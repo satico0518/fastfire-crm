@@ -1,3 +1,43 @@
 .menu {
     height: calc(100vh - 50px);
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: "width 0.5s ease-in-out";
+
+    &__menu-items ul {
+        padding-left: 20px;
+    }
+
+    &__menu-items li {
+        list-style: none;
+        line-height: 40px;
+        font-weight: bold;
+    }
+
+    .active {
+        color: #b4a6fd;
+    }
+
+    &__btn-close-menu {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 20px;
+        margin-bottom: 20px;
+        width: 40px;
+        height: 40px;
+        border: solid 1px antiquewhite;
+    }
+
+    &__back-icon {
+        margin-left: 9px;
+    }
+}
+
+.closed {
+    width: 50px;
+    padding-right: 20px;
+    transition: "width 0.5s ease-in-out",
 }
