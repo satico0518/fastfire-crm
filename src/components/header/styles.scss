@@ -3,6 +3,32 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 20px 20px 20px;
     height: 50px;
+
+    &__company {
+        display: flex;
+        align-items: center;
+    }
+
+    &__text{
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    &__logo {
+        width: 150px;
+        padding-right: 20px;
+        border-radius: 5px;
+    }
+
+    &__user {
+        display: flex;
+        align-items: center;
+    }
+
+    &__user-image {
+        width: 50px;
+        padding-right: 10px;
+    }
 }
