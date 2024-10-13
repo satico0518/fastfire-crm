@@ -12,8 +12,8 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Header />
     <div className="main-container">
-      <MenuComponent />
       <BrowserRouter>
+        <MenuComponent />
         <App />
       </BrowserRouter>
     </div>
