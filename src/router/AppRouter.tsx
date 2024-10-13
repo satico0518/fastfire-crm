@@ -20,7 +20,12 @@ export const AppRouter = () => {
         <Route path="/purchasing-manager" element={<PurchasingManagerPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
-      <Route  path="*" element={<HomePage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/home" element={<HomePage />} />
+      </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route path="*" element={<LoginPage />} />
+      </Route>
     </Routes>
   );
 };

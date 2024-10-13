@@ -3,6 +3,9 @@
 @import '@fontsource/roboto/500.css';
 @import '@fontsource/roboto/700.css';
 
+// Pages
+@import '../src/pages/login/styles.scss';
+
 // Components
 @import '../src/components/header/styles.scss';
 @import '../src/components/menu/styles.scss';
