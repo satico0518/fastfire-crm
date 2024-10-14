@@ -1,0 +1,16 @@
+@import '@fontsource/roboto/300.css';
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/500.css';
+@import '@fontsource/roboto/700.css';
+
+// Pages
+@import '../src/pages/login/styles.scss';
+
+// Components
+@import '../src/components/header/styles.scss';
+@import '../src/components/menu/styles.scss';
+
+#root {
+  width: 100%;
+}
+
