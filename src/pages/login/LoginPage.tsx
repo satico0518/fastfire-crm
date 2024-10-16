@@ -37,9 +37,8 @@ export const LoginPage = () => {
         setIsAuth(true);
         navigate("/home");
     } else {
-        setIsError(translateErrorMessage(signInResponse.error?.message as string) ?? 'Error al intentar iniciar sesion')
-        console.error(signInResponse.error?.code)
-    } // Aquí enviarías los datos al backend para autenticar
+        setIsError(translateErrorMessage(signInResponse.error as string) ?? 'Error al intentar iniciar sesion')
+    }
   };
 
 

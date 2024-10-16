@@ -1,9 +1,10 @@
 .menu {
+    width: 195px;
     height: calc(100vh - 50px);
-    width: 240px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    background-color: rgba(0, 0, 0, 0.2);
     transition: "width 0.5s ease-in-out";
 
     &__menu-items ul {
@@ -19,25 +20,4 @@
     .active {
         color: #b4a6fd;
     }
-
-    &__btn-close-menu {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 20px;
-        margin-bottom: 20px;
-        width: 40px;
-        height: 40px;
-        border: solid 1px antiquewhite;
-    }
-
-    &__back-icon {
-        margin-left: 9px;
-    }
-}
-
-.closed {
-    width: 50px;
-    padding-right: 20px;
-    transition: "width 0.5s ease-in-out",
 }

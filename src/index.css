@@ -13,8 +13,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.main-container {
+.body-container {
   display: flex;
+}
+
+.page-container {
+  display: flex;
+  width: 100%;
+  padding: 20px;
 }
 
 a {
