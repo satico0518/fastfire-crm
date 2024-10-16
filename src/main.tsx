@@ -10,12 +10,14 @@ import { MenuComponent } from "./components/menu/MenuComponent.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Header />
-    <div className="main-container">
-      <BrowserRouter>
+    <BrowserRouter>
+      <Header />
+      <div className="body-container">
         <MenuComponent />
-        <App />
-      </BrowserRouter>
-    </div>
+        <div className="page-container">
+          <App />
+        </div>
+      </div>
+    </BrowserRouter>
   </StrictMode>
 );

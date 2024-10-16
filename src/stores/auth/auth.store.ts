@@ -10,13 +10,16 @@ interface AuthState {
 
 export const useAuhtStore = create<AuthState>()((set) => ({
   user: {
-    name: 'Davo Gomez',
+    id: '123',
+    key: 'abc',
+    isActive: true,
+    firstName: 'Davo',
+    lastName: 'Gomez',
     email: 'davo.gomez1@gmail.com',
-    role: 'ADMIN',
-    permissions: ['tasks']
+    permissions: ['ADMIN', 'TYP', 'PURCHASE']
   },
   // user: null,
-  isAuth: false,
+  isAuth: true, // TODO DEJAR EN FALSE
   setNewUser: (user: User) => set(() => ({ user })),
   setIsAuth: (isAuth: boolean) => set(() => ({ isAuth })),
 }));

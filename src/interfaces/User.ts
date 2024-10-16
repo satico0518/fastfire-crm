@@ -1,6 +1,10 @@
+export type Access = 'TYP'|'ADMIN'|'PURCHASE' 
 export interface User {
-    name: string;
+    id?: string,
+    key?: string,
+    isActive: boolean,
+    firstName: string;
+    lastName: string;
     email: string;
-    role: 'ADMIN'|'OPERATOR';
-    permissions: string[];
+    permissions: Access[];
 }

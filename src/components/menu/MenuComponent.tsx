@@ -1,25 +1,17 @@
-import { IconButton } from "@mui/material";
-import { deepPurple } from "@mui/material/colors";
-import ArrowBackIos from "@mui/icons-material/ArrowBackIos";
-import ArrowForwardIos from "@mui/icons-material/ArrowForwardIos";
+import { NavLink } from "react-router-dom";
+import { useAuhtStore } from "../../stores";
+
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
-import { NavLink } from "react-router-dom";
-import { useState } from "react";
-import { useAuhtStore } from "../../stores";
+import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined';
 
 export const MenuComponent = () => {
   const isAuth = useAuhtStore((state) => state.isAuth);
-  const [isClosing, setIsClosing] = useState(false);
 
   if (!isAuth) return null;
 
-  const handleToggleMenu = () => {
-    setIsClosing((isClosing) => !isClosing);
-  };
-
   return (
-    <div className={isClosing ? "menu closed" : "menu"}>
+    <div className="menu opened">
       <div className="menu__menu-items">
         <ul>
           <li>
@@ -29,7 +21,7 @@ export const MenuComponent = () => {
                 isPending ? "pending" : isActive ? "active" : ""
               }
             >
-              {isClosing ? <TaskAltIcon /> : "Proyectos y Tareas"}
+              <TaskAltIcon titleAccess="Proyectos y Tareas" sx={{position: 'relative', top: '6px'}}/> T&P
             </NavLink>
           </li>
           <li>
@@ -39,24 +31,20 @@ export const MenuComponent = () => {
                 isPending ? "pending" : isActive ? "active" : ""
               }
             >
-              {isClosing ? (
-                <AddShoppingCartOutlinedIcon />
-              ) : (
-                "Gestor de Compras"
-              )}
+              <AddShoppingCartOutlinedIcon titleAccess="Gestor de Compras" sx={{position: 'relative', top: '6px'}}/> Compras
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin"
+              className={({ isActive, isPending }) =>
+                isPending ? "pending" : isActive ? "active" : ""
+              }
+            >
+              <BuildCircleOutlinedIcon titleAccess="Administrador" sx={{position: 'relative', top: '6px'}}/> Admin
             </NavLink>
           </li>
           {/* <li>
-          <NavLink
-            to="/login"
-            className={({ isActive, isPending }) =>
-              isPending ? "pending" : isActive ? "active" : ""
-            }
-          >
-            Login
-          </NavLink>
-        </li>
-        <li>
           <NavLink
             to="/home"
             className={({ isActive, isPending }) =>
@@ -67,18 +55,6 @@ export const MenuComponent = () => {
           </NavLink>
         </li> */}
         </ul>
-      </div>
-      <div className="menu__btn-close-menu">
-        <IconButton onClick={handleToggleMenu} aria-label="delete">
-          {isClosing ? (
-            <ArrowForwardIos sx={{ color: deepPurple[900] }} />
-          ) : (
-            <ArrowBackIos
-              className="menu__back-icon"
-              sx={{ color: deepPurple[900] }}
-            />
-          )}
-        </IconButton>
       </div>
     </div>
   );
