@@ -4,16 +4,33 @@ import userNoImage from "../../assets/img/user-no-image.png";
 import { useAuhtStore } from "../../stores";
 
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import { AuthService } from "../../services/auth.service";
+import { useUiStore } from "../../stores/ui/ui.store";
 
 export const Header = () => {
   const isAuth = useAuhtStore((state) => state.isAuth);
   const setIsAuth = useAuhtStore((state) => state.setIsAuth);
   const firstName = useAuhtStore((state) => state.user?.firstName);
   const lastName = useAuhtStore((state) => state.user?.lastName);
+  const setIsLoading = useUiStore(state => state.setIsLoading);
+  const setSnackbar = useUiStore(state => state.setSnackbar);
 
   if (!isAuth) return null;
 
-  const handleLogOut = () => setIsAuth(false);
+  const handleLogOut = async () => {
+    setIsLoading(true);
+    const response = await AuthService.LogOut();
+    if (response?.result === 'OK')
+      setIsAuth(false);
+    else {
+      setIsLoading(false);
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: response.errorMessage ?? 'Error cerrando sesión!',
+      })
+    }
+  }
 
   return (
     <div className="header">

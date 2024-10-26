@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Checkbox,
   FormControl,
   FormControlLabel,
   FormGroup,
-  FormHelperText,
   FormLabel,
   Stack,
   TextField,
@@ -16,7 +15,11 @@ import { AuthService } from "../../services/auth.service";
 import { Access, User } from "../../interfaces/User";
 import { useUiStore } from "../../stores/ui/ui.store";
 
-export const UserFormComponent = () => {
+interface UserFormComponentProps {
+  editingUser?: User;
+}
+
+export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
@@ -27,7 +30,9 @@ export const UserFormComponent = () => {
     ADMIN: false,
     PURCHASE: false,
   });
+
   const {
+    setValue,
     register,
     handleSubmit,
     formState: { errors },
@@ -40,23 +45,63 @@ export const UserFormComponent = () => {
     });
   };
 
+  useEffect(() => {
+    if (editingUser) {
+      setValue("firstName", editingUser.firstName);
+      setValue("lastName", editingUser.lastName);
+      setValue("email", editingUser.email);
+      setAccessState({
+        ADMIN: editingUser.permissions.includes("ADMIN"),
+        TYP: editingUser.permissions.includes("TYP"),
+        PURCHASE: editingUser.permissions.includes("PURCHASE"),
+      });
+    }
+  }, [editingUser, setValue]);
+
   const onSubmit = async (data: User) => {
-    setModal({...modal, open: false})
-    setIsLoading(true);
-    data = {
-      ...data,
-      permissions: Object.keys(accessState).filter(
-        (key) => accessState[key as Access] === true
-      ) as Access[],
-    };
+    try {
+      setModal({ ...modal, open: false });
+      setIsLoading(true);
+      data = {
+        ...data,
+        permissions: Object.keys(accessState).filter(
+          (key) => accessState[key as Access] === true
+        ) as Access[],
+      };
 
-    const signInResponse = await AuthService.createUser(data);
-    setIsLoading(false);
+      let signInResponse;
+      if (editingUser)
+        signInResponse = await AuthService.modifyUser({
+          ...editingUser,
+          ...data,
+        });
+      else signInResponse = await AuthService.createUser(data);
 
-    if (signInResponse.result === "OK") {
-        setSnackbar({...snackbar, open: true, message: 'Usuario creado exitosamente!', severity: 'success'});
-    } else {
-        setSnackbar({...snackbar, open: true, message: signInResponse.error as string, severity: 'error'});
+      if (signInResponse.result === "OK") {
+        setSnackbar({
+          ...snackbar,
+          open: true,
+          message: "Usuario creado exitosamente!",
+          severity: "success",
+        });
+      } else {
+        setSnackbar({
+          ...snackbar,
+          open: true,
+          message: signInResponse.result as string,
+          severity: "error",
+        });
+      }
+    } catch (error) {
+      console.error(`Error al intentar ${editingUser ? 'editar' : 'crear'} el usurio: `, {error});
+      setSnackbar({
+        ...snackbar,
+        open: true,
+        message: `Error al intentar ${editingUser ? 'editar' : 'crear'} el usurio`,
+        severity: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -130,7 +175,6 @@ export const UserFormComponent = () => {
               label="Admin"
             />
           </FormGroup>
-          <FormHelperText>Be careful</FormHelperText>
         </FormControl>
         <Button
           fullWidth
@@ -139,7 +183,7 @@ export const UserFormComponent = () => {
           size="large"
           color="success"
         >
-          Crear Usuario
+          {editingUser ? "Editar Usuario" : "Crear Usuario"}
         </Button>
       </Stack>
     </form>

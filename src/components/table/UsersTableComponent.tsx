@@ -12,37 +12,25 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import userNoImage from "../../assets/img/user-no-image.png";
 import { Button, Chip } from "@mui/material";
 import { Access, User } from "../../interfaces/User";
-import { onValue, ref } from "firebase/database";
-import { db } from "../../firebase/firebase.config";
 import { useUsersStore } from "../../stores/users/users.store";
+import { translateAccess } from "../../utils/utils";
+import { UserFormComponent } from "../user-form/UserFormComponent";
+import { useLoadData } from "../../hooks/useLoadData";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function UsersTable() {
-  const setIsLoading = useUiStore((state) => state.setIsLoading);
+  useLoadData()
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const users = useUsersStore(state => state.users);
-  const setUsers = useUsersStore(state => state.setUsers);
-
-  const translateAccess = (access: Access) => {
-    switch (access) {
-      case "ADMIN":
-        return access;
-      case "PURCHASE":
-        return "COMPRAS";
-      case "TYP":
-        return "T&P";
-      default:
-        return "NA";
-    }
-  };
+  const modal = useUiStore((state) => state.modal);
+  const setModal = useUiStore((state) => state.setModal);
 
   const columns: GridColDef[] = [
     {
       field: "fullName",
       headerName: "Nombre",
-      description: "This column has a value getter and is not sortable.",
       sortable: false,
       width: 350,
       renderCell: (params: GridRenderCellParams) => (
@@ -73,7 +61,7 @@ export default function UsersTable() {
       renderCell: (params: GridRenderCellParams) => (
         <div className="permissions">
           {params.row.permissions.map((acc: Access) => (
-            <Chip key={acc} label={translateAccess(acc)} color="primary" />
+            <Chip size="small" key={acc} label={translateAccess(acc)} color="primary" />
           ))}
         </div>
       ),
@@ -85,8 +73,15 @@ export default function UsersTable() {
       align: "right",
       getActions: (params: GridRowParams) => [
         <GridActionsCellItem
-          onClick={() => console.log({ params })}
-          label="Editar Accesos"
+          onClick={() => 
+            setModal({
+            ...modal,
+            open: true,
+            title: "Editar Usuario",
+            text: "Ingrese las modificaciones del usuario.",
+            content: <UserFormComponent editingUser={params.row}/>,
+          })}
+          label="Editar"
           showInMenu
         />,
         <GridActionsCellItem
@@ -96,28 +91,12 @@ export default function UsersTable() {
               `${params.row.firstName || ""} ${params.row.lastName || ""}`
             )
           }
-          label="Eliminar Usuario"
+          label="Eliminar"
           showInMenu
         />,
       ],
     },
   ];
-
-  useEffect(() => {
-    setIsLoading(true);
-    const usersRef = ref(db, "users");
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val();
-
-      if (data) {
-        const values = Object.entries(data).map(([key, value]) => ({ ...value, key }));
-        setUsers(values.filter((user) => user.isActive) as unknown as User[]);
-      } else 
-        setUsers([]);
-      
-      setIsLoading(false);
-    });
-  }, [setIsLoading, setUsers]);
 
   const handleDeleteUser = async (userKey: string) => {
     const deleteResult = await AuthService.deleteUser(userKey);
