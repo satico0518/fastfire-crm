@@ -1,18 +1,18 @@
 import * as React from "react";
+
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import UsersTable from "../../components/table/UsersTableComponent";
 import { Button } from "@mui/material";
 import PersonAddAltOutlinedIcon from "@mui/icons-material/PersonAddAltOutlined";
+import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+
 import { useUiStore } from "../../stores/ui/ui.store";
 import { UserFormComponent } from "../../components/user-form/UserFormComponent";
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+import { TabPanelProps } from "../../interfaces/Tabs";
+import UsersTable from "../../components/table/UsersTableComponent";
+import { WorkgroupsFormComponent } from "../../components/workgroups-form/WorkgroupsFormComponent";
+import WorksgroupTable from "../../components/table/WorkgroupsTableComponent";
 
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
@@ -56,8 +56,8 @@ export const AdministratorPage = () => {
           aria-label="basic tabs example"
         >
           <Tab label="Listado de Usuarios" {...a11yProps(0)} />
-          {/* <Tab label="Item Two" {...a11yProps(1)} />
-          <Tab label="Item Three" {...a11yProps(2)} /> */}
+          <Tab label="Grupos de trabajo" {...a11yProps(1)} />
+          {/* <Tab label="Item Three" {...a11yProps(2)} /> */}
         </Tabs>
       </Box>
       <CustomTabPanel value={tabsValue} index={0}>
@@ -77,10 +77,24 @@ export const AdministratorPage = () => {
           <PersonAddAltOutlinedIcon />
         </Button>
       </CustomTabPanel>
-      {/* <CustomTabPanel value={value} index={1}>
-        Item Two
+      <CustomTabPanel value={tabsValue} index={1}>
+        <WorksgroupTable />
+        <Button
+          onClick={() =>
+            setModal({
+              ...modal,
+              open: true,
+              title: "Crear Grupo de Trabajo",
+              text: "Ingrese los datos del nuevo grupo de trabajo.",
+              content: <WorkgroupsFormComponent />,
+            })
+          }
+          sx={{ color: "white", top: '10px' }}
+        >
+          <GroupAddOutlinedIcon />
+        </Button>
       </CustomTabPanel>
-      <CustomTabPanel value={value} index={2}>
+      {/* <CustomTabPanel value={value} index={2}>
         Item Three
       </CustomTabPanel> */}
     </Box>

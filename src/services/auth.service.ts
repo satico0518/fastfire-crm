@@ -7,6 +7,7 @@ import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCr
 import { db } from "../firebase/firebase.config";
 import { ref, push, set, update } from "firebase/database";
 import { User } from "../interfaces/User";
+import { ServiceResponse } from "../interfaces/Shared";
 
 export class AuthService {
   static async createUser(user: User): Promise<FirebaseSignInOrCreateResponse> {
@@ -37,9 +38,9 @@ export class AuthService {
         user: null,
         error: "Error al intentar crear usuario, intente de nuevo!",
       };
-    } catch (error: unknown) {
+    } catch (error) {
       let message;
-      if (error.code && error.code.includes("auth/email-already-in-use")) {
+      if (error?.code && error?.code.includes("auth/email-already-in-use")) {
         message = "Este usuario ya fue creado!";
       }
 
@@ -73,17 +74,65 @@ export class AuthService {
     }
   }
 
-  static async deleteUser(userKey: string): Promise<boolean> {
+  static async deleteUser(userKey: string): Promise<ServiceResponse> {
     try {
       const usersRef = ref(db, `users/${userKey}`);
-      await update(usersRef, {isActive: false});
-      return true;
+      await update(usersRef, { isActive: false });
+      return {
+        result: "OK",
+        message: "Usuario eliminado exitosamante",
+      };
     } catch (err) {
       console.error(
-        `Error deleting user [key: ${userKey}] - [currentUserUid: ${auth.currentUser?.uid}]`,
+        `Error eliminando el usuario [key: ${userKey}] - [currentUserUid: ${auth.currentUser?.uid}]`,
         err
       );
-      return false;
+      return {
+        result: "ERROR",
+        message: "",
+        errorMessage: "Error eliminando el usuario",
+      };
+    }
+  }
+
+  static async modifyUser(user: User): Promise<ServiceResponse> {
+    try {
+      const usersRef = ref(db, `users/${user.key}`);
+      await update(usersRef, user);
+      return {
+        result: "OK",
+        message: "Usuario modificado exitosamante",
+      };
+    } catch (err) {
+      console.error(
+        `Error modificando el usuario [key: ${user.key}] - [currentUserUid: ${auth.currentUser?.uid}]`,
+        err
+      );
+      return {
+        result: "ERROR",
+        message: "",
+        errorMessage: "Error modificando el usuario",
+      };
+    }
+  }
+
+  static async LogOut(): Promise<ServiceResponse> {
+    try {
+      await auth.signOut()
+      return {
+        result: 'OK',
+        message: ''
+      };
+    } catch (error) {
+      console.error(
+        `Error cerrando sesión - [currentUserUid: ${auth.currentUser?.uid}]`,
+        error
+      );
+      return {
+        result: "ERROR",
+        message: "",
+        errorMessage: "Error cerrando sesión",
+      };
     }
   }
 }

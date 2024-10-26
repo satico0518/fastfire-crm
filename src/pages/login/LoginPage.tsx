@@ -30,9 +30,6 @@ export const LoginPage = () => {
 
   const onSubmit = async (data: Login) => {
     const signInResponse = await AuthService.signIn(data.email, data.password);
-
-    console.log({signInResponse});
-
     if (signInResponse.result === 'OK') {
         setIsAuth(true);
         navigate("/home");

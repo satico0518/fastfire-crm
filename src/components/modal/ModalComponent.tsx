@@ -26,6 +26,7 @@ export default function ModalComponent() {
   return (
     <React.Fragment>
       <Dialog
+        maxWidth={"xs"}
         open={modal.open}
         onClose={handleClose}
       >
