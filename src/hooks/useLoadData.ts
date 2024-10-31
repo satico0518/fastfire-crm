@@ -24,7 +24,7 @@ export const useLoadData = () => {
           const values: User[] = Object.entries<User>(data).map(
             ([key, value]) => ({ ...value, key })
           ) as User[];
-          setUsers(values.filter((user) => user.isActive) as unknown as User[]);
+          setUsers(values);
         } else setUsers([]);
 
         setIsLoading(false);
@@ -53,11 +53,7 @@ export const useLoadData = () => {
             ...value,
             key,
           }));
-          setTasks(
-            values.filter(
-              (task) => task.status !== "DELETED"
-            ) as unknown as Task[]
-          );
+          setTasks(values);
         } else setTasks([]);
 
         setIsLoading(false);

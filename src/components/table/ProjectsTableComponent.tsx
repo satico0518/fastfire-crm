@@ -1,4 +1,9 @@
 import { useEffect } from "react";
+import { onValue, ref } from "firebase/database";
+import { db } from "../../firebase/firebase.config";
+import { useUiStore } from "../../stores/ui/ui.store";
+import { useProjectsStore } from "../../stores/projects/projects.store";
+import { ProjectService } from "../../services/project.service";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -7,20 +12,15 @@ import {
   GridRowParams,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import { useUiStore } from "../../stores/ui/ui.store";
-import { onValue, ref } from "firebase/database";
-import { db } from "../../firebase/firebase.config";
-import { useProjectsStore } from "../../stores/projects/projects.store";
 import { Project } from "../../interfaces/Project";
+import { Button, Chip } from "@mui/material";
+import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import { ProjectsFormComponent } from "../projects-form/ProjectsFormComponent";
 import {
   formatToCOP,
   translateStatus,
   translateTimestampToString,
 } from "../../utils/utils";
-import { Button, Chip } from "@mui/material";
-import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
-import { ProjectService } from "../../services/project.service";
-import { ProjectsFormComponent } from "../projects-form/ProjectsFormComponent";
 
 const paginationModel = { page: 0, pageSize: 15 };
 

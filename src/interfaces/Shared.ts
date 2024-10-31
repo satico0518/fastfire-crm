@@ -8,7 +8,7 @@ export type Status =
 
 export interface ServiceResponse {
   result: "OK" | "ERROR";
-  message: unknown;
+  message?: unknown;
   errorMessage?: string;
 }
 

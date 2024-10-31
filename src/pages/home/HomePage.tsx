@@ -1,6 +1,6 @@
 
 export const HomePage = () => {
   return (
-    <div>HomePage</div>
+    <div>Bienvenido al CRM de FastFire de Colombia</div>
   )
 }

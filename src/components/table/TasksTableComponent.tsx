@@ -8,11 +8,12 @@ import {
 import Paper from "@mui/material/Paper";
 import userNoImage from "../../assets/img/user-no-image.png";
 import { Button, Chip } from "@mui/material";
+import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
 import { useUiStore } from "../../stores/ui/ui.store";
-import { GetProjectNameByKey, GetUserNameByKey, translateTimestampToString } from "../../utils/utils";
+import { GetProjectNameByKey, GetUserNameByKey, translateStatus, translateTimestampToString } from "../../utils/utils";
 import { useUsersStore } from "../../stores/users/users.store";
 import { useProjectsStore } from "../../stores/projects/projects.store";
 import { useLoadData } from "../../hooks/useLoadData";
@@ -39,13 +40,71 @@ export default function TasksTable() {
       field: "status",
       headerName: "Estado",
       type: "string",
-      width: 100,
+      width: 150,
+      renderCell: (params: GridRenderCellParams<Task>) => (
+        <>
+          {params.row.status === "IN_PROGRESS" && (
+            <Chip color="success" label={translateStatus(params.row.status)} />
+          )}
+          {params.row.status === "BLOCKED" && (
+            <>
+              <Chip color="error" label={translateStatus(params.row.status)} />
+              <Button
+                title="Iniciar"
+                onClick={() =>
+                  TaskService.updateTask({
+                    ...params.row,
+                    status: "IN_PROGRESS",
+                  })
+                }
+              >
+                <PlayCircleFilledOutlinedIcon />
+              </Button>
+            </>
+          )}
+          {params.row.status === "ARCHIVED" && (
+            <Chip color="default" label={translateStatus(params.row.status)} />
+          )}
+          {params.row.status === "DONE" && (
+            <>
+              <Chip color="info" label={translateStatus(params.row.status)} />
+              <Button
+                title="Reiniciar"
+                onClick={() =>
+                  TaskService.updateTask({
+                    ...params.row,
+                    status: "IN_PROGRESS",
+                  })
+                }
+              >
+                <PlayCircleFilledOutlinedIcon />
+              </Button>
+            </>
+          )}
+          {params.row.status === "TODO" && (
+            <>
+              <span>{translateStatus(params.row.status)}</span>
+              <Button
+                title="Iniciar"
+                onClick={() =>
+                  TaskService.updateTask({
+                    ...params.row,
+                    status: "IN_PROGRESS",
+                  })
+                }
+              >
+                <PlayCircleFilledOutlinedIcon />
+              </Button>
+            </>
+          )}
+        </>
+      ),
     },
     {
       field: "createdById",
       headerName: "Creada Por",
       type: "string",
-      width: 150,
+      width: 250,
       renderCell: ({row}: GridRenderCellParams<Task>) => (
         <>
           <img
