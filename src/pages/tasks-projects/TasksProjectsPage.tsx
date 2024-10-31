@@ -11,11 +11,14 @@ import TasksTable from "../../components/table/TasksTableComponent";
 import ProjectsTable from "../../components/table/ProjectsTableComponent";
 import { ProjectsFormComponent } from "../../components/projects-form/ProjectsFormComponent";
 import { TasksFormComponent } from "../../components/tasks-form/TasksFormComponent";
+import { useAuhtStore } from "../../stores";
+import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 
 export const TasksPage = () => {
   const [tabsValue, setTabsValue] = useState(0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
+  const user = useAuhtStore((state) => state.user);
 
   const handleTabsChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
@@ -23,6 +26,8 @@ export const TasksPage = () => {
 
   const CustomTabPanel = (props: TabPanelProps) => {
     const { children, value, index, ...other } = props;
+
+    if (!user?.permissions.includes('TYP')) return <UnauthorizedPage />
 
     return (
       <div
