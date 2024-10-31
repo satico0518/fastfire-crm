@@ -15,12 +15,10 @@ import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
 import { translateAccess } from "../../utils/utils";
 import { UserFormComponent } from "../user-form/UserFormComponent";
-import { useLoadData } from "../../hooks/useLoadData";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function UsersTable() {
-  useLoadData()
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const users = useUsersStore(state => state.users);

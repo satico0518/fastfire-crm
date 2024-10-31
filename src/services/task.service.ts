@@ -1,4 +1,4 @@
-import { auth, db } from "../firebase/firebase.config";
+import { db } from "../firebase/firebase.config";
 import { push, ref, set, update } from "firebase/database";
 import { ServiceResponse } from "../interfaces/Shared";
 import { Task } from "../interfaces/Task";

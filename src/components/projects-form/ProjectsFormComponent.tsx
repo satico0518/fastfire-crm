@@ -3,82 +3,78 @@ import { Stack, TextField, Button, Autocomplete } from "@mui/material";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { Project } from "../../interfaces/Project";
 import { ProjectService } from "../../services/project.service";
-import { useEffect } from "react";
-import { CitiesService } from "../../services/cities.service";
 import { useCitiesStore } from "../../stores/cities/cities.store";
 
 interface ProjectsFormComponentProps {
-  editingProject?: Project
+  editingProject?: Project;
 }
 
-export const ProjectsFormComponent = ({editingProject}: ProjectsFormComponentProps) => {
+export const ProjectsFormComponent = ({
+  editingProject,
+}: ProjectsFormComponentProps) => {
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const snackbar = useUiStore((state) => state.snackbar);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const setCities = useCitiesStore((state) => state.setCities);
   const cities = useCitiesStore((state) => state.cities);
 
   const {
-    setValue,
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
-
-  useEffect(() => {
-    const getCities = async () => {
-        const citiesResponse = await CitiesService.getCities();
-        setCities(citiesResponse)
-    }
-    getCities();
-  }, [setCities])
-
-  useEffect(() => {
-    if (editingProject) {
-      setValue('name', editingProject.name);
-      setValue('location', editingProject.location);
-      setValue('budget', editingProject.budget);
-    }
-
-  }, [editingProject, setValue])
+  } = useForm({
+    defaultValues: {
+      name: editingProject?.name ?? "",
+      location: editingProject?.location,
+      budget: editingProject?.budget,
+    },
+  });
 
   const onSubmit = async (data: Project) => {
     try {
       setModal({ ...modal, open: false });
-    setIsLoading(true);
+      setIsLoading(true);
 
-    let response;
-    if (editingProject)
-      response = await ProjectService.updateProject({...editingProject, ...data})
-    else 
-      response = await ProjectService.createProject(data);
+      let response;
+      if (editingProject)
+        response = await ProjectService.updateProject({
+          ...editingProject,
+          ...data,
+        });
+      else response = await ProjectService.createProject(data);
 
-    setIsLoading(false);
+      setIsLoading(false);
 
-    if (response.result === "OK") {
-      setSnackbar({
-        ...snackbar,
-        open: true,
-        message: `Proyecto ${editingProject ? 'modificado' : 'creado'} exitosamente!`,
-        severity: "success",
-      });
-    } else {
-      setSnackbar({
-        ...snackbar,
-        open: true,
-        message: response.errorMessage as string,
-        severity: "error",
-      });
-    }
+      if (response.result === "OK") {
+        setSnackbar({
+          ...snackbar,
+          open: true,
+          message: `Proyecto ${
+            editingProject ? "modificado" : "creado"
+          } exitosamente!`,
+          severity: "success",
+        });
+      } else {
+        setSnackbar({
+          ...snackbar,
+          open: true,
+          message: response.errorMessage as string,
+          severity: "error",
+        });
+      }
     } catch (error) {
-      console.error(`Error ${editingProject ? 'modificando' : 'creando'} proyecto.`, {error});
-      
+      console.error(
+        `Error ${editingProject ? "modificando" : "creando"} proyecto.`,
+        { error }
+      );
+
       setSnackbar({
         ...snackbar,
         open: true,
-        message: `Error ${editingProject ? 'modificando' : 'creando'} proyecto.`,
+        message: `Error ${
+          editingProject ? "modificando" : "creando"
+        } proyecto.`,
         severity: "error",
       });
     }
@@ -103,7 +99,12 @@ export const ProjectsFormComponent = ({editingProject}: ProjectsFormComponentPro
           options={cities}
           includeInputInList
           sx={{ width: 300 }}
-          value={editingProject && {key: cities.filter(c => c.label === editingProject?.location)[0].key, label: editingProject?.location}}
+          value={
+            editingProject && {
+              key: cities.filter((c) => c.label === editingProject?.location)[0].key,
+              label: editingProject?.location,
+            }
+          }
           renderInput={(params) => (
             <TextField
               {...params}
@@ -135,7 +136,7 @@ export const ProjectsFormComponent = ({editingProject}: ProjectsFormComponentPro
           size="large"
           color="success"
         >
-          {editingProject ? 'Modificar Proyecto' : 'Crear Proyecto'}
+          {editingProject ? "Modificar Proyecto" : "Crear Proyecto"}
         </Button>
       </Stack>
     </form>

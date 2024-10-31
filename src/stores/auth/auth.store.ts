@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { User } from "../../interfaces/User";
+import { createJSONStorage, devtools, persist, StateStorage } from "zustand/middleware";
 
 interface AuthState {
   user: User | null;
@@ -10,20 +11,30 @@ interface AuthState {
   setIsAuth: (isAuth: boolean) => void;
 }
 
-export const useAuhtStore = create<AuthState>()((set) => ({
-  // user: {
-  //   id: '123',
-  //   key: 'abc',
-  //   isActive: true,
-  //   firstName: 'Davo',
-  //   lastName: 'Gomez',
-  //   email: 'davo.gomez1@gmail.com',
-  //   permissions: ['ADMIN', 'TYP', 'PURCHASE']
-  // },
-  user: null,
-  isAuth: false, // TODO DEJAR EN FALSE
-  token: '',
-  setToken: (token: string) => set(() => ({token})),
-  setNewUser: (user: User) => set(() => ({ user })),
-  setIsAuth: (isAuth: boolean) => set(() => ({ isAuth })),
-}));
+const customSessionStorage: StateStorage = {
+  getItem: function (name: string): string | null | Promise<string | null> {
+    return sessionStorage.getItem(name);
+  },
+  setItem: function (name: string, value: string): void {
+    sessionStorage.setItem(name, value);
+  },
+  removeItem: function (name: string): void {
+    sessionStorage.removeItem(name);
+  }
+}
+
+export const useAuhtStore = create<AuthState>()(
+  persist(
+    devtools((set) => ({
+      user: null,
+      isAuth: false, // TODO DEJAR EN FALSE
+      token: "",
+      setToken: (token: string) => set(() => ({ token })),
+      setNewUser: (user: User) => set(() => ({ user })),
+      setIsAuth: (isAuth: boolean) => set(() => ({ isAuth })),
+    })), {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => customSessionStorage),
+    }
+  )
+);

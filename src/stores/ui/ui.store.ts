@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { ModalComponentProps } from "../../components/modal/ModalComponent";
 import { SnackbarComponentProps } from "../../components/snackbar/SnackbarComponent";
 import { ConfirmationComponentProps } from "../../components/confirmation/ConfirmationComponent";
+import { devtools } from "zustand/middleware";
 
 interface UiState {
   isLoading: boolean;
@@ -14,13 +15,17 @@ interface UiState {
   setConfirmation: (snackbar: ConfirmationComponentProps) => void;
 }
 
-export const useUiStore = create<UiState>()((set) => ({
-  isLoading: false,
-  setIsLoading: (isLoading: boolean) => set(() => ({ isLoading })),
-  modal: {open: false, title: '', content: null, },
-  setModal: (modal: ModalComponentProps) => set(() => ({ modal })),
-  snackbar: {open: false, message: '', duration: 4000, severity: 'info'},
-  setSnackbar: (snackbar: SnackbarComponentProps) => set(() => ({snackbar})),
-  confirmation: {open: false, title: '', text: '', actions: null},
-  setConfirmation: (confirmation: ConfirmationComponentProps) => set(() => ({confirmation})),
-}));
+export const useUiStore = create<UiState>()(
+  devtools((set) => ({
+    isLoading: false,
+    setIsLoading: (isLoading: boolean) => set(() => ({ isLoading })),
+    modal: { open: false, title: "", content: null },
+    setModal: (modal: ModalComponentProps) => set(() => ({ modal })),
+    snackbar: { open: false, message: "", duration: 4000, severity: "info" },
+    setSnackbar: (snackbar: SnackbarComponentProps) =>
+      set(() => ({ snackbar })),
+    confirmation: { open: false, title: "", text: "", actions: null },
+    setConfirmation: (confirmation: ConfirmationComponentProps) =>
+      set(() => ({ confirmation })),
+  }))
+);
