@@ -31,7 +31,7 @@ export class TaskService {
 
   static async updateTask(task: Task): Promise<ServiceResponse> {
     try {
-      const tasksRef = ref(db, `tasks/${task.id}`);
+      const tasksRef = ref(db, `tasks/${task.key}`);
       await update(tasksRef, task);
 
       return {

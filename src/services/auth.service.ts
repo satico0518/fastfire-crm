@@ -5,7 +5,7 @@ import {
 import { auth } from "../firebase/firebase.config";
 import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCreateResponse";
 import { db } from "../firebase/firebase.config";
-import { ref, push, set, update } from "firebase/database";
+import { ref, push, set, update, get } from "firebase/database";
 import { User } from "../interfaces/User";
 import { ServiceResponse } from "../interfaces/Shared";
 
@@ -15,7 +15,7 @@ export class AuthService {
       const createUserResponse = await createUserWithEmailAndPassword(
         auth,
         user.email,
-        "Ff12345"
+        "Ff12345" // TODO env Var
       );
       if (createUserResponse.user && createUserResponse.user.uid) {
         const userToPush: User = {
@@ -35,7 +35,6 @@ export class AuthService {
 
       return {
         result: "ERROR",
-        user: null,
         error: "Error al intentar crear usuario, intente de nuevo!",
       };
     } catch (error) {
@@ -47,7 +46,6 @@ export class AuthService {
       console.error({ error });
       return {
         result: "ERROR",
-        user: null,
         error: message ?? "Error al intentar crear usuario",
       };
     }
@@ -59,17 +57,34 @@ export class AuthService {
   ): Promise<FirebaseSignInOrCreateResponse> {
     try {
       const userLoggedIn = await signInWithEmailAndPassword(auth, email, pass);
-      return {
-        result: userLoggedIn.user ? "OK" : "ERROR",
-        user: userLoggedIn.user ?? null,
-      };
-    } catch (error: unknown) {
-      console.error(error);
+      const users: User[] =  Object.values((await get(ref(db, 'users'))).val());
+      const userDB = users?.filter((u) => u.email === email)[0];
+      if (!userDB) {
+        const msg = `El usuario "${email}" no está registrado.`;
+        console.error(msg);
+        return {
+          result: "ERROR",
+          error: msg
+        };
+      } else if (userDB && !userDB.isActive) {
+        const msg = `El usuario "${email}" está inactivo. Comuníquese con el administrador!`;
+        console.error(msg);
+        return {
+          result: "ERROR",
+          error: msg
+        };
+      }
 
       return {
+        result: 'OK',
+        firebaseUser: userLoggedIn.user,
+        user: userDB,
+      }
+    } catch (error: unknown) {
+      console.error(error);
+      return {
         result: "ERROR",
-        user: null,
-        error: "Error al intentar iniciar sesion.",
+        error: "Error al intentar iniciar sesión, revise sus credenciales.",
       };
     }
   }
@@ -118,10 +133,9 @@ export class AuthService {
 
   static async LogOut(): Promise<ServiceResponse> {
     try {
-      await auth.signOut()
+      await auth.signOut();
       return {
-        result: 'OK',
-        message: ''
+        result: "OK",
       };
     } catch (error) {
       console.error(
@@ -130,7 +144,6 @@ export class AuthService {
       );
       return {
         result: "ERROR",
-        message: "",
         errorMessage: "Error cerrando sesión",
       };
     }

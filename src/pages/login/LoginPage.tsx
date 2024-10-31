@@ -7,11 +7,13 @@ import { useAuhtStore } from "../../stores";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "../../services/auth.service";
 import { useState } from "react";
-
+import { User } from "../../interfaces/User";
 
 export const LoginPage = () => {
-    const [isError, setIsError] = useState<string | null>(null)
+  const [isError, setIsError] = useState<string | null>(null);
+  const setNewUser = useAuhtStore((state) => state.setNewUser);
   const setIsAuth = useAuhtStore((state) => state.setIsAuth);
+  const setToken = useAuhtStore((state) => state.setToken);
   const navigate = useNavigate();
   const {
     register,
@@ -20,28 +22,33 @@ export const LoginPage = () => {
   } = useForm();
 
   const translateErrorMessage = (message: string): string => {
-    if (message.includes('auth/invalid-credential'))
-        return 'Usuario o Contraseña incorrectos!'
-    else if (message.includes('auth/too-many-requests'))
-        return 'Demasiados intentos fallidos, usuario bloqueado! Informe al administrador.';
+    if (message.includes("auth/invalid-credential"))
+      return "Usuario o Contraseña incorrectos!";
+    else if (message.includes("auth/too-many-requests"))
+      return "Demasiados intentos fallidos, usuario bloqueado! Informe al administrador.";
 
     return message;
-  }
+  };
 
   const onSubmit = async (data: Login) => {
     const signInResponse = await AuthService.signIn(data.email, data.password);
-    if (signInResponse.result === 'OK') {
-        setIsAuth(true);
-        navigate("/home");
+    
+    if (signInResponse.result === "OK") {
+      setIsAuth(true);
+      setToken(await signInResponse.firebaseUser?.getIdToken() || '');
+      setNewUser(signInResponse.user as User)
+      navigate("/home");
     } else {
-        setIsError(translateErrorMessage(signInResponse.error as string) ?? 'Error al intentar iniciar sesion')
+      setIsError(translateErrorMessage(signInResponse.error as string));
     }
   };
 
-
   return (
     <div className="login">
-      <form className="login__form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
+      <form
+        className="login__form"
+        onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
+      >
         <img className="login__logo" src={Logo} />
         <input
           {...register("email", { required: true })}
