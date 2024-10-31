@@ -38,7 +38,6 @@ export default function WorksgroupTable() {
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
-  const setWorkgroups = useWorkgroupStore((state) => state.setWorkgroups);
   const users = useUsersStore((state) => state.users);
 
   const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -142,38 +141,6 @@ export default function WorksgroupTable() {
       ],
     },
   ];
-
-  useEffect(() => {
-    try {
-      setIsLoading(true);
-    const usersRef = ref(db, "workgroups");
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val();
-
-      if (data) {
-        const values: Workgroup[] = Object.entries<Workgroup>(data).map(
-          ([key, value]) => ({ ...value, key })
-        ) as Workgroup[];
-        
-        setWorkgroups(
-          values.filter((wg) => wg.isActive) as unknown as Workgroup[]
-        );
-      } else setWorkgroups([]);
-
-    });
-    } catch (error) {
-      console.error('Error al intentar cargar los grupos de trabajo. ', {error});
-      setWorkgroups([])
-      setSnackbar({
-        open: true,
-        message: 'Error al intentar cargar los grupos de trabajo',
-        severity: "error",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-    
-  }, [setIsLoading, setSnackbar, setWorkgroups]);
 
   const handleDeleteWorkgroup = async (workgroup: Workgroup) => {
     const deleteResult = await WorkgroupService.deleteWorkgroup(workgroup);

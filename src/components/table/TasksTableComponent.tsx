@@ -16,18 +16,19 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { GetProjectNameByKey, GetUserNameByKey, translateStatus, translateTimestampToString } from "../../utils/utils";
 import { useUsersStore } from "../../stores/users/users.store";
 import { useProjectsStore } from "../../stores/projects/projects.store";
-import { useLoadData } from "../../hooks/useLoadData";
 import { TaskService } from "../../services/task.service";
+import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function TasksTable() {
-  useLoadData();
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const tasks = useTasksStore(state => state.tasks);
   const users = useUsersStore(state => state.users);
   const projects = useProjectsStore(state => state.projects);
+  const modal = useUiStore((state) => state.modal);
+  const setModal = useUiStore((state) => state.setModal);
 
   const columns: GridColDef[] = [
     {
@@ -171,10 +172,16 @@ export default function TasksTable() {
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
-          onClick={() => console.log({ params })}
-          label="Modificar"
-          showInMenu
-        />,
+            onClick={() => setModal({
+              ...modal,
+              open: true,
+              title: "Modificar Tarea",
+              text: "Ingrese los datos a modificar.",
+              content: <TasksFormComponent editingTask={params.row}/>,
+            })}
+            label="Modificar"
+            showInMenu
+          />,
         <GridActionsCellItem
           onClick={() => handleDeleteConfirmation(params.row)}
           label="Eliminar"
@@ -182,7 +189,7 @@ export default function TasksTable() {
         />,
       ],
     },
-  ];  
+  ];
 
   const handleDeleteTask = async (task: Task) => {
     task.status = 'DELETED';

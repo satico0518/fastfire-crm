@@ -1,6 +1,3 @@
-import { useEffect } from "react";
-import { onValue, ref } from "firebase/database";
-import { db } from "../../firebase/firebase.config";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { useProjectsStore } from "../../stores/projects/projects.store";
 import { ProjectService } from "../../services/project.service";
@@ -21,15 +18,16 @@ import {
   translateStatus,
   translateTimestampToString,
 } from "../../utils/utils";
+import { useEffect } from "react";
+import { CitiesService } from "../../services/cities.service";
+import { useCitiesStore } from "../../stores/cities/cities.store";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function ProjectsTable() {
-  const setIsLoading = useUiStore((state) => state.setIsLoading);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const projects = useProjectsStore((state) => state.projects);
-  const setProjects = useProjectsStore((state) => state.setProjects);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
 
@@ -38,7 +36,7 @@ export default function ProjectsTable() {
       field: "name",
       headerName: "Nombre",
       type: "string",
-      width: 250,
+      width: 300,
       renderCell: ({ row }: GridRenderCellParams<Project>) => (
         <span
           style={{
@@ -53,7 +51,7 @@ export default function ProjectsTable() {
       field: "status",
       headerName: "Estado",
       type: "string",
-      width: 200,
+      width: 250,
       renderCell: (params: GridRenderCellParams<Project>) => (
         <>
           {params.row.status === "IN_PROGRESS" && (
@@ -123,21 +121,20 @@ export default function ProjectsTable() {
       field: "createdDate",
       headerName: "Fecha Creacion",
       type: "string",
-      width: 200,
+      width: 250,
       valueGetter: (value) => translateTimestampToString(value),
     },
     {
       field: "budget",
       headerName: "Presupuesto",
       type: "number",
-      width: 150,
-      editable: true,
+      width: 200,
       valueGetter: (value) => formatToCOP(value),
     },
     {
       field: "actions",
       type: "actions",
-      width: 100,
+      headerAlign: 'right',
       align: "right",
       getActions: (params: GridRowParams<Project>) => {
         if (params.row.status === "DONE")
@@ -178,28 +175,6 @@ export default function ProjectsTable() {
       },
     },
   ];
-
-  useEffect(() => {
-    setIsLoading(true);
-    const projectsRef = ref(db, "projects");
-    onValue(projectsRef, (snapshot) => {
-      const data = snapshot.val();
-
-      if (data) {
-        const values = Object.entries<{ value: Project }>(data).map(
-          ([key, value]) => ({ ...value, key })
-        );
-
-        setProjects(
-          (values as unknown as Project[]).filter(
-            (val) => val.status !== "DELETED"
-          )
-        );
-      } else setProjects([]);
-
-      setIsLoading(false);
-    });
-  }, [setIsLoading, setProjects]);
 
   const handleDeleteProject = async (projectKey: string) => {
     const deleteResult = await ProjectService.deleteProject(projectKey);

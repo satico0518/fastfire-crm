@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { SubmitHandler, FieldValues, useForm } from "react-hook-form";
-import { onValue, ref } from "firebase/database";
-import { auth, db } from "../../firebase/firebase.config";
+import { auth } from "../../firebase/firebase.config";
 import { Project } from "../../interfaces/Project";
-import { AutocompleteField } from "../../interfaces/Shared";
-import { GetUserNameByKey } from "../../utils/utils";
-import { User } from "../../interfaces/User";
+import { AutocompleteField, Status } from "../../interfaces/Shared";
+import { GetProjectNameByKey, GetUserNameByKey } from "../../utils/utils";
 
 import {
   Stack,
@@ -24,12 +22,19 @@ import { useUsersStore } from "../../stores/users/users.store";
 import { useProjectsStore } from "../../stores/projects/projects.store";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { TaskService } from "../../services/task.service";
-import { Task } from "../../interfaces/Task";
+import { Task, TaskEvent } from "../../interfaces/Task";
 import { useTagsStore } from "../../stores/tags/tags.store";
 import { TagsService } from "../../services/tags.service";
 import { Tag } from "../../interfaces/Tag";
+import { User } from "../../interfaces/User";
+import { useTasksStore } from "../../stores/tasks/tasks.store";
+import dayjs from "dayjs";
 
-export const TasksFormComponent = () => {
+interface ProjectsFormComponentProps {
+  editingTask?: Task
+}
+
+export const TasksFormComponent = ({editingTask}: ProjectsFormComponentProps) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
@@ -37,11 +42,9 @@ export const TasksFormComponent = () => {
   const snackbar = useUiStore((state) => state.snackbar);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const users = useUsersStore((state) => state.users);
-  const setUsers = useUsersStore((state) => state.setUsers);
+  const tasks = useTasksStore((state) => state.tasks);
   const projects = useProjectsStore((state) => state.projects);
-  const setProjects = useProjectsStore((state) => state.setProjects);
   const tags = useTagsStore((state) => state.tags);
-  const setTags = useTagsStore((state) => state.setTags);
 
   const {
     setValue,
@@ -51,56 +54,14 @@ export const TasksFormComponent = () => {
   } = useForm();
 
   useEffect(() => {
-    setIsLoading(true);
-    const usersRef = ref(db, "users");
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val();
-
-      if (data) {
-        const values: User[] = Object.entries<User>(data).map(
-          ([key, value]) => ({ ...value, key })
-        ) as User[];
-        setUsers(values.filter((user) => user.isActive) as unknown as User[]);
-      } else setUsers([]);
-
-      setIsLoading(false);
-    });
-  }, [setIsLoading, setUsers]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    const projects = ref(db, "projects");
-    onValue(projects, (snapshot) => {
-      const data = snapshot.val();
-
-      if (data) {
-        const values: Project[] = Object.entries<Project>(data).map(
-          ([key, value]) => ({ ...value, key })
-        ) as Project[];
-        setProjects(
-          values.filter(
-            (project) => project.status !== "DELETED"
-          ) as unknown as Project[]
-        );
-      } else setProjects([]);
-
-      setIsLoading(false);
-    });
-  }, [setIsLoading, setProjects]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    const tagsRef = ref(db, "tags");
-    onValue(tagsRef, (snapshot) => {
-      const data = snapshot.val();
-
-      if (data) {
-        setTags(data);
-      } else setTags([]);
-
-      setIsLoading(false);
-    });
-  }, [setIsLoading, setTags]);
+    if (editingTask) {
+      setValue('name', editingTask.name);
+      setValue('projectId', editingTask.projectId );
+      setValue('ownerId',editingTask.ownerId);
+      setValue("dueDate", dayjs(editingTask.dueDate).format("DD/MM/YYYY"))
+      setSelectedTags(editingTask.tags.map((t, i) => ({[i]: t})))
+    }
+  }, [editingTask, projects, setValue, users])
 
   const handleAddTag = (tag: Tag | string) => {
     if (!Object.values(tags).some((t) => t === tag)) {
@@ -129,18 +90,37 @@ export const TasksFormComponent = () => {
       }
 
       data.tags = selectedTags as unknown as string[];
-      data.createdByUserKey = currentUserKey;
-      console.log({ data });
 
       setModal({ ...modal, open: false });
       setIsLoading(true);
 
-      const response = await TaskService.createTask(data);
+      let response;
+      if (editingTask){
+        const originalTask = tasks?.filter(t => t.id === editingTask.id)[0];
+        const history: TaskEvent = {
+          originalName: originalTask?.name as string,
+          newName: editingTask.name,
+          modifiedDate: Date.now(),
+          modifierUserId: auth.currentUser?.uid ?? 'NA',
+          originalDueDate: originalTask?.dueDate as Date,
+          newDueDate: editingTask.dueDate as Date,
+          originalOwnerId: originalTask?.ownerId as string,
+          newOwnerId: editingTask.ownerId,
+          originalStatus: originalTask?.status as Status,
+          newStatus: editingTask.status,
+        };
+        editingTask.history = [...(originalTask?.history ?? []), history];
+        response = await TaskService.updateTask(editingTask);
+      } else {
+        data.createdByUserKey = currentUserKey;
+        response = await TaskService.createTask(data);
+      }
+
       if (response.result === "OK") {
         setSnackbar({
           ...snackbar,
           open: true,
-          message: "Proyecto creado exitosamente!",
+          message: `Tarea ${editingTask ? 'modificada' : 'creada'} exitosamente!`,
           severity: "success",
         });
       } else {
@@ -153,11 +133,11 @@ export const TasksFormComponent = () => {
       }
       setSelectedTags([]);
     } catch (error) {
-      console.error("Error creando tarea.", { error });
+      console.error(`Error ${editingTask ? 'modificando' : 'creando'} tarea.`, { error });
       setSnackbar({
         ...snackbar,
         open: true,
-        message: "Error creando tarea.",
+        message: `Error ${editingTask ? 'modificando' : 'creando'} tarea.`,
         severity: "error",
       });
     } finally {
@@ -188,6 +168,10 @@ export const TasksFormComponent = () => {
             })) as readonly AutocompleteField[]
           }
           fullWidth
+          value={editingTask && {
+            key: projects?.filter(p => p.id === editingTask.projectId)[0].key,
+            label: GetProjectNameByKey(editingTask.projectId, projects as Project[])
+          } }
           onChange={(_, options) => setValue("projectId", options?.key)}
           renderInput={(params) => (
             <TextField
@@ -213,6 +197,10 @@ export const TasksFormComponent = () => {
           }
           includeInputInList
           fullWidth
+          value={editingTask && {
+            key: users?.filter(u => u.key === editingTask.ownerId)[0].key,
+            label: GetUserNameByKey(editingTask.ownerId, users as User[])
+          }}
           onChange={(_, options) => setValue("ownerId", options?.key)}
           renderInput={(params) => (
             <TextField
@@ -232,11 +220,12 @@ export const TasksFormComponent = () => {
           <DatePicker
             disablePast
             format={"DD/MM/YYYY"}
-            label="Fecha de Vencimiento"
+            label="Fecha Límite"
             name="dueDate"
             onChange={(val, _) =>
               setValue("dueDate", val?.format("DD/MM/YYYY"))
             }
+            value={editingTask && dayjs(editingTask.dueDate)}
           />
         </LocalizationProvider>
         <div style={{ maxWidth: "500px" }}>
@@ -250,7 +239,7 @@ export const TasksFormComponent = () => {
 
               return (
                 <div
-                  key={st as string}
+                  key={Object.values(st)[0] as string}
                   className="selected-chip"
                 >
                   <Chip
@@ -303,7 +292,7 @@ export const TasksFormComponent = () => {
           size="large"
           color="success"
         >
-          Crear Tarea
+          {editingTask ? 'Editar Tarea' : 'Crear Tarea'}
         </Button>
       </Stack>
     </form>

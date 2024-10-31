@@ -23,13 +23,14 @@ export const Header = () => {
     if (response?.result === 'OK')
       setIsAuth(false);
     else {
-      setIsLoading(false);
       setSnackbar({
         open: true,
         severity: 'error',
         message: response.errorMessage ?? 'Error cerrando sesión!',
       })
     }
+
+    setIsLoading(false);
   }
 
   return (

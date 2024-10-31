@@ -58,6 +58,7 @@ export const LoginPage = () => {
 
         <input
           {...register("password", { required: true })}
+          value="Ff12345"
           type="password"
           placeholder="Contraseña"
         />

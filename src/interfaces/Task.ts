@@ -10,11 +10,13 @@ export interface Note {
 export interface TaskEvent {
     originalStatus: Status;
     newStatus?: Status;
-    originalOwnerUserId: string; 
-    newOwnerUserId?: string;
+    originalName: string; 
+    newName: string;
+    originalOwnerId: string; 
+    newOwnerId?: string;
     originalDueDate: Date;
     newDueDate?: Date;
-    modifiedDate: Date;
+    modifiedDate: number;
     modifierUserId: string;
 }
 

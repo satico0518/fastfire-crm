@@ -81,7 +81,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         setSnackbar({
           ...snackbar,
           open: true,
-          message: "Usuario creado exitosamente!",
+          message: `Usuario ${editingUser ? 'editado' : 'creado'} exitosamente!`,
           severity: "success",
         });
       } else {
@@ -130,7 +130,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
           autoCapitalize="words"
           required
         />
-        <TextField
+        {!editingUser && <TextField
           label="Correo"
           type="email"
           {...register("email", { required: true })}
@@ -140,7 +140,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
           helperText={errors.email?.message as string}
           required
           autoCapitalize="none"
-        />
+        />}
         <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
           <FormLabel component="legend">Permisos</FormLabel>
           <FormGroup>
