@@ -13,9 +13,14 @@ import { TabPanelProps } from "../../interfaces/Tabs";
 import UsersTable from "../../components/table/UsersTableComponent";
 import { WorkgroupsFormComponent } from "../../components/workgroups-form/WorkgroupsFormComponent";
 import WorksgroupTable from "../../components/table/WorkgroupsTableComponent";
+import { useAuhtStore } from "../../stores";
+import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
+  const user = useAuhtStore((state) => state.user);
+
+  if (!user?.permissions.includes('TYP')) return <UnauthorizedPage />
 
   return (
     <div

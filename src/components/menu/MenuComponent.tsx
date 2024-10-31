@@ -7,6 +7,7 @@ import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined';
 
 export const MenuComponent = () => {
   const isAuth = useAuhtStore((state) => state.isAuth);
+  const currentUser = useAuhtStore((state) => state.user);
 
   if (!isAuth) return null;
 
@@ -14,7 +15,7 @@ export const MenuComponent = () => {
     <div className="menu opened">
       <div className="menu__menu-items">
         <ul>
-          <li>
+          {currentUser?.permissions.includes('TYP') && <li>
             <NavLink
               to="/tasks"
               className={({ isActive, isPending }) =>
@@ -23,8 +24,8 @@ export const MenuComponent = () => {
             >
               <TaskAltIcon titleAccess="Proyectos y Tareas" sx={{position: 'relative', top: '6px'}}/> T&P
             </NavLink>
-          </li>
-          <li>
+          </li>}
+          {currentUser?.permissions.includes('PURCHASE') && <li>
             <NavLink
               to="/purchasing-manager"
               className={({ isActive, isPending }) =>
@@ -33,8 +34,8 @@ export const MenuComponent = () => {
             >
               <AddShoppingCartOutlinedIcon titleAccess="Gestor de Compras" sx={{position: 'relative', top: '6px'}}/> Compras
             </NavLink>
-          </li>
-          <li>
+          </li>}
+          {currentUser?.permissions.includes('ADMIN') && <li>
             <NavLink
               to="/admin"
               className={({ isActive, isPending }) =>
@@ -43,7 +44,7 @@ export const MenuComponent = () => {
             >
               <BuildCircleOutlinedIcon titleAccess="Administrador" sx={{position: 'relative', top: '6px'}}/> Admin
             </NavLink>
-          </li>
+          </li>}
           {/* <li>
           <NavLink
             to="/home"
