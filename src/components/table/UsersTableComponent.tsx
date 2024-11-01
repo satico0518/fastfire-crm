@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -13,8 +12,10 @@ import userNoImage from "../../assets/img/user-no-image.png";
 import { Button, Chip } from "@mui/material";
 import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
-import { translateAccess } from "../../utils/utils";
+import { GetWorkgroupNameByKey, translateAccess } from "../../utils/utils";
 import { UserFormComponent } from "../user-form/UserFormComponent";
+import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
+import { Workgroup } from "../../interfaces/Workgroup";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -22,6 +23,7 @@ export default function UsersTable() {
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const users = useUsersStore(state => state.users);
+  const workgroups = useWorkgroupStore(state => state.workgroups);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
 
@@ -50,6 +52,19 @@ export default function UsersTable() {
       headerName: "Correo",
       type: "string",
       width: 350,
+    },
+    {
+      field: "workgroupKeys",
+      headerName: "Grupos de trabajo",
+      type: "string",
+      width: 400,
+      renderCell: (params: GridRenderCellParams<User>) => (
+        <div className="permissions">
+          {params.row.workgroupKeys.map((wg: string) => (
+            <Chip size="small" key={wg} label={GetWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
+          ))}
+        </div>
+      ),
     },
     {
       field: "permissions",

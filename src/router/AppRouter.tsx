@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 
-import { TasksPage } from "../pages/tasks-projects/TasksProjectsPage";
-import { ProjectsPage } from "../pages/projects/ProjectsPage";
+import { TasksPage } from "../pages/tasks-groups/TasksGroupsPage";
 import { HomePage } from "../pages/home/HomePage";
 import { LoginPage } from "../pages/login/LoginPage";
 import { PurchasingManagerPage } from "../pages/purchasing-manager/PurchasingManagerPage";
@@ -21,9 +20,6 @@ export const AppRouter = () => {
       <Routes>
         <Route element={<ProtectedRoute />}>
           <Route path="/tasks" element={<TasksPage />} />
-        </Route>
-        <Route element={<ProtectedRoute />}>
-          <Route path="/projects" element={<ProjectsPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route

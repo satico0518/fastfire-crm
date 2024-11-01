@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -22,12 +21,11 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { WorkgroupService } from "../../services/workgroup.service";
 
-import { onValue, ref } from "firebase/database";
-import { db } from "../../firebase/firebase.config";
 import { useUsersStore } from "../../stores/users/users.store";
 import { GetUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
+import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -128,6 +126,19 @@ export default function WorksgroupTable() {
       width: 100,
       align: "right",
       getActions: (params: GridRowParams<Workgroup>) => [
+        <GridActionsCellItem
+          onClick={() => 
+            setModal({
+              ...modal,
+              open: true,
+              title: "Nueva Tarea",
+              text: "Ingrese los datos de la tarea.",
+              content: <TasksFormComponent workgroupKey={params.row.key as string}/>,
+            })
+          }
+          label="Nueva tarea"
+          showInMenu
+        />,
         <GridActionsCellItem
           onClick={() => handleModifyWorkgroup(params.row)}
           label="Modificar"

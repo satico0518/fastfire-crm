@@ -1,6 +1,7 @@
 import { Project } from "../interfaces/Project";
 import { Status } from "../interfaces/Shared";
 import { Access, User } from "../interfaces/User";
+import { Workgroup } from "../interfaces/Workgroup";
 
 export const formatToCOP = (value: number): string => {
   const options: Intl.NumberFormatOptions = {
@@ -19,8 +20,8 @@ export const translateAccess = (access: Access) => {
       return access;
     case "PURCHASE":
       return "COMPRAS";
-    case "TYP":
-      return "T&P";
+    case "TYG":
+      return "T&G";
     default:
       return "NA";
   }
@@ -44,17 +45,12 @@ export const translateStatus = (status: Status): string => {
 };
 
 export const translateTimestampToString = (date: number): string => {
-  interface FormatOptions {
-    year: "numeric" | "2-digit";
-    month: "numeric" | "2-digit" | "long" | "short";
-    day: "numeric" | "2-digit";
-    // Puedes agregar más opciones según tus necesidades
-  }
-
-  const options: FormatOptions = {
+  const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
     day: "numeric",
+    hour: '2-digit',
+    minute: '2-digit',
   };
 
   const formatter = new Intl.DateTimeFormat("es-ES", options);
@@ -74,6 +70,14 @@ export const GetProjectNameByKey = (projectKey: string, projects: Project[]) => 
   if (projects.length) {
     const project = projects.filter((p) => p.key === projectKey)[0];
     return project.name;
+  }
+  return "NA";
+};
+
+export const GetWorkgroupNameByKey = (workgroupKey: string, workgroups: Workgroup[]) => {
+  if (workgroups.length) {
+    const workgroup = workgroups.filter((wg) => wg.key === workgroupKey)[0];
+    return workgroup.name;
   }
   return "NA";
 };

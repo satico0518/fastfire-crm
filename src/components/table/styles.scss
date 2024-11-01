@@ -1,25 +1,35 @@
 .user-image {
-    width: 34px;
-    position: relative;
-    top: 10px
+  width: 34px;
+  position: relative;
+  top: 10px;
 }
 
-.permissions {
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    height: 100%;
-    gap: 8px;
+.permissions,
+.tags {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  height: 100%;
+  gap: 8px;
+}
+
+.no-owner {
+  background-color: crimson;
+  color: white;
+  font-weight: bolder;
+  border-radius: 10px;
+  padding: 0 3px;
+  text-align: center;
 }
 
 .members {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 5px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .members-cell {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }

@@ -5,22 +5,19 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import { Button } from "@mui/material";
 import PersonAddAltOutlinedIcon from "@mui/icons-material/PersonAddAltOutlined";
-import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+import DomainAddOutlinedIcon from "@mui/icons-material/DomainAddOutlined";
 
 import { useUiStore } from "../../stores/ui/ui.store";
 import { UserFormComponent } from "../../components/user-form/UserFormComponent";
 import { TabPanelProps } from "../../interfaces/Tabs";
 import UsersTable from "../../components/table/UsersTableComponent";
-import { WorkgroupsFormComponent } from "../../components/workgroups-form/WorkgroupsFormComponent";
-import WorksgroupTable from "../../components/table/WorkgroupsTableComponent";
 import { useAuhtStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
+import ProjectsTable from "../../components/table/ProjectsTableComponent";
+import { ProjectsFormComponent } from "../../components/projects-form/ProjectsFormComponent";
 
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
-  const user = useAuhtStore((state) => state.user);
-
-  if (!user?.permissions.includes('TYP')) return <UnauthorizedPage />
 
   return (
     <div
@@ -46,6 +43,9 @@ export const AdministratorPage = () => {
   const [tabsValue, setTabsValue] = React.useState(0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
+  const user = useAuhtStore((state) => state.user);
+
+  if (!user?.permissions.includes('ADMIN')) return <UnauthorizedPage />
 
   const handleTabsChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
@@ -61,7 +61,7 @@ export const AdministratorPage = () => {
           aria-label="basic tabs example"
         >
           <Tab label="Listado de Usuarios" {...a11yProps(0)} />
-          <Tab label="Grupos de trabajo" {...a11yProps(1)} />
+          <Tab label="Proyectos" {...a11yProps(1)} />
           {/* <Tab label="Item Three" {...a11yProps(2)} /> */}
         </Tabs>
       </Box>
@@ -72,8 +72,8 @@ export const AdministratorPage = () => {
             setModal({
               ...modal,
               open: true,
-              title: "Crear Usuario",
-              text: "Ingrese los datos del nuevo usuario y asigne los permisos.",
+              title: "Nuevo Usuario",
+              text: "Ingrese los datos del usuario y asigne los permisos.",
               content: <UserFormComponent />,
             })
           }
@@ -83,20 +83,20 @@ export const AdministratorPage = () => {
         </Button>
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={1}>
-        <WorksgroupTable />
+      <ProjectsTable />
         <Button
           onClick={() =>
             setModal({
               ...modal,
               open: true,
-              title: "Crear Grupo de Trabajo",
-              text: "Ingrese los datos del nuevo grupo de trabajo.",
-              content: <WorkgroupsFormComponent />,
+              title: "Nuevo Proyecto",
+              text: "Ingrese los datos del proyecto.",
+              content: <ProjectsFormComponent />,
             })
           }
           sx={{ color: "white", top: '10px' }}
         >
-          <GroupAddOutlinedIcon />
+          <DomainAddOutlinedIcon />
         </Button>
       </CustomTabPanel>
       {/* <CustomTabPanel value={value} index={2}>

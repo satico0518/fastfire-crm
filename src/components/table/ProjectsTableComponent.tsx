@@ -18,9 +18,6 @@ import {
   translateStatus,
   translateTimestampToString,
 } from "../../utils/utils";
-import { useEffect } from "react";
-import { CitiesService } from "../../services/cities.service";
-import { useCitiesStore } from "../../stores/cities/cities.store";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
