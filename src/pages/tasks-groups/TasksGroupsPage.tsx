@@ -16,7 +16,7 @@ export const TasksPage = () => {
   const setModal = useUiStore((state) => state.setModal);
   const user = useAuhtStore((state) => state.user);
 
-  const handleTabsChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
   };
 

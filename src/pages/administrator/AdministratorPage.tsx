@@ -47,7 +47,7 @@ export const AdministratorPage = () => {
 
   if (!user?.permissions.includes('ADMIN')) return <UnauthorizedPage />
 
-  const handleTabsChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
   };
 
