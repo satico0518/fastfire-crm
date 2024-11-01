@@ -10,7 +10,7 @@ import { User } from "../interfaces/User";
 import { ServiceResponse } from "../interfaces/Shared";
 
 export class AuthService {
-  static async createUser(user: User): Promise<FirebaseSignInOrCreateResponse> {
+  static async createUser(user: User): Promise<ServiceResponse> {
     try {
       const createUserResponse = await createUserWithEmailAndPassword(
         auth,
@@ -28,16 +28,14 @@ export class AuthService {
 
         return {
           result: "OK",
-          user: createUserResponse.user,
-          error: undefined,
         };
       }
 
       return {
         result: "ERROR",
-        error: "Error al intentar crear usuario, intente de nuevo!",
+        errorMessage: "Error al intentar crear usuario, intente de nuevo!",
       };
-    } catch (error) {
+    } catch (error: any) {
       let message;
       if (error?.code && error?.code.includes("auth/email-already-in-use")) {
         message = "Este usuario ya fue creado!";
@@ -46,7 +44,7 @@ export class AuthService {
       console.error({ error });
       return {
         result: "ERROR",
-        error: message ?? "Error al intentar crear usuario",
+        errorMessage: message ?? "Error al intentar crear usuario",
       };
     }
   }

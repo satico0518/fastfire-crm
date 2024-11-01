@@ -1,4 +1,4 @@
-export type Access = 'TYP'|'ADMIN'|'PURCHASE' 
+export type Access = 'TYG'|'ADMIN'|'PURCHASE' 
 export interface User {
     id?: string,
     key?: string,
@@ -7,4 +7,5 @@ export interface User {
     lastName: string;
     email: string;
     permissions: Access[];
+    workgroupKeys: string[];
 }

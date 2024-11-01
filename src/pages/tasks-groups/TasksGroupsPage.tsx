@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { Box, Button, Tab, Tabs } from "@mui/material";
-import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
-import DomainAddOutlinedIcon from "@mui/icons-material/DomainAddOutlined";
-
-import { UserFormComponent } from "../../components/user-form/UserFormComponent";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 
 import { TabPanelProps } from "../../interfaces/Tabs";
 import { useUiStore } from "../../stores/ui/ui.store";
 import TasksTable from "../../components/table/TasksTableComponent";
-import ProjectsTable from "../../components/table/ProjectsTableComponent";
-import { ProjectsFormComponent } from "../../components/projects-form/ProjectsFormComponent";
-import { TasksFormComponent } from "../../components/tasks-form/TasksFormComponent";
 import { useAuhtStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
+import WorksgroupTable from "../../components/table/WorkgroupsTableComponent";
+import { WorkgroupsFormComponent } from "../../components/workgroups-form/WorkgroupsFormComponent";
 
 export const TasksPage = () => {
   const [tabsValue, setTabsValue] = useState(0);
@@ -20,14 +16,14 @@ export const TasksPage = () => {
   const setModal = useUiStore((state) => state.setModal);
   const user = useAuhtStore((state) => state.user);
 
-  const handleTabsChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
   };
 
   const CustomTabPanel = (props: TabPanelProps) => {
     const { children, value, index, ...other } = props;
 
-    if (!user?.permissions.includes('TYP')) return <UnauthorizedPage />
+    if (!user?.permissions.includes("TYG")) return <UnauthorizedPage />;
 
     return (
       <div
@@ -59,42 +55,43 @@ export const TasksPage = () => {
           aria-label="basic tabs example"
         >
           <Tab label="Tareas" {...a11yProps(0)} />
-          <Tab label="Proyectos" {...a11yProps(1)} />
+          <Tab label="Grupos de trabajo" {...a11yProps(1)} />
           {/* <Tab label="Item Three" {...a11yProps(2)} /> */}
         </Tabs>
       </Box>
       <CustomTabPanel value={tabsValue} index={0}>
         <TasksTable />
-        <Button
+        {/* <Button
           onClick={() =>
             setModal({
               ...modal,
               open: true,
-              title: "Crear Tarea",
-              text: "Ingrese los datos de la nueva tarea.",
+              title: "Nueva Tarea",
+              text: "Ingrese los datos de la tarea.",
               content: <TasksFormComponent />,
             })
           }
           sx={{ color: "white", top: "10px" }}
         >
           <AddTaskOutlinedIcon />
-        </Button>
+        </Button> */}
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={1}>
-        <ProjectsTable />
+        <WorksgroupTable />
         <Button
+          title="Crear nuevo grupo de trabajo"
           onClick={() =>
             setModal({
               ...modal,
               open: true,
-              title: "Crear Proyecto",
-              text: "Ingrese los datos del nuevo proyecto.",
-              content: <ProjectsFormComponent />,
+              title: "Nuevo Grupo de trabajo",
+              text: "Ingrese los datos del nuevo grupo.",
+              content: <WorkgroupsFormComponent />,
             })
           }
           sx={{ color: "white", top: "10px" }}
         >
-          <DomainAddOutlinedIcon />
+          <GroupAddOutlinedIcon />
         </Button>
       </CustomTabPanel>
       {/* <CustomTabPanel value={tabsValue} index={2}>

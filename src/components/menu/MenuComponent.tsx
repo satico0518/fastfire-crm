@@ -15,14 +15,14 @@ export const MenuComponent = () => {
     <div className="menu opened">
       <div className="menu__menu-items">
         <ul>
-          {currentUser?.permissions.includes('TYP') && <li>
+          {currentUser?.permissions.includes('TYG') && <li>
             <NavLink
               to="/tasks"
               className={({ isActive, isPending }) =>
                 isPending ? "pending" : isActive ? "active" : ""
               }
             >
-              <TaskAltIcon titleAccess="Proyectos y Tareas" sx={{position: 'relative', top: '6px'}}/> T&P
+              <TaskAltIcon titleAccess="Tareas y Grupos de Trabajo" sx={{position: 'relative', top: '6px'}}/> T&G
             </NavLink>
           </li>}
           {currentUser?.permissions.includes('PURCHASE') && <li>

@@ -12,8 +12,8 @@ export interface TaskEvent {
     newStatus?: Status;
     originalName: string; 
     newName: string;
-    originalOwnerId: string; 
-    newOwnerId?: string;
+    originalOwnerKey: string; 
+    newOwnerKey?: string;
     originalDueDate: Date;
     newDueDate?: Date;
     modifiedDate: number;
@@ -21,16 +21,17 @@ export interface TaskEvent {
 }
 
 export interface Task {
+    [key: string]: unknown;
     id: string;
     key?: string;
     avatarURL?: string; 
     name: string;
-    ownerId: string;
+    ownerKey?: string;
     history: TaskEvent[];
     createdDate: number;
     dueDate: Date;
     createdByUserKey: string;
-    projectId: string;
+    workgroupKey: string;
     tags: string[];
     status: Status;
     notes: Note[];
