@@ -25,10 +25,15 @@ import { TaskService } from "../../services/task.service";
 import { RefObject, useRef } from "react";
 import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
+import { Workgroup } from "../../interfaces/Workgroup";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
-export default function TasksTable() {
+interface TasksTableProps {
+  workgroup: Workgroup;
+}
+
+export default function TasksTable({workgroup}: TasksTableProps) {
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
@@ -90,7 +95,7 @@ export default function TasksTable() {
       field: "name",
       headerName: "Nombre",
       type: "string",
-      width: 150,
+      width: 250,
       editable: true,
       renderEditCell: (params: GridRenderEditCellParams<Task>) => (
         <>
@@ -199,7 +204,7 @@ export default function TasksTable() {
       headerName: "Grupo de Trabajo",
       type: "string",
       width: 150,
-      valueGetter: (value) => workgroups?.filter(wg => wg.key === value)[0].name,
+      valueGetter: (value) => workgroups?.filter(wg => wg.key === value)[0]?.name || 'Sin Nombre',
     },
     {
       field: "ownerKey",
@@ -291,10 +296,16 @@ export default function TasksTable() {
   };
 
   const getTaskByRole = (): Task[] => {
+    if (workgroup) {
+      return tasks?.filter(t => t.workgroupKey === workgroup.key) as Task[]
+    }
+
     if (!currentUser?.permissions.includes('ADMIN'))
-        return tasks?.filter(t => currentUser?.workgroupKeys.some(wg => t.workgroupKey === wg)) as Task[]
+        return tasks?.
+          filter(t => currentUser?.workgroupKeys.some(wg => t.workgroupKey === wg)).
+          filter(t => t.status !== 'DELETED') as Task[];
     
-    return tasks !== null ? tasks : [];
+    return tasks !== null ? tasks.filter(t => t.status !== 'DELETED') : [];
   }
 
   return (

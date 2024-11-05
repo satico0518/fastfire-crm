@@ -11,6 +11,7 @@ import { useUiStore } from "../stores/ui/ui.store";
 import ModalComponent from "../components/modal/ModalComponent";
 import { SnackbarComponent } from "../components/snackbar/SnackbarComponent";
 import { ConfirmationComponent } from "../components/confirmation/ConfirmationComponent";
+import { TasksbyGroupPage } from "../pages/tasks-by-group/TasksbyGroupPage";
 
 export const AppRouter = () => {
   const isLoading = useUiStore(state => state.isLoading);
@@ -20,6 +21,9 @@ export const AppRouter = () => {
       <Routes>
         <Route element={<ProtectedRoute />}>
           <Route path="/tasks" element={<TasksPage />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/tasksbygroup" element={<TasksbyGroupPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route

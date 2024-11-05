@@ -26,13 +26,14 @@ export default function ModalComponent() {
   return (
     <React.Fragment>
       <Dialog
-        maxWidth={"xs"}
+        maxWidth={"sm"}
         open={modal.open}
         onClose={handleClose}
       >
         <DialogTitle>{modal.title}</DialogTitle>
         <DialogContent>
           {modal.text && <DialogContentText>{modal.text}</DialogContentText>}
+          <div style={{marginBottom: '20px'}}/>
           {modal.content}
         </DialogContent>
         <DialogActions>

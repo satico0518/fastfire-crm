@@ -1,23 +1,76 @@
 .menu {
-    min-width:169px;
-    height: calc(100vh - 50px);
+  min-width: 220px;
+  height: calc(100vh - 90px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: "width 0.5s ease-in-out";
+  padding: 20px;
+
+  ul {
+    padding: 0;
+  }
+
+  &__menu-items {
+    font-weight: bold;
+  }
+
+  li {
+    list-style: none;
+    line-height: 30px;
+  }
+
+  .active {
+    color: #b4a6fd;
+  }
+
+  &__workgroups {
+    border-top: solid 2px #fcfcfc48;
+    height: 400px;
+    overflow-y: auto;
+  }
+
+  &__workgroups-title {
+    width: 100%;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: space-between;
-    background-color: rgba(0, 0, 0, 0.2);
-    transition: "width 0.5s ease-in-out";
+    margin-top: 8px;
 
-    &__menu-items ul {
-        padding-left: 20px;
-    }
-
-    &__menu-items li {
-        list-style: none;
-        line-height: 40px;
+    span {
         font-weight: bold;
     }
+  }
 
-    .active {
-        color: #b4a6fd;
+  &__workgroups-title-text {
+    cursor: pointer;
+
+    &:hover {
+        color: #a19bc3;
+        font-size: large;
     }
+  }
+
+  &__workgroups-title-actions {
+    cursor: pointer;
+  }
+
+  &__workgroup-item {
+    display: flex;
+    align-items: center;
+
+  }
+
+  &__workgroup-item-icon {
+    padding: 0 5px;
+    border-radius: 5px;
+    margin-right: 10px;
+    font-size: small;
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+    position: relative;
+    top: 4px;
+  }
 }
