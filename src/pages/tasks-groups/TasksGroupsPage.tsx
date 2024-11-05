@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Button, Tab, Tabs } from "@mui/material";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 
@@ -9,12 +9,19 @@ import { useAuhtStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 import WorksgroupTable from "../../components/table/WorkgroupsTableComponent";
 import { WorkgroupsFormComponent } from "../../components/workgroups-form/WorkgroupsFormComponent";
+import { useLocation } from "react-router-dom";
 
 export const TasksPage = () => {
-  const [tabsValue, setTabsValue] = useState(0);
+  const {state} = useLocation();
+  
+  const [tabsValue, setTabsValue] = useState(state?.goTo === 'wg' ? 1 : 0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const user = useAuhtStore((state) => state.user);
+
+  useEffect(() => {
+    setTabsValue(state?.goTo === 'wg' ? 1 : 0);
+  }, [state])
 
   const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);

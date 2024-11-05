@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Groups2OutlinedIcon from "@mui/icons-material/Groups2Outlined";
+import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 
 import { Workgroup } from "../../interfaces/Workgroup";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -26,10 +27,12 @@ import { GetUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
+import { useAuhtStore } from "../../stores";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function WorksgroupTable() {
+  const currentUser = useAuhtStore((state) => state.user);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
@@ -37,6 +40,15 @@ export default function WorksgroupTable() {
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const users = useUsersStore((state) => state.users);
+
+  const isAdmin = currentUser?.permissions.includes("ADMIN");
+  const workgroupsByRole = (): Workgroup[] => {
+    if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
+
+    return workgroups
+      ?.filter((wg) => currentUser?.workgroupKeys.some((key) => wg.key === key))
+      .filter((wg) => wg.isActive) as Workgroup[];
+  };
 
   const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} arrow />
@@ -81,15 +93,15 @@ export default function WorksgroupTable() {
       open: true,
       title: "Modificar Grupo de Trabajo",
       text: "Ingrese los datos a modificar del grupo de trabajo.",
-      content: <WorkgroupsFormComponent editingGroup={workgroup}/>,
-    })
+      content: <WorkgroupsFormComponent editingGroup={workgroup} />,
+    });
   };
 
   const columns: GridColDef[] = [
     {
       field: "name",
       headerName: "Nombre",
-      width: 550,
+      width: 300,
     },
     {
       field: "memberKeys",
@@ -98,27 +110,46 @@ export default function WorksgroupTable() {
       width: 200,
       display: "flex",
       align: "center",
-      renderCell: (params: GridRenderCellParams<Workgroup>) => (
-        <div className="members-cell">
-          <HtmlTooltip
-            title={
-              <div className="members">
-                {params.row.memberKeys.map((key) => (
-                  <Chip
-                    key={key}
-                    size="small"
-                    label={GetUserNameByKey(key, users as User[])}
-                    color="info"
-                    onDelete={() => handleDeleteMember(params.row, key)}
-                  />
-                ))}
-              </div>
-            }
-          >
-            <Groups2OutlinedIcon />
-          </HtmlTooltip>
-        </div>
-      ),
+      renderCell: (params: GridRenderCellParams<Workgroup>) => {
+        if (!params.row.memberKeys?.length)
+          return (
+            <PublicOutlinedIcon
+              titleAccess="Público"
+              fontSize="medium"
+              sx={{
+                marginLeft: "10px",
+                color: "#b8d2e9",
+              }}
+            />
+          );
+
+        return (
+          <div className="members-cell">
+            <HtmlTooltip
+              title={
+                <div className="members">
+                  {params.row.memberKeys.map((key) => (
+                    <Chip
+                      key={key}
+                      size="small"
+                      label={GetUserNameByKey(key, users as User[])}
+                      color="info"
+                      onDelete={() => handleDeleteMember(params.row, key)}
+                    />
+                  ))}
+                </div>
+              }
+            >
+              <Groups2OutlinedIcon />
+            </HtmlTooltip>
+          </div>
+        );
+      },
+    },
+    {
+      field: "description",
+      headerName: "Descripción",
+      width: 450,
     },
     {
       field: "actions",
@@ -127,13 +158,15 @@ export default function WorksgroupTable() {
       align: "right",
       getActions: (params: GridRowParams<Workgroup>) => [
         <GridActionsCellItem
-          onClick={() => 
+          onClick={() =>
             setModal({
               ...modal,
               open: true,
               title: "Nueva Tarea",
               text: "Ingrese los datos de la tarea.",
-              content: <TasksFormComponent workgroupKey={params.row.key as string}/>,
+              content: (
+                <TasksFormComponent workgroupKey={params.row.key as string} />
+              ),
             })
           }
           label="Nueva tarea"
@@ -188,7 +221,7 @@ export default function WorksgroupTable() {
   return (
     <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
       <DataGrid
-        rows={workgroups as Workgroup[]}
+        rows={workgroupsByRole() as Workgroup[]}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}

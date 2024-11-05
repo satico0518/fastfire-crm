@@ -15,26 +15,27 @@ export const useWorkgroupStore = create<WorkgroupState>()(
     workgroups: [],
     loadWorkgroups: async () => {
       try {
-      const usersRef = ref(db, "workgroups");
-      onValue(usersRef, (snapshot) => {
-        const data = snapshot.val();
-  
-        if (data) {
-          const values: Workgroup[] = Object.entries<Workgroup>(data).map(
-            ([key, value]) => ({ ...value, key })
-          ) as Workgroup[];
-          
-          set({workgroups: values.filter((wg) => wg.isActive) as unknown as Workgroup[]});
-        } else set({workgroups: []});
-  
-      });
+        const usersRef = ref(db, "workgroups");
+        onValue(usersRef, (snapshot) => {
+          const data = snapshot.val();
+
+          if (data) {
+            const values: Workgroup[] = Object.entries<Workgroup>(data).map(
+              ([key, value]) => ({ ...value, key })
+            ) as Workgroup[];
+
+            set({ workgroups: values });
+          } else set({ workgroups: [] });
+        });
       } catch (error) {
-        console.error('Error al intentar cargar los grupos de trabajo. ', {error});
-        set({workgroups: []});
-      } 
+        console.error("Error al intentar cargar los grupos de trabajo. ", {
+          error,
+        });
+        set({ workgroups: [] });
+      }
     },
     setWorkgroups: (workgroups: Workgroup[]) => set(() => ({ workgroups })),
   }))
 );
 
-useWorkgroupStore.getState().loadWorkgroups()
+useWorkgroupStore.getState().loadWorkgroups();

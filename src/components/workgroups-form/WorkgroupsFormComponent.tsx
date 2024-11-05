@@ -4,8 +4,8 @@ import {
   Button,
   Chip,
   Stack,
+  Switch,
   TextField,
-  Typography,
 } from "@mui/material";
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -16,6 +16,8 @@ import { useUsersStore } from "../../stores/users/users.store";
 import { GetUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { AutocompleteField } from "../../interfaces/Shared";
+import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
+import { ColorResult } from "react-color";
 
 interface WorkgroupsFormComponentProps {
   editingGroup?: Workgroup;
@@ -24,6 +26,11 @@ interface WorkgroupsFormComponentProps {
 export const WorkgroupsFormComponent = ({
   editingGroup,
 }: WorkgroupsFormComponentProps) => {
+  console.log({ editingGroup });
+
+  const [bgColor, setBgColor] = useState("deepskyblue");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(editingGroup?.isPrivate ?? false);
   const [selectedMembers, setSelectedMembers] = useState<AutocompleteField[]>(
     []
   );
@@ -47,25 +54,31 @@ export const WorkgroupsFormComponent = ({
   useEffect(() => {
     if (editingGroup) {
       setValue("name", editingGroup.name);
-      setSelectedMembers(
-        editingGroup.memberKeys.map((key) => ({
-          key: key,
-          label: GetUserNameByKey(key as string, users as User[]),
-        })) as SetStateAction<AutocompleteField[]>
-      );
+      setValue("description", editingGroup.description ?? "");
+      setIsPrivate(editingGroup.isPrivate);
+      setBgColor(editingGroup.color);
+
+      if (editingGroup.memberKeys?.length > 0) {
+        setSelectedMembers(editingGroup.memberKeys.map((key) => ({
+                key: key,
+                label: GetUserNameByKey(key as string, users as User[]),
+              })) as SetStateAction<AutocompleteField[]>
+        );     
+      }
 
       const availableEditingMembers = users
-        ? users.filter(
-            (user) => !editingGroup.memberKeys.some((key) => user.key === key)
-          )
-        : [];
+          ? users.filter(
+              (user) => !editingGroup.memberKeys?.some((key) => user.key === key)
+            )
+          : [];
 
-      setAvailableMembers(
-        availableEditingMembers?.map((user) => ({
-          key: user.key,
-          label: GetUserNameByKey(user.key as string, users as User[]),
-        })) as SetStateAction<AutocompleteField[]>
-      );
+        setAvailableMembers(
+          availableEditingMembers?.map((user) => ({
+            key: user.key,
+            label: GetUserNameByKey(user.key as string, users as User[]),
+          })) as SetStateAction<AutocompleteField[]>
+        );
+
       return;
     }
 
@@ -81,6 +94,8 @@ export const WorkgroupsFormComponent = ({
     data = {
       ...data,
       isActive: true,
+      color: bgColor,
+      isPrivate,
       memberKeys: selectedMembers.map((sc) => sc.key) as string[],
     };
     setModal({ ...modal, open: false });
@@ -139,63 +154,106 @@ export const WorkgroupsFormComponent = ({
     }
   };
 
+  const handleColorChange = (color: ColorResult) => {
+    setBgColor(color.hex);
+    setShowColorPicker(false);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"} direction={"column"}>
+      <Stack spacing={2} width={"100%"}>
+        <div className="wg-name">
+          <div className="wg-icon" style={{ backgroundColor: bgColor }}>
+            <Button
+              onClick={() => setShowColorPicker(true)}
+              sx={{ color: "white" }}
+            >
+              G
+            </Button>
+            <ColorPickerComponent
+              visible={showColorPicker}
+              handleChange={handleColorChange}
+            />
+          </div>
+          <TextField
+            label="Nombre"
+            type="text"
+            {...register("name", { required: true })}
+            variant="standard"
+            fullWidth
+            error={!!errors.name}
+            helperText={errors.name?.message as string}
+            autoCapitalize="words"
+            required
+            placeholder="P. ej. marketing, ingeniería, RRHH"
+          />
+        </div>
         <TextField
-          label="Nombre"
+          label="Descripción (opcional)"
           type="text"
-          {...register("name", { required: true })}
+          {...register("description")}
           variant="standard"
           fullWidth
-          error={!!errors.name}
-          helperText={errors.name?.message as string}
-          autoCapitalize="words"
-          required
+          autoCapitalize="sentences"
         />
-        <div style={{ maxWidth: "500px" }}>
-          <Typography component="span" fontSize={"15px"}>
-            Colaboradores seleccionados:
-          </Typography>
-          <br />
-          <div className="selected-Members">
-            {selectedMembers.map(({ key, label }) => (
-              <div className="selected-chip">
-                <Chip
-                  key={key}
-                  className="selected-chip"
-                  size="small"
-                  color="success"
-                  label={label}
-                  onDelete={() => handleDeleteMember(key as string)}
-                />
-              </div>
-            ))}
+        <div className="private">
+          <div className="text">
+            <div className="text__title">Hacer Privado</div>
+            <p className="text__content">
+              Solo tu y los colaboradores invitados tienen acceso
+            </p>
           </div>
+          <Switch
+            defaultChecked={isPrivate}
+            value={isPrivate}
+            onChange={() => setIsPrivate(!isPrivate)}
+          />
         </div>
-        <Autocomplete
-          options={availableMembers}
-          includeInputInList
-          sx={{ width: 300 }}
-          fullWidth
-          onChange={(_, options) => {
-            handleSelectedUsersChange(options as AutocompleteField);
-            setValue("colaborators", "");
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              name="colaborators"
-              label="Agrega Colaboradores"
-              type="text"
-              variant="standard"
+        {isPrivate && (
+          <>
+            <div style={{ maxWidth: "500px" }}>
+              <div className="text__title">Colaboradores seleccionados:</div>
+              <br />
+              <div className="selected-colaborators">
+                {selectedMembers.map(({ key, label }) => (
+                  <div key={key} className="selected-chip">
+                    <Chip
+                      key={key}
+                      className="selected-chip"
+                      size="small"
+                      color="success"
+                      label={label}
+                      onDelete={() => handleDeleteMember(key as string)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Autocomplete
+              options={availableMembers}
+              includeInputInList
               fullWidth
-              error={!!errors.location}
-              helperText={errors.location?.message as string}
-              autoCapitalize="words"
+              onChange={(_, options) => {
+                handleSelectedUsersChange(options as AutocompleteField);
+                setValue("colaborators", "");
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  name="colaborators"
+                  label="Agrega Colaboradores"
+                  type="text"
+                  variant="standard"
+                  fullWidth
+                  error={!!errors.location}
+                  helperText={errors.location?.message as string}
+                  autoCapitalize="words"
+                />
+              )}
             />
-          )}
-        />
+          </>
+        )}
+
         <Button
           fullWidth
           type="submit"

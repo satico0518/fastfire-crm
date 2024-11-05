@@ -77,7 +77,7 @@ export const GetProjectNameByKey = (projectKey: string, projects: Project[]) => 
 export const GetWorkgroupNameByKey = (workgroupKey: string, workgroups: Workgroup[]) => {
   if (workgroups.length) {
     const workgroup = workgroups.filter((wg) => wg.key === workgroupKey)[0];
-    return workgroup.name;
+    return workgroup.name ?? 'NA';
   }
   return "NA";
 };

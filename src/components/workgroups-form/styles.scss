@@ -1,10 +1,40 @@
+.wg-name {
+  display: flex;
+  align-items: center;
+}
+
+.wg-icon {
+  margin-right: 10px;
+  border: solid 2px #f3f3f3;
+  border-radius: 5px;
+}
+
+.private {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+
+  .text {
+    line-height: 5px;
+
+    &__content {
+        color: rgba(0, 0, 0, 0.6);
+    }
+  }
+}
+
+.text__title {
+    font-weight: 500;
+}
+
 .selected-colaborators {
-    max-width: 350px;
-    display: flex;
-    flex-wrap: wrap;
-    row-gap: 3px;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 3px;
 }
 
 .selected-chip {
-    margin-left: 5px;
+  margin-left: 5px;
 }

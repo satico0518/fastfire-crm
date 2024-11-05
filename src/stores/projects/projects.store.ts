@@ -24,11 +24,7 @@ export const useProjectsStore = create<ProjectsState>()(
               ([key, value]) => ({ ...value, key })
             ) as Project[];
 
-            set({
-              projects: values.filter(
-                (project) => project.status !== "DELETED"
-              ) as unknown as Project[],
-            });
+            set({ projects: values });
           } else {
             set({ projects: [] });
           }
