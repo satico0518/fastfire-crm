@@ -26,8 +26,6 @@ interface WorkgroupsFormComponentProps {
 export const WorkgroupsFormComponent = ({
   editingGroup,
 }: WorkgroupsFormComponentProps) => {
-  console.log({ editingGroup });
-
   const [bgColor, setBgColor] = useState("deepskyblue");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isPrivate, setIsPrivate] = useState(editingGroup?.isPrivate ?? false);

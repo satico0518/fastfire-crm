@@ -30,7 +30,7 @@ import { Workgroup } from "../../interfaces/Workgroup";
 const paginationModel = { page: 0, pageSize: 15 };
 
 interface TasksTableProps {
-  workgroup: Workgroup;
+  workgroup?: Workgroup;
 }
 
 export default function TasksTable({workgroup}: TasksTableProps) {
