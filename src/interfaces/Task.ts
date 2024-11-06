@@ -1,11 +1,12 @@
 import { Status } from "./Shared";
 
-
 export interface Note {
     text: string;
     createdByUserId: string;
     createdDate: Date;
 }
+
+export type Priority = 'LOW'|'NORMAL'|'HIGH'|'URGENT';
 
 export interface TaskEvent {
     originalStatus: Status;
@@ -27,6 +28,7 @@ export interface Task {
     avatarURL?: string; 
     name: string;
     ownerKey?: string;
+    priority: Priority;
     history: TaskEvent[];
     createdDate: number;
     dueDate: Date;

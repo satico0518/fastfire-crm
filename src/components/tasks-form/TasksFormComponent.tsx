@@ -10,8 +10,13 @@ import {
   Autocomplete,
   Chip,
   Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
+import EmojiFlagsOutlinedIcon from '@mui/icons-material/EmojiFlagsOutlined';
 import { DatePicker } from "@mui/x-date-pickers";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -19,7 +24,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useUsersStore } from "../../stores/users/users.store";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { TaskService } from "../../services/task.service";
-import { Task } from "../../interfaces/Task";
+import { Priority, Task } from "../../interfaces/Task";
 import { useTagsStore } from "../../stores/tags/tags.store";
 import { TagsService } from "../../services/tags.service";
 import { Tag } from "../../interfaces/Tag";
@@ -29,9 +34,11 @@ interface TasksFormComponentProps {
   workgroupKey: string;
 }
 
-
-export const TasksFormComponent = ({workgroupKey}: TasksFormComponentProps) => {
+export const TasksFormComponent = ({
+  workgroupKey,
+}: TasksFormComponentProps) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [priority, setPriority] = useState<Priority>();
   const currentUser = useAuhtStore((state) => state.user);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
@@ -75,6 +82,7 @@ export const TasksFormComponent = ({workgroupKey}: TasksFormComponentProps) => {
       }
 
       data.tags = selectedTags as unknown as string[];
+      data.priority = priority as Priority || 'LOW';
 
       setModal({ ...modal, open: false });
       setIsLoading(true);
@@ -114,7 +122,7 @@ export const TasksFormComponent = ({workgroupKey}: TasksFormComponentProps) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"} direction={"column"}>
+      <Stack spacing={2} width={"500px"} direction={"column"}>
         <TextField
           label="Nombre"
           type="text"
@@ -216,6 +224,21 @@ export const TasksFormComponent = ({workgroupKey}: TasksFormComponentProps) => {
             </div>
           )}
         />
+        <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+          <InputLabel id="demo-select-small-label">Prioridad</InputLabel>
+          <Select
+            labelId="demo-select-small-label"
+            id="demo-select-small"
+            value={priority}
+            label="Prioridad"
+            onChange={({target}) => setPriority(target.value as Priority)}
+          >
+            <MenuItem value="LOW"><EmojiFlagsOutlinedIcon sx={{color: 'gray'}}/>{' '}Baja</MenuItem>
+            <MenuItem value="NORMAL"><EmojiFlagsOutlinedIcon sx={{color: 'blue'}} />{' '}Normal</MenuItem>
+            <MenuItem value="HIGH"><EmojiFlagsOutlinedIcon sx={{color: 'orange'}} />{' '}Alta</MenuItem>
+            <MenuItem value="URGENT"><EmojiFlagsOutlinedIcon sx={{color: 'red'}} />{' '}Urgente</MenuItem>
+          </Select>
+        </FormControl>
         <Button
           fullWidth
           type="submit"

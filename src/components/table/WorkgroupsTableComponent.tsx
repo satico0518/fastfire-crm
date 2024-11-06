@@ -28,6 +28,8 @@ import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 import { useAuhtStore } from "../../stores";
+import { useTasksStore } from "../../stores/tasks/tasks.store";
+import { Task } from "../../interfaces/Task";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -40,6 +42,7 @@ export default function WorksgroupTable() {
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const users = useUsersStore((state) => state.users);
+  const tasks = useTasksStore((state) => state.tasks);
 
   const isAdmin = currentUser?.permissions.includes("ADMIN");
   const workgroupsByRole = (): Workgroup[] => {
@@ -187,7 +190,7 @@ export default function WorksgroupTable() {
   ];
 
   const handleDeleteWorkgroup = async (workgroup: Workgroup) => {
-    const deleteResult = await WorkgroupService.deleteWorkgroup(workgroup);
+    const deleteResult = await WorkgroupService.deleteWorkgroup(workgroup, tasks as Task[], users as User[]);
 
     if (deleteResult)
       setSnackbar({

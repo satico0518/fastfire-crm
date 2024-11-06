@@ -10,13 +10,17 @@ import Paper from "@mui/material/Paper";
 import userNoImage from "../../assets/img/user-no-image.png";
 import { Button, Chip, Input } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
+import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
 import { useUiStore } from "../../stores/ui/ui.store";
 import {
   GetUserNameByKey,
+  translatePriority,
   translateStatus,
   translateTimestampToString,
 } from "../../utils/utils";
@@ -26,6 +30,7 @@ import { RefObject, useRef } from "react";
 import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
+import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -33,14 +38,14 @@ interface TasksTableProps {
   workgroup?: Workgroup;
 }
 
-export default function TasksTable({workgroup}: TasksTableProps) {
+export default function TasksTable({ workgroup }: TasksTableProps) {
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const tasks = useTasksStore((state) => state.tasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
-  const currentUser = useAuhtStore(state => state.user)
+  const currentUser = useAuhtStore((state) => state.user);
 
   const handleEditTask = async (
     field: string,
@@ -92,26 +97,6 @@ export default function TasksTable({workgroup}: TasksTableProps) {
 
   const columns: GridColDef[] = [
     {
-      field: "name",
-      headerName: "Nombre",
-      type: "string",
-      width: 250,
-      editable: true,
-      renderEditCell: (params: GridRenderEditCellParams<Task>) => (
-        <>
-          <Input inputRef={editNameRef} placeholder={params.row.name}></Input>
-          <Button
-            title="Guardar"
-            onClick={() =>
-              handleEditTask("name", editNameRef, params.row as Task)
-            }
-          >
-            <SaveOutlinedIcon />
-          </Button>
-        </>
-      ),
-    },
-    {
       field: "status",
       headerName: "Estado",
       type: "string",
@@ -123,7 +108,10 @@ export default function TasksTable({workgroup}: TasksTableProps) {
           )}
           {params.row.status === "BLOCKED" && (
             <>
-              <Chip color="error" label={translateStatus(params.row.status).replace('/.$/', 'a')} />
+              <Chip
+                color="error"
+                label={translateStatus(params.row.status).replace("/.$/", "a")}
+              />
               <Button
                 title="Reiniciar"
                 onClick={() =>
@@ -176,20 +164,68 @@ export default function TasksTable({workgroup}: TasksTableProps) {
       ),
     },
     {
-      field: "createdById",
-      headerName: "Creada Por",
+      field: "name",
+      headerName: "Nombre",
       type: "string",
-      width: 250,
+      width: 450,
+      editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
-        <>
-          <img className="user-image" src={row?.avatarURL ?? userNoImage} />{" "}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <span
-            style={{ cursor: "pointer" }}
-            title={`Creada el ${translateTimestampToString(row.createdDate)}`}
+            style={{
+              textDecoration: row.status === "DONE" ? "line-through" : "none",
+            }}
           >
-            {(users && GetUserNameByKey(row.createdByUserKey, users)) || "NA"}
+            {row.name}
           </span>
+          <div className="tags">
+            {row.tags?.length &&
+              row.tags.map((tag: string) => (
+                <Chip
+                  size="small"
+                  key={tag}
+                  label={tag}
+                  color="primary"
+                  onDelete={() => handleDeleteTag(row, tag)}
+                  sx={{fontSize: '12px'}}
+                />
+              ))}
+          </div>
+        </div>
+      ),
+      renderEditCell: (params: GridRenderEditCellParams<Task>) => (
+        <>
+          <Input inputRef={editNameRef} placeholder={params.row.name}></Input>
+          <Button
+            title="Guardar"
+            onClick={() =>
+              handleEditTask("name", editNameRef, params.row as Task)
+            }
+          >
+            <SaveOutlinedIcon />
+          </Button>
         </>
+      ),
+    },
+    {
+      field: "ownerKey",
+      headerName: "Responsable",
+      sortable: false,
+      width: 150,
+      renderCell: ({ row }: GridRenderCellParams<Task>) => (
+        <div className={`${!row.ownerKey && "no-owner"}`}>
+          {row.ownerKey && (
+            <img className="user-image" src={row?.avatarURL ?? userNoImage} />
+          )}
+          {row.ownerKey ? (
+            <span>
+              {" "}
+              {(users && GetUserNameByKey(row.ownerKey, users)) || "NA"}
+            </span>
+          ) : (
+            "Sin asignar"
+          )}
+        </div>
       ),
     },
     {
@@ -200,42 +236,42 @@ export default function TasksTable({workgroup}: TasksTableProps) {
       valueGetter: (value) => value ?? "Sin fecha límite",
     },
     {
+      field: "notes",
+      headerName: "Notas",
+      type: "string",
+      width: 150,
+      valueGetter: (value) => value ?? "-",
+    },
+    {
+      field: "priority",
+      headerName: "Prioridad",
+      type: "string",
+      width: 150,
+      renderCell: (params: GridRenderCellParams<Task>) => params.row?.priority ? translatePriority(params.row.priority) : '-',
+    },
+    {
+      field: "createdDate",
+      headerName: "Fecha de Creación",
+      type: "string",
+      width: 180,
+      renderCell: ({ row }: GridRenderCellParams<Task>) => (
+        <span
+          style={{ cursor: "pointer" }}
+          title={`Creada por ${
+            (users && GetUserNameByKey(row.createdByUserKey, users)) || "NA"
+          }`}
+        >
+          {translateTimestampToString(row.createdDate)}
+        </span>
+      ),
+    },
+    {
       field: "workgroupKey",
       headerName: "Grupo de Trabajo",
       type: "string",
       width: 150,
-      valueGetter: (value) => workgroups?.filter(wg => wg.key === value)[0]?.name || 'Sin Nombre',
-    },
-    {
-      field: "ownerKey",
-      headerName: "Responsable",
-      sortable: false,
-      width: 150,
-      renderCell: ({ row }: GridRenderCellParams<Task>) => (
-        <div className={`${!row.ownerKey && 'no-owner'}`}>
-          {row.ownerKey && <img className="user-image" src={row?.avatarURL ?? userNoImage} />}
-          {row.ownerKey ? <span>{' '}{(users && GetUserNameByKey(row.ownerKey, users)) || "NA"}</span> : "Sin asignar"}
-        </div>
-      ),
-    },
-    {
-      field: "tags",
-      headerName: "Etiquetas",
-      type: "string",
-      width: 400,
-      renderCell: ({ row }: GridRenderCellParams<Task>) => (
-        <div className="tags">
-          {row.tags?.length && row.tags.map((tag: string) => (
-            <Chip
-              size="small"
-              key={tag}
-              label={tag}
-              color="primary"
-              onDelete={() => handleDeleteTag(row, tag)}
-            />
-          ))}
-        </div>
-      ),
+      valueGetter: (value) =>
+        workgroups?.filter((wg) => wg.key === value)[0]?.name || "Sin Nombre",
     },
     {
       field: "actions",
@@ -244,20 +280,24 @@ export default function TasksTable({workgroup}: TasksTableProps) {
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
-            onClick={() =>
-              TaskService.updateTask({ ...params.row, status: "BLOCKED" })
-            }
-            label="Bloquear"
-            showInMenu
-          />,
-          <GridActionsCellItem
-            onClick={() =>
-              TaskService.updateTask({ ...params.row, status: "DONE" })
-            }
-            label="Finalizar"
-            showInMenu
-          />,
+          icon={<BlockOutlinedIcon />}
+          onClick={() =>
+            TaskService.updateTask({ ...params.row, status: "BLOCKED" })
+          }
+          label="Bloquear"
+          showInMenu
+        />,
         <GridActionsCellItem
+          hidden={params.row.status === "DONE"}
+          icon={<TaskAltOutlinedIcon />}
+          onClick={() =>
+            TaskService.updateTask({ ...params.row, status: "DONE" })
+          }
+          label="Finalizar"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          icon={<ArchiveOutlinedIcon />}
           onClick={() => handleDeleteConfirmation(params.row)}
           label="Archivar"
           showInMenu
@@ -297,19 +337,21 @@ export default function TasksTable({workgroup}: TasksTableProps) {
 
   const getTaskByRole = (): Task[] => {
     if (workgroup) {
-      return tasks?.filter(t => t.workgroupKey === workgroup.key) as Task[]
+      return tasks?.filter((t) => t.workgroupKey === workgroup.key) as Task[];
     }
 
-    if (!currentUser?.permissions.includes('ADMIN'))
-        return tasks?.
-          filter(t => currentUser?.workgroupKeys.some(wg => t.workgroupKey === wg)).
-          filter(t => t.status !== 'DELETED') as Task[];
-    
-    return tasks !== null ? tasks.filter(t => t.status !== 'DELETED') : [];
-  }
+    if (!currentUser?.permissions.includes("ADMIN"))
+      return tasks
+        ?.filter((t) =>
+          currentUser?.workgroupKeys.some((wg) => t.workgroupKey === wg)
+        )
+        .filter((t) => t.status !== "DELETED") as Task[];
+
+    return tasks !== null ? tasks.filter((t) => t.status !== "DELETED") : [];
+  };
 
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ height: "calc(100vh - 220px)", width: "100%" }}>
       <DataGrid
         autoPageSize
         rows={getTaskByRole()}
@@ -321,6 +363,7 @@ export default function TasksTable({workgroup}: TasksTableProps) {
         }}
         sx={{ border: 0 }}
       />
+      <TaskCreatorRowComponent />
     </Paper>
   );
 }

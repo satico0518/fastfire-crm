@@ -16,6 +16,7 @@ import { Access, User } from "../../interfaces/User";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { MultiselectComponent } from "../multi-select/MultiselectComponent";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
+import { UsersService } from "../../services/users.service";
 
 interface UserFormComponentProps {
   editingUser?: User;
@@ -97,7 +98,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
 
       let signInResponse;
       if (editingUser)
-        signInResponse = await AuthService.modifyUser({
+        signInResponse = await UsersService.modifyUser({
           ...editingUser,
           ...data,
         });

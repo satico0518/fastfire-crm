@@ -10,9 +10,9 @@ import { useUiStore } from "../../stores/ui/ui.store";
 
 export interface ConfirmationComponentProps {
   open: boolean;
-  title: string;
-  text: string;
-  actions: React.ReactNode;
+  title?: string;
+  text?: string;
+  actions?: React.ReactNode;
 }
 
 export const ConfirmationComponent = () => {

@@ -19,6 +19,10 @@ import { Button } from "@mui/material";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { WorkgroupService } from "../../services/workgroup.service";
+import { useTasksStore } from "../../stores/tasks/tasks.store";
+import { Task } from "../../interfaces/Task";
+import { useUsersStore } from "../../stores/users/users.store";
+import { User } from "../../interfaces/User";
 
 export const MenuComponent = () => {
   const navigate = useNavigate();
@@ -29,6 +33,8 @@ export const MenuComponent = () => {
   const modal = useUiStore((state) => state.modal);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
+  const tasks = useTasksStore((state) => state.tasks);
+  const users = useUsersStore((state) => state.users);
 
   if (!isAuth) return null;
 
@@ -61,13 +67,18 @@ export const MenuComponent = () => {
 
   const handleDeleteGroup = async (workgroup: Workgroup) => {
     try {
-      const resp = await WorkgroupService.deleteWorkgroup(workgroup);
+      const resp = await WorkgroupService.deleteWorkgroup(
+        workgroup,
+        tasks as Task[],
+        users as User[],
+      );
       if (resp.result === "OK") {
         setSnackbar({
           open: true,
-          message: "Grupo elimanado correctamente!",
+          message: "Grupo y tareas eliminados correctamente!",
           severity: "success",
         });
+        navigate('/home')
       } else {
         setSnackbar({
           open: true,
@@ -83,6 +94,8 @@ export const MenuComponent = () => {
         severity: "error",
       });
       console.error("Error eliminando grupo!", { error });
+    } finally {
+      setConfirmation({ open: false });
     }
   };
 
@@ -98,7 +111,7 @@ export const MenuComponent = () => {
             ...modal,
             open: true,
             title: "Nueva Tarea",
-            text: "tarea nueva.",
+            text: "Ingrese los datos de la nueva tarea.",
             content: (
               <TasksFormComponent workgroupKey={workgroup.key as string} />
             ),
@@ -203,9 +216,11 @@ export const MenuComponent = () => {
       <div className="menu__workgroups">
         <div className="menu__workgroups-title">
           <span>Grupos</span>
-          {isAdmin && <div className="menu__workgroups-title-actions">
-            <SecondaryActions options={SECONDARY_ACTIONS_OPTIONS.options} />
-          </div>}
+          {isAdmin && (
+            <div className="menu__workgroups-title-actions">
+              <SecondaryActions options={SECONDARY_ACTIONS_OPTIONS.options} />
+            </div>
+          )}
         </div>
         <ul>
           {isAdmin && (
@@ -220,41 +235,47 @@ export const MenuComponent = () => {
               </Button>
             </li>
           )}
-          {workgroupsByRole().length > 0 ? workgroupsByRole().map((wg) => (
-            <li>
-              <div key={wg.id} className="menu__workgroup-item">
-                <div
-                  className="menu__workgroup-item-icon"
-                  style={{ backgroundColor: wg.color ? wg.color : "#8a8282" }}
-                >
-                  {wg.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="menu__workgroups-title">
-                  <span
-                    className="menu__workgroups-title-text"
-                    onClick={() => navigate("/tasksbygroup", { state: { wg } })}
+          {workgroupsByRole().length > 0 ? (
+            workgroupsByRole().map((wg) => (
+              <li key={wg.id}>
+                <div key={wg.id} className="menu__workgroup-item">
+                  <div
+                    className="menu__workgroup-item-icon"
+                    style={{ backgroundColor: wg.color ? wg.color : "#8a8282" }}
                   >
-                    {wg.name.charAt(0).toUpperCase() +
-                      wg.name.substring(1).toLowerCase()}
-                    {!wg.isPrivate && (
-                      <PublicOutlinedIcon
-                        titleAccess="Público"
-                        sx={{
-                          fontSize: "15px",
-                          marginLeft: "10px",
-                          top: "2px",
-                          color: "#b8d2e9",
-                        }}
-                      />
-                    )}
-                  </span>
-                  <SecondaryActions
-                    options={getGroupSecondaryActions(wg).options}
-                  />
+                    {wg.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="menu__workgroups-title">
+                    <span
+                      className="menu__workgroups-title-text"
+                      onClick={() =>
+                        navigate("/tasksbygroup", { state: { wg } })
+                      }
+                    >
+                      {wg.name.charAt(0).toUpperCase() +
+                        wg.name.substring(1).toLowerCase()}
+                      {!wg.isPrivate && (
+                        <PublicOutlinedIcon
+                          titleAccess="Público"
+                          sx={{
+                            fontSize: "15px",
+                            marginLeft: "10px",
+                            top: "2px",
+                            color: "#b8d2e9",
+                          }}
+                        />
+                      )}
+                    </span>
+                    <SecondaryActions
+                      options={getGroupSecondaryActions(wg).options}
+                    />
+                  </div>
                 </div>
-              </div>
-            </li>
-          )) : <span>Sin asignación de grupos</span>}
+              </li>
+            ))
+          ) : (
+            <span>Sin asignación de grupos</span>
+          )}
           {isAdmin && (
             <>
               <li>

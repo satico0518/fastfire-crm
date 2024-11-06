@@ -81,7 +81,7 @@ export const WorkgroupsFormComponent = ({
     }
 
     setAvailableMembers(
-      users?.map((user) => ({
+      users?.filter(u => u.isActive).map((user) => ({
         key: user.key,
         label: GetUserNameByKey(user.key as string, users),
       })) as SetStateAction<AutocompleteField[]>
@@ -104,9 +104,9 @@ export const WorkgroupsFormComponent = ({
       response = await WorkgroupService.modifyWorkgroup({
         ...editingGroup,
         ...data,
-      });
+      }, users as User[]);
     } else {
-      response = await WorkgroupService.createWorkgroup(data);
+      response = await WorkgroupService.createWorkgroup(data, users as User[]);
     }
     setIsLoading(false);
 

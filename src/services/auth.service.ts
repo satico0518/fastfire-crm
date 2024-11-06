@@ -5,7 +5,7 @@ import {
 import { auth } from "../firebase/firebase.config";
 import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCreateResponse";
 import { db } from "../firebase/firebase.config";
-import { ref, push, set, update, get } from "firebase/database";
+import { ref, push, set, get } from "firebase/database";
 import { User } from "../interfaces/User";
 import { ServiceResponse } from "../interfaces/Shared";
 
@@ -35,6 +35,7 @@ export class AuthService {
         result: "ERROR",
         errorMessage: "Error al intentar crear usuario, intente de nuevo!",
       };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       let message;
       if (error?.code && error?.code.includes("auth/email-already-in-use")) {
@@ -83,48 +84,6 @@ export class AuthService {
       return {
         result: "ERROR",
         error: "Error al intentar iniciar sesión, revise sus credenciales.",
-      };
-    }
-  }
-
-  static async deleteUser(userKey: string): Promise<ServiceResponse> {
-    try {
-      const usersRef = ref(db, `users/${userKey}`);
-      await update(usersRef, { isActive: false });
-      return {
-        result: "OK",
-        message: "Usuario eliminado exitosamante",
-      };
-    } catch (err) {
-      console.error(
-        `Error eliminando el usuario [key: ${userKey}] - [currentUserUid: ${auth.currentUser?.uid}]`,
-        err
-      );
-      return {
-        result: "ERROR",
-        message: "",
-        errorMessage: "Error eliminando el usuario",
-      };
-    }
-  }
-
-  static async modifyUser(user: User): Promise<ServiceResponse> {
-    try {
-      const usersRef = ref(db, `users/${user.key}`);
-      await update(usersRef, user);
-      return {
-        result: "OK",
-        message: "Usuario modificado exitosamante",
-      };
-    } catch (err) {
-      console.error(
-        `Error modificando el usuario [key: ${user.key}] - [currentUserUid: ${auth.currentUser?.uid}]`,
-        err
-      );
-      return {
-        result: "ERROR",
-        message: "",
-        errorMessage: "Error modificando el usuario",
       };
     }
   }

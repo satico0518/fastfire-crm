@@ -6,16 +6,18 @@ import {
   GridRowParams,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import { AuthService } from "../../services/auth.service";
 import { useUiStore } from "../../stores/ui/ui.store";
 import userNoImage from "../../assets/img/user-no-image.png";
 import { Button, Chip } from "@mui/material";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
 import { GetWorkgroupNameByKey, translateAccess } from "../../utils/utils";
 import { UserFormComponent } from "../user-form/UserFormComponent";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
+import { UsersService } from "../../services/users.service";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -32,7 +34,7 @@ export default function UsersTable() {
       field: "fullName",
       headerName: "Nombre",
       sortable: false,
-      width: 350,
+      width: 250,
       renderCell: (params: GridRenderCellParams) => (
         <>
           <img
@@ -51,18 +53,18 @@ export default function UsersTable() {
       field: "email",
       headerName: "Correo",
       type: "string",
-      width: 350,
+      width: 300,
     },
     {
       field: "workgroupKeys",
       headerName: "Grupos de trabajo",
       type: "string",
-      width: 400,
+      width: 300,
       renderCell: (params: GridRenderCellParams<User>) => (
         <div className="permissions">
-          {params.row.workgroupKeys.map((wg: string) => (
+          {params.row?.workgroupKeys?.map((wg: string) => (
             <Chip size="small" key={wg} label={GetWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
-          ))}
+          )) || <Chip label="Sin grupo" color="warning"/>}
         </div>
       ),
     },
@@ -70,7 +72,7 @@ export default function UsersTable() {
       field: "permissions",
       headerName: "Permisos",
       type: "string",
-      width: 400,
+      width: 300,
       renderCell: (params: GridRenderCellParams) => (
         <div className="permissions">
           {params.row.permissions.map((acc: Access) => (
@@ -86,6 +88,7 @@ export default function UsersTable() {
       align: "right",
       getActions: (params: GridRowParams) => [
         <GridActionsCellItem
+        icon={<ModeEditOutlineOutlinedIcon />}
           onClick={() => 
             setModal({
             ...modal,
@@ -94,10 +97,11 @@ export default function UsersTable() {
             text: "Ingrese las modificaciones del usuario.",
             content: <UserFormComponent editingUser={params.row}/>,
           })}
-          label="Editar"
+          label="Modificar"
           showInMenu
         />,
         <GridActionsCellItem
+        icon={<DeleteOutlineOutlinedIcon />}
           onClick={() =>
             handleDeleteConfirmation(
               params.row.key,
@@ -112,7 +116,7 @@ export default function UsersTable() {
   ];
 
   const handleDeleteUser = async (userKey: string) => {
-    const deleteResult = await AuthService.deleteUser(userKey);
+    const deleteResult = await UsersService.deleteUser(userKey);
 
     if (deleteResult)
       setSnackbar({
@@ -144,7 +148,7 @@ export default function UsersTable() {
   return (
     <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
       <DataGrid
-        rows={users as User[]}
+        rows={users?.filter(u => u.isActive) as User[]}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
