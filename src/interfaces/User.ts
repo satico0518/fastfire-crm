@@ -6,6 +6,8 @@ export interface User {
     firstName: string;
     lastName: string;
     email: string;
+    avatarURL?: string;
+    color?: string;
     permissions: Access[];
     workgroupKeys: string[];
 }

@@ -12,6 +12,9 @@ import Paper from "@mui/material/Paper";
 import { Project } from "../../interfaces/Project";
 import { Button, Chip } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
+import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import { ProjectsFormComponent } from "../projects-form/ProjectsFormComponent";
 import {
   formatToCOP,
@@ -131,30 +134,39 @@ export default function ProjectsTable() {
     {
       field: "actions",
       type: "actions",
-      headerAlign: 'right',
+      headerAlign: "right",
       align: "right",
       getActions: (params: GridRowParams<Project>) => {
         if (params.row.status === "DONE")
           return [
             <GridActionsCellItem
-              onClick={() => handleDeleteConfirmation(params.row.key as string, params.row.name)}
+              onClick={() =>
+                handleDeleteConfirmation(
+                  params.row.key as string,
+                  params.row.name
+                )
+              }
               label="Eliminar"
               showInMenu
             />,
           ];
         return [
           <GridActionsCellItem
-            onClick={() => setModal({
-              ...modal,
-              open: true,
-              title: "Modificar Proyecto",
-              text: "Ingrese los datos del proyecto a modificar.",
-              content: <ProjectsFormComponent editingProject={params.row}/>,
-            })}
+            icon={<ModeEditOutlineOutlinedIcon />}
+            onClick={() =>
+              setModal({
+                ...modal,
+                open: true,
+                title: "Modificar Proyecto",
+                text: "Ingrese los datos del proyecto a modificar.",
+                content: <ProjectsFormComponent editingProject={params.row} />,
+              })
+            }
             label="Modificar"
             showInMenu
           />,
           <GridActionsCellItem
+            icon={<BlockOutlinedIcon />}
             onClick={() =>
               ProjectService.updateProject({ ...params.row, status: "BLOCKED" })
             }
@@ -162,6 +174,7 @@ export default function ProjectsTable() {
             showInMenu
           />,
           <GridActionsCellItem
+            icon={<TaskAltOutlinedIcon />}
             onClick={() =>
               ProjectService.updateProject({ ...params.row, status: "DONE" })
             }

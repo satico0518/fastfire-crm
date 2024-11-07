@@ -23,11 +23,13 @@ import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { WorkgroupService } from "../../services/workgroup.service";
 
 import { useUsersStore } from "../../stores/users/users.store";
-import { GetUserNameByKey } from "../../utils/utils";
+import { getUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 import { useAuhtStore } from "../../stores";
+import { useTasksStore } from "../../stores/tasks/tasks.store";
+import { Task } from "../../interfaces/Task";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -40,6 +42,7 @@ export default function WorksgroupTable() {
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const users = useUsersStore((state) => state.users);
+  const tasks = useTasksStore((state) => state.tasks);
 
   const isAdmin = currentUser?.permissions.includes("ADMIN");
   const workgroupsByRole = (): Workgroup[] => {
@@ -132,7 +135,7 @@ export default function WorksgroupTable() {
                     <Chip
                       key={key}
                       size="small"
-                      label={GetUserNameByKey(key, users as User[])}
+                      label={getUserNameByKey(key, users as User[])}
                       color="info"
                       onDelete={() => handleDeleteMember(params.row, key)}
                     />
@@ -187,7 +190,7 @@ export default function WorksgroupTable() {
   ];
 
   const handleDeleteWorkgroup = async (workgroup: Workgroup) => {
-    const deleteResult = await WorkgroupService.deleteWorkgroup(workgroup);
+    const deleteResult = await WorkgroupService.deleteWorkgroup(workgroup, tasks as Task[], users as User[]);
 
     if (deleteResult)
       setSnackbar({

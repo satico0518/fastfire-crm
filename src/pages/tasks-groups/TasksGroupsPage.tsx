@@ -12,16 +12,16 @@ import { WorkgroupsFormComponent } from "../../components/workgroups-form/Workgr
 import { useLocation } from "react-router-dom";
 
 export const TasksPage = () => {
-  const {state} = useLocation();
-  
-  const [tabsValue, setTabsValue] = useState(state?.goTo === 'wg' ? 1 : 0);
+  const { state } = useLocation();
+
+  const [tabsValue, setTabsValue] = useState(state?.goTo === "wg" ? 1 : 0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const user = useAuhtStore((state) => state.user);
 
   useEffect(() => {
-    setTabsValue(state?.goTo === 'wg' ? 1 : 0);
-  }, [state])
+    setTabsValue(state?.goTo === "wg" ? 1 : 0);
+  }, [state]);
 
   const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
@@ -68,24 +68,11 @@ export const TasksPage = () => {
       </Box>
       <CustomTabPanel value={tabsValue} index={0}>
         <TasksTable />
-        {/* <Button
-          onClick={() =>
-            setModal({
-              ...modal,
-              open: true,
-              title: "Nueva Tarea",
-              text: "Ingrese los datos de la tarea.",
-              content: <TasksFormComponent />,
-            })
-          }
-          sx={{ color: "white", top: "10px" }}
-        >
-          <AddTaskOutlinedIcon />
-        </Button> */}
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={1}>
         <WorksgroupTable />
         <Button
+          startIcon={<GroupAddOutlinedIcon />}
           title="Crear nuevo grupo de trabajo"
           onClick={() =>
             setModal({
@@ -98,7 +85,7 @@ export const TasksPage = () => {
           }
           sx={{ color: "white", top: "10px" }}
         >
-          <GroupAddOutlinedIcon />
+          Nuevo Grupo
         </Button>
       </CustomTabPanel>
       {/* <CustomTabPanel value={tabsValue} index={2}>

@@ -13,7 +13,7 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { WorkgroupService } from "../../services/workgroup.service";
 import { useUsersStore } from "../../stores/users/users.store";
-import { GetUserNameByKey } from "../../utils/utils";
+import { getUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { AutocompleteField } from "../../interfaces/Shared";
 import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
@@ -26,8 +26,6 @@ interface WorkgroupsFormComponentProps {
 export const WorkgroupsFormComponent = ({
   editingGroup,
 }: WorkgroupsFormComponentProps) => {
-  console.log({ editingGroup });
-
   const [bgColor, setBgColor] = useState("deepskyblue");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isPrivate, setIsPrivate] = useState(editingGroup?.isPrivate ?? false);
@@ -61,7 +59,7 @@ export const WorkgroupsFormComponent = ({
       if (editingGroup.memberKeys?.length > 0) {
         setSelectedMembers(editingGroup.memberKeys.map((key) => ({
                 key: key,
-                label: GetUserNameByKey(key as string, users as User[]),
+                label: getUserNameByKey(key as string, users as User[]),
               })) as SetStateAction<AutocompleteField[]>
         );     
       }
@@ -75,7 +73,7 @@ export const WorkgroupsFormComponent = ({
         setAvailableMembers(
           availableEditingMembers?.map((user) => ({
             key: user.key,
-            label: GetUserNameByKey(user.key as string, users as User[]),
+            label: getUserNameByKey(user.key as string, users as User[]),
           })) as SetStateAction<AutocompleteField[]>
         );
 
@@ -83,9 +81,9 @@ export const WorkgroupsFormComponent = ({
     }
 
     setAvailableMembers(
-      users?.map((user) => ({
+      users?.filter(u => u.isActive).map((user) => ({
         key: user.key,
-        label: GetUserNameByKey(user.key as string, users),
+        label: getUserNameByKey(user.key as string, users),
       })) as SetStateAction<AutocompleteField[]>
     );
   }, [editingGroup, setValue, users]);
@@ -106,9 +104,9 @@ export const WorkgroupsFormComponent = ({
       response = await WorkgroupService.modifyWorkgroup({
         ...editingGroup,
         ...data,
-      });
+      }, users as User[]);
     } else {
-      response = await WorkgroupService.createWorkgroup(data);
+      response = await WorkgroupService.createWorkgroup(data, users as User[]);
     }
     setIsLoading(false);
 
