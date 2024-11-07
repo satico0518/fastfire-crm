@@ -23,7 +23,7 @@ import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { WorkgroupService } from "../../services/workgroup.service";
 
 import { useUsersStore } from "../../stores/users/users.store";
-import { GetUserNameByKey } from "../../utils/utils";
+import { getUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
@@ -135,7 +135,7 @@ export default function WorksgroupTable() {
                     <Chip
                       key={key}
                       size="small"
-                      label={GetUserNameByKey(key, users as User[])}
+                      label={getUserNameByKey(key, users as User[])}
                       color="info"
                       onDelete={() => handleDeleteMember(params.row, key)}
                     />

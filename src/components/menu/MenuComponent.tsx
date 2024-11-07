@@ -43,7 +43,7 @@ export const MenuComponent = () => {
     if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
 
     return workgroups
-      ?.filter((wg) => currentUser?.workgroupKeys.some((key) => wg.key === key))
+      ?.filter((wg) => currentUser?.workgroupKeys.some((key) => wg.key === key) || !wg.isPrivate)
       .filter((wg) => wg.isActive) as Workgroup[];
   };
 
@@ -153,7 +153,7 @@ export const MenuComponent = () => {
     <div className="menu">
       <div className="menu__menu-items">
         <ul>
-          {currentUser?.permissions.includes("TYG") && (
+          {currentUser?.permissions.includes("ADMIN") && (
             <li>
               <NavLink
                 to="/tasks"

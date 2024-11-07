@@ -13,6 +13,26 @@
   gap: 8px;
 }
 
+.owners-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.owner-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 100%;
+  font-weight: bold;
+  color: white;
+  margin-left: -5px;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .no-owner {
   background-color: crimson;
   color: white;

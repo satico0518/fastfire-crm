@@ -7,30 +7,33 @@ import {
   GridRowParams,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import userNoImage from "../../assets/img/user-no-image.png";
 import { Button, Chip, Input } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
 import { useUiStore } from "../../stores/ui/ui.store";
 import {
-  GetUserNameByKey,
+  getUserKeysByNames,
+  getUserNameByKey,
   translatePriority,
   translateStatus,
   translateTimestampToString,
 } from "../../utils/utils";
 import { useUsersStore } from "../../stores/users/users.store";
 import { TaskService } from "../../services/task.service";
-import { RefObject, useRef } from "react";
+import { RefObject, useRef, useState } from "react";
 import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
+import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
+import { User } from "../../interfaces/User";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -46,6 +49,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
+  const [openOwnersDialog, setOpenOwnersDialog] = useState(false);
+  const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
 
   const handleEditTask = async (
     field: string,
@@ -90,6 +95,37 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       setSnackbar({
         open: true,
         message: "Error eliminando etiqueta.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleEditOwner = async (ownerNames: string[], task: Task) => {
+    try {
+      task.ownerKeys = getUserKeysByNames(ownerNames, users as User[]) ?? [];
+      const resp = await TaskService.updateTask(task);
+      if (resp.result === "OK") {
+        setSnackbar({
+          open: true,
+          message: "Tarea creada exitosamente!",
+          severity: "success",
+        });
+      } else {
+        console.error(
+          "Error creando tarea en Task Creator, ",
+          resp.errorMessage
+        );
+        setSnackbar({
+          open: true,
+          message: "Error creando tarea.",
+          severity: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error creando tarea en Task Creator, ", { error });
+      setSnackbar({
+        open: true,
+        message: "Error creando tarea.",
         severity: "error",
       });
     }
@@ -187,7 +223,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                   label={tag}
                   color="primary"
                   onDelete={() => handleDeleteTag(row, tag)}
-                  sx={{fontSize: '12px'}}
+                  sx={{ fontSize: "12px" }}
                 />
               ))}
           </div>
@@ -208,25 +244,63 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       ),
     },
     {
-      field: "ownerKey",
-      headerName: "Responsable",
+      field: "ownerKeys",
+      headerName: "Responsables",
       sortable: false,
       width: 150,
+      align: "center",
+      editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
-        <div className={`${!row.ownerKey && "no-owner"}`}>
-          {row.ownerKey && (
-            <img className="user-image" src={row?.avatarURL ?? userNoImage} />
-          )}
-          {row.ownerKey ? (
-            <span>
-              {" "}
-              {(users && GetUserNameByKey(row.ownerKey, users)) || "NA"}
-            </span>
-          ) : (
-            "Sin asignar"
-          )}
+        <div className={`${!row.ownerKeys && "no-owner"} owners-container`}>
+          {row.ownerKeys
+            ? row.ownerKeys.map((k) => (
+                <div
+                  key={k}
+                  className="owner-circle"
+                  title={(users && getUserNameByKey(k, users)) || "NA"}
+                  style={{
+                    backgroundColor:
+                      users?.filter((u) => u.key === k)[0].color ??
+                      "blueviolet",
+                  }}
+                >
+                  {`${users
+                    ?.filter((u) => u.key === k)[0]
+                    .firstName.charAt(0)}${users
+                    ?.filter((u) => u.key === k)[0]
+                    .lastName.charAt(0)}`}
+                </div>
+              ))
+            : "Sin asignar"}
         </div>
       ),
+      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => {
+        // setSelectedOwners(users?.filter(u => row.ownerKeys?.some(k => k === u.key)) as User[])
+
+        return (
+          <>
+            <DialogueMultiselect
+              title="Responsables"
+              open={openOwnersDialog}
+              labels={
+                users?.map((u) =>
+                  getUserNameByKey(u.key as string, users)
+                ) as unknown as string[]
+              }
+              setOpen={setOpenOwnersDialog}
+              value={selectedOwners}
+              setValue={setSelectedOwners}
+              okButtonText="Guardar"
+              okButtonAction={() =>
+                handleEditOwner(selectedOwners as unknown as string[], row)
+              }
+            />
+            <Button onClick={() => setOpenOwnersDialog(true)}>
+              <GroupAddOutlinedIcon />
+            </Button>
+          </>
+        );
+      },
     },
     {
       field: "dueDate",
@@ -240,14 +314,15 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Notas",
       type: "string",
       width: 150,
-      valueGetter: (value) => value ?? "-",
+      valueGetter: (value: string) => value.length > 0 ? value : "-",
     },
     {
       field: "priority",
       headerName: "Prioridad",
       type: "string",
       width: 150,
-      renderCell: (params: GridRenderCellParams<Task>) => params.row?.priority ? translatePriority(params.row.priority) : '-',
+      renderCell: (params: GridRenderCellParams<Task>) =>
+        params.row?.priority ? translatePriority(params.row.priority) : "-",
     },
     {
       field: "createdDate",
@@ -258,7 +333,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <span
           style={{ cursor: "pointer" }}
           title={`Creada por ${
-            (users && GetUserNameByKey(row.createdByUserKey, users)) || "NA"
+            (users && getUserNameByKey(row.createdByUserKey, users)) || "NA"
           }`}
         >
           {translateTimestampToString(row.createdDate)}
@@ -266,12 +341,14 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       ),
     },
     {
-      field: "workgroupKey",
-      headerName: "Grupo de Trabajo",
+      field: "workgroupKeys",
+      headerName: "Grupos de Trabajo",
       type: "string",
-      width: 150,
-      valueGetter: (value) =>
-        workgroups?.filter((wg) => wg.key === value)[0]?.name || "Sin Nombre",
+      width: 200,
+      renderCell: ({row}: GridRenderCellParams<Task>) => {
+        const taskWorkgroups = workgroups?.filter(wg => row.workgroupKeys.some(k => k === wg.key as string));
+        return taskWorkgroups?.map(wg => (<Chip style={{marginLeft: '5px'}} size="small" label={wg.name}/>));
+      },
     },
     {
       field: "actions",
@@ -337,14 +414,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
 
   const getTaskByRole = (): Task[] => {
     if (workgroup) {
-      return tasks?.filter((t) => t.workgroupKey === workgroup.key) as Task[];
+      return tasks?.filter((t) => t.workgroupKeys.some(k => workgroup.key === k)) as Task[];
     }
 
     if (!currentUser?.permissions.includes("ADMIN"))
       return tasks
-        ?.filter((t) =>
-          currentUser?.workgroupKeys.some((wg) => t.workgroupKey === wg)
-        )
+        ?.filter((t) => currentUser?.workgroupKeys.some((k) => t.workgroupKey === k))
         .filter((t) => t.status !== "DELETED") as Task[];
 
     return tasks !== null ? tasks.filter((t) => t.status !== "DELETED") : [];

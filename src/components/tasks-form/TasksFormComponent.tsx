@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { SubmitHandler, FieldValues, useForm } from "react-hook-form";
-import { AutocompleteField } from "../../interfaces/Shared";
-import { GetUserNameByKey } from "../../utils/utils";
+import {
+  getUserKeysByNames,
+  getUserNameByKey,
+  getWorkgroupNameByKey,
+} from "../../utils/utils";
 
 import {
   Stack,
@@ -16,7 +19,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
-import EmojiFlagsOutlinedIcon from '@mui/icons-material/EmojiFlagsOutlined';
+import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import { DatePicker } from "@mui/x-date-pickers";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -29,23 +32,31 @@ import { useTagsStore } from "../../stores/tags/tags.store";
 import { TagsService } from "../../services/tags.service";
 import { Tag } from "../../interfaces/Tag";
 import { useAuhtStore } from "../../stores";
+import { MultiselectComponent } from "../multi-select/MultiselectComponent";
+import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
+import { User } from "../../interfaces/User";
 
 interface TasksFormComponentProps {
-  workgroupKey: string;
+  workgroupKey?: string;
 }
 
 export const TasksFormComponent = ({
   workgroupKey,
 }: TasksFormComponentProps) => {
+  const users = useUsersStore((state) => state.users);
+  const workgroups = useWorkgroupStore((state) => state.workgroups);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [priority, setPriority] = useState<Priority>();
+  const [selectedOwnerKeys, setSelectedOwnerKeys] = useState<string[]>([]);
+  const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([
+    workgroups?.filter((wg) => wg.key === workgroupKey)[0].name as string,
+  ]);
+  const [priority, setPriority] = useState<Priority>("LOW");
   const currentUser = useAuhtStore((state) => state.user);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const snackbar = useUiStore((state) => state.snackbar);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const users = useUsersStore((state) => state.users);
   const tags = useTagsStore((state) => state.tags);
 
   const {
@@ -81,14 +92,15 @@ export const TasksFormComponent = ({
         return;
       }
 
-      data.tags = selectedTags as unknown as string[];
-      data.priority = priority as Priority || 'LOW';
-
       setModal({ ...modal, open: false });
       setIsLoading(true);
 
+      data.tags = selectedTags as unknown as string[];
+      data.priority = (priority as Priority) || "LOW";
       data.createdByUserKey = currentUser.key;
-      data.workgroupKey = workgroupKey;
+      data.ownerKeys = getUserKeysByNames(selectedOwnerKeys, users as User[]);
+      data.workgroupKeys = workgroups?.filter((wg) => selectedGroupKeys.some((sg) => sg === wg.name)).map((wg) => wg.key) as string[];
+
       const response = await TaskService.createTask(data);
 
       if (response.result === "OK") {
@@ -107,6 +119,8 @@ export const TasksFormComponent = ({
         });
       }
       setSelectedTags([]);
+      setSelectedOwnerKeys([]);
+      setSelectedGroupKeys([]);
     } catch (error) {
       console.error(`Error creando tarea.`, { error });
       setSnackbar({
@@ -134,49 +148,13 @@ export const TasksFormComponent = ({
           autoCapitalize="words"
           required
         />
-        <Autocomplete
-          disablePortal
-          options={
-            users?.map((user) => ({
-              key: user.key,
-              label: GetUserNameByKey(user.key as string, users),
-            })) as readonly AutocompleteField[]
-          }
-          includeInputInList
-          fullWidth
-          onChange={(_, options) => setValue("ownerKey", options?.key)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              name="ownerKey"
-              label="Responsable"
-              type="text"
-              variant="standard"
-              fullWidth
-              error={!!errors.ownerKey}
-              helperText={errors.ownerKey?.message as string}
-              autoCapitalize="words"
-            />
-          )}
-        />
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            disablePast
-            format={"DD/MM/YYYY"}
-            label="Fecha Límite"
-            name="dueDate"
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            onChange={(val, _) =>
-              setValue("dueDate", val?.format("DD/MM/YYYY"))
-            }
-          />
-        </LocalizationProvider>
+
         <div style={{ maxWidth: "500px" }}>
           <Typography component="span" fontSize={"15px"}>
             Etiquetas:
           </Typography>
           <br />
-          <div className="selected-Members">
+          <div className="selected-members">
             {selectedTags.map((st: Tag | string) => (
               <div
                 key={Object.values(st)[0] as string}
@@ -224,6 +202,28 @@ export const TasksFormComponent = ({
             </div>
           )}
         />
+        <MultiselectComponent
+          labels={
+            users
+              ?.filter((u) => u.isActive)
+              .map((u) => getUserNameByKey(u.key as string, users)) as string[]
+          }
+          title="Responsables"
+          value={selectedOwnerKeys}
+          setValue={setSelectedOwnerKeys}
+        />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            disablePast
+            format={"DD/MM/YYYY"}
+            label="Fecha Límite"
+            name="dueDate"
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            onChange={(val, _) =>
+              setValue("dueDate", val?.format("DD/MM/YYYY"))
+            }
+          />
+        </LocalizationProvider>
         <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
           <InputLabel id="demo-select-small-label">Prioridad</InputLabel>
           <Select
@@ -231,14 +231,45 @@ export const TasksFormComponent = ({
             id="demo-select-small"
             value={priority}
             label="Prioridad"
-            onChange={({target}) => setPriority(target.value as Priority)}
+            onChange={({ target }) => setPriority(target.value as Priority)}
           >
-            <MenuItem value="LOW"><EmojiFlagsOutlinedIcon sx={{color: 'gray'}}/>{' '}Baja</MenuItem>
-            <MenuItem value="NORMAL"><EmojiFlagsOutlinedIcon sx={{color: 'blue'}} />{' '}Normal</MenuItem>
-            <MenuItem value="HIGH"><EmojiFlagsOutlinedIcon sx={{color: 'orange'}} />{' '}Alta</MenuItem>
-            <MenuItem value="URGENT"><EmojiFlagsOutlinedIcon sx={{color: 'red'}} />{' '}Urgente</MenuItem>
+            <MenuItem value="LOW">
+              <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
+            </MenuItem>
+            <MenuItem value="NORMAL">
+              <EmojiFlagsOutlinedIcon sx={{ color: "blue" }} /> Normal
+            </MenuItem>
+            <MenuItem value="HIGH">
+              <EmojiFlagsOutlinedIcon sx={{ color: "orange" }} /> Alta
+            </MenuItem>
+            <MenuItem value="URGENT">
+              <EmojiFlagsOutlinedIcon sx={{ color: "red" }} /> Urgente
+            </MenuItem>
           </Select>
         </FormControl>
+        <MultiselectComponent
+          labels={
+            workgroups
+              ?.filter((wg) => wg.isActive)
+              .map((w) =>
+                getWorkgroupNameByKey(w.key as string, workgroups)
+              ) as string[]
+          }
+          title="Grupos de trabajo"
+          value={selectedGroupKeys}
+          setValue={setSelectedGroupKeys}
+        />
+        <TextField
+          label="Notas"
+          type="text"
+          {...register("notes")}
+          variant="standard"
+          fullWidth
+          error={!!errors.notes}
+          helperText={errors.notes?.message as string}
+          autoCapitalize="words"
+          required
+        />
         <Button
           fullWidth
           type="submit"

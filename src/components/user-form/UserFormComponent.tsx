@@ -180,8 +180,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         <MultiselectComponent
           title="Grupos de trabajo"
           labels={workgroups?.map((wg) => wg.name) || []}
-          label={labelWg}
-          setLabel={setLabelWg}
+          value={labelWg}
+          setValue={setLabelWg}
         />
         <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
           <FormLabel component="legend">Permisos</FormLabel>

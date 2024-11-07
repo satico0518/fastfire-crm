@@ -13,7 +13,7 @@ import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutl
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
-import { GetWorkgroupNameByKey, translateAccess } from "../../utils/utils";
+import { getWorkgroupNameByKey, translateAccess } from "../../utils/utils";
 import { UserFormComponent } from "../user-form/UserFormComponent";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
@@ -63,7 +63,7 @@ export default function UsersTable() {
       renderCell: (params: GridRenderCellParams<User>) => (
         <div className="permissions">
           {params.row?.workgroupKeys?.map((wg: string) => (
-            <Chip size="small" key={wg} label={GetWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
+            <Chip size="small" key={wg} label={getWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
           )) || <Chip label="Sin grupo" color="warning"/>}
         </div>
       ),

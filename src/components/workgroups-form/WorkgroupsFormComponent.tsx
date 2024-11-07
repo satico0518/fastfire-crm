@@ -13,7 +13,7 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { WorkgroupService } from "../../services/workgroup.service";
 import { useUsersStore } from "../../stores/users/users.store";
-import { GetUserNameByKey } from "../../utils/utils";
+import { getUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { AutocompleteField } from "../../interfaces/Shared";
 import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
@@ -59,7 +59,7 @@ export const WorkgroupsFormComponent = ({
       if (editingGroup.memberKeys?.length > 0) {
         setSelectedMembers(editingGroup.memberKeys.map((key) => ({
                 key: key,
-                label: GetUserNameByKey(key as string, users as User[]),
+                label: getUserNameByKey(key as string, users as User[]),
               })) as SetStateAction<AutocompleteField[]>
         );     
       }
@@ -73,7 +73,7 @@ export const WorkgroupsFormComponent = ({
         setAvailableMembers(
           availableEditingMembers?.map((user) => ({
             key: user.key,
-            label: GetUserNameByKey(user.key as string, users as User[]),
+            label: getUserNameByKey(user.key as string, users as User[]),
           })) as SetStateAction<AutocompleteField[]>
         );
 
@@ -83,7 +83,7 @@ export const WorkgroupsFormComponent = ({
     setAvailableMembers(
       users?.filter(u => u.isActive).map((user) => ({
         key: user.key,
-        label: GetUserNameByKey(user.key as string, users),
+        label: getUserNameByKey(user.key as string, users),
       })) as SetStateAction<AutocompleteField[]>
     );
   }, [editingGroup, setValue, users]);

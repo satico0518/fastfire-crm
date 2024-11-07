@@ -30,23 +30,23 @@ function getStyles(name: string, personName: readonly string[], theme: Theme) {
 interface MultiselectComponentProps {
   title: string;
   labels: string[];
-  label: string[];
-  setLabel: React.Dispatch<React.SetStateAction<string[]>>;
+  value: string[];
+  setValue: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export const MultiselectComponent = ({
   title,
   labels,
-  label,
-  setLabel,
+  value,
+  setValue,
 }: MultiselectComponentProps) => {
   const theme = useTheme();
 
-  const handleChange = (event: SelectChangeEvent<typeof label>) => {
+  const handleChange = (event: SelectChangeEvent<typeof value>) => {
     const {
       target: { value },
     } = event;
-    setLabel(typeof value === "string" ? value.split(",") : value);
+    setValue(typeof value === "string" ? value.split(",") : value);
   };
 
   return (
@@ -56,7 +56,7 @@ export const MultiselectComponent = ({
         <Select
           labelId="demo-multiple-chip-label"
           multiple
-          value={label}
+          value={value}
           onChange={handleChange}
           input={<OutlinedInput id="select-multiple-chip" label={title} />}
           renderValue={(selected) => (
@@ -71,7 +71,7 @@ export const MultiselectComponent = ({
           MenuProps={MenuProps}
         >
           {labels.map((lb) => (
-            <MenuItem key={lb} value={lb} style={getStyles(lb, label, theme)}>
+            <MenuItem key={lb} value={lb} style={getStyles(lb, value, theme)}>
               {lb}
             </MenuItem>
           ))}

@@ -25,16 +25,15 @@ export interface Task {
     [key: string]: unknown;
     id: string;
     key?: string;
-    avatarURL?: string; 
     name: string;
-    ownerKey?: string;
+    ownerKeys?: string[];
     priority: Priority;
     history: TaskEvent[];
     createdDate: number;
     dueDate: Date;
     createdByUserKey: string;
-    workgroupKey: string;
+    workgroupKeys: string[];
     tags: string[];
     status: Status;
-    notes: Note[];
+    notes: string;
 }

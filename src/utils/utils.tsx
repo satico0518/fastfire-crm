@@ -75,15 +75,29 @@ export const translatePriority = (priority: Priority): JSX.Element => {
   }
 };
 
-export const GetUserNameByKey = (userKey: string, users: User[]) => {
+export const getUserNameByKey = (userKey: string, users: User[]): string => {
   if (users.length) {
     const user = users.filter((u) => u.key === userKey)[0];
-    return `${user.firstName} ${user.lastName}`;
+    return `${user?.firstName} ${user?.lastName}`;
   }
   return "NA";
 };
 
-export const GetProjectNameByKey = (
+export const getUserKeysByNames = (ownerNames: string[], users: User[]): string[] => {
+  if (users.length) {
+    const owners = users?.filter((u) =>
+      ownerNames.some(
+        (o) =>
+          o.includes(u.firstName) &&
+          ownerNames.some((o) => o.includes(u.lastName))
+      )
+    );
+    return owners?.map((o) => o.key) as string[] || [];
+  }
+  return [];
+};
+
+export const getProjectNameByKey = (
   projectKey: string,
   projects: Project[]
 ) => {
@@ -94,7 +108,7 @@ export const GetProjectNameByKey = (
   return "NA";
 };
 
-export const GetWorkgroupNameByKey = (
+export const getWorkgroupNameByKey = (
   workgroupKey: string,
   workgroups: Workgroup[]
 ) => {
