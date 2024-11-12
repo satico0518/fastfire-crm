@@ -18,7 +18,6 @@ export const useTasksStore = create<TasksState>()(
         const tasksRef = ref(db, "tasks");
         onValue(tasksRef, (snapshot) => {
           const data = snapshot.val();
-
           if (data) {
             const values = Object.entries<Task>(data).map(([key, value]) => ({
               ...value,
@@ -28,7 +27,7 @@ export const useTasksStore = create<TasksState>()(
           } else set({ tasks: [] });
         });
       } catch (error) {
-        console.error('Error cargando tareas desde store', {error});
+        console.error("Error cargando tareas desde store", { error });
         set({ tasks: [] });
       }
     },

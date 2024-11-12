@@ -23,6 +23,8 @@ export const DialogueMultiselect = ({
   okButtonText = "Ok",
   okButtonAction = () => {},
 }: DialogueMultiselectProps) => {
+  console.log('entroo');
+  
   return (
     <Dialog
       sx={{ top: "35%", left: "50%" }}

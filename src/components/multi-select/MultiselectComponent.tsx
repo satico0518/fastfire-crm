@@ -21,7 +21,7 @@ const MenuProps = {
 
 function getStyles(name: string, personName: readonly string[], theme: Theme) {
   return {
-    fontWeight: personName.includes(name)
+    fontWeight: personName?.includes(name)
       ? theme.typography.fontWeightMedium
       : theme.typography.fontWeightRegular,
   };
@@ -70,7 +70,7 @@ export const MultiselectComponent = ({
           variant="standard"
           MenuProps={MenuProps}
         >
-          {labels.map((lb) => (
+          {labels.length > 0 && labels?.map((lb) => (
             <MenuItem key={lb} value={lb} style={getStyles(lb, value, theme)}>
               {lb}
             </MenuItem>
