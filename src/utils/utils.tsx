@@ -36,11 +36,13 @@ export const translateStatus = (status: Status): string => {
     case "IN_PROGRESS":
       return "En Progreso";
     case "BLOCKED":
-      return "Bloqueado";
+      return "Bloqueada";
     case "ARCHIVED":
-      return "Archivado";
+      return "Archivada";
+      case "DELETED":
+        return "Eliminada";
     case "DONE":
-      return "Finalizado";
+      return "Finalizada";
     default:
       return "NA";
   }

@@ -7,7 +7,7 @@ import {
   GridRowParams,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import { Button, Chip, Input } from "@mui/material";
+import { Button, Chip, FormControlLabel, Input, Switch } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
@@ -50,6 +50,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
   const [openOwnersDialog, setOpenOwnersDialog] = useState(false);
+  const [showArchivedTasks, setShowArchivedTasks] = useState(false);
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
 
   const handleEditTask = async (
@@ -104,6 +105,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     try {
       task.ownerKeys = getUserKeysByNames(ownerNames, users as User[]) ?? [];
       const resp = await TaskService.updateTask(task);
+
       if (resp.result === "OK") {
         setSnackbar({
           open: true,
@@ -132,6 +134,37 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   };
 
   const columns: GridColDef[] = [
+    {
+      field: "actions",
+      type: "actions",
+      width: 50,
+      align: "right",
+      getActions: (params: GridRowParams<Task>) => [
+        <GridActionsCellItem
+          icon={<BlockOutlinedIcon />}
+          onClick={() =>
+            TaskService.updateTask({ ...params.row, status: "BLOCKED" })
+          }
+          label="Bloquear"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          hidden={params.row.status === "DONE"}
+          icon={<TaskAltOutlinedIcon />}
+          onClick={() =>
+            TaskService.updateTask({ ...params.row, status: "DONE" })
+          }
+          label="Finalizar"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          icon={<ArchiveOutlinedIcon />}
+          onClick={() => handleDeleteConfirmation(params.row)}
+          label="Archivar"
+          showInMenu
+        />,
+      ],
+    },
     {
       field: "status",
       headerName: "Estado",
@@ -163,6 +196,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           )}
           {params.row.status === "ARCHIVED" && (
             <Chip color="default" label={translateStatus(params.row.status)} />
+          )}{" "}
+          {params.row.status === "DELETED" && (
+            <Chip color="error" label={translateStatus(params.row.status)} />
           )}
           {params.row.status === "DONE" && (
             <>
@@ -260,15 +296,15 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                   title={(users && getUserNameByKey(k, users)) || "NA"}
                   style={{
                     backgroundColor:
-                      users?.filter((u) => u.key === k)[0].color ??
+                      users?.filter((u) => u.key === k)[0]?.color ??
                       "blueviolet",
                   }}
                 >
                   {`${users
                     ?.filter((u) => u.key === k)[0]
-                    .firstName.charAt(0)}${users
+                    ?.firstName.charAt(0)}${users
                     ?.filter((u) => u.key === k)[0]
-                    .lastName.charAt(0)}`}
+                    ?.lastName.charAt(0)}`}
                 </div>
               ))
             : "Sin asignar"}
@@ -314,7 +350,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Notas",
       type: "string",
       width: 150,
-      valueGetter: (value: string) => value.length > 0 ? value : "-",
+      valueGetter: (value: string) => (value.length > 0 ? value : "-"),
     },
     {
       field: "priority",
@@ -345,41 +381,14 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Grupos de Trabajo",
       type: "string",
       width: 200,
-      renderCell: ({row}: GridRenderCellParams<Task>) => {
-        const taskWorkgroups = workgroups?.filter(wg => row.workgroupKeys.some(k => k === wg.key as string));
-        return taskWorkgroups?.map(wg => (<Chip style={{marginLeft: '5px'}} size="small" label={wg.name}/>));
+      renderCell: ({ row }: GridRenderCellParams<Task>) => {
+        const taskWorkgroups = workgroups?.filter((wg) =>
+          row.workgroupKeys?.some((k) => k === (wg.key as string))
+        );
+        return taskWorkgroups?.map((wg) => (
+          <Chip style={{ marginLeft: "5px" }} size="small" label={wg.name} />
+        ));
       },
-    },
-    {
-      field: "actions",
-      type: "actions",
-      width: 100,
-      align: "right",
-      getActions: (params: GridRowParams<Task>) => [
-        <GridActionsCellItem
-          icon={<BlockOutlinedIcon />}
-          onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "BLOCKED" })
-          }
-          label="Bloquear"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          hidden={params.row.status === "DONE"}
-          icon={<TaskAltOutlinedIcon />}
-          onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "DONE" })
-          }
-          label="Finalizar"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          icon={<ArchiveOutlinedIcon />}
-          onClick={() => handleDeleteConfirmation(params.row)}
-          label="Archivar"
-          showInMenu
-        />,
-      ],
     },
   ];
 
@@ -414,15 +423,25 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
 
   const getTaskByRole = (): Task[] => {
     if (workgroup) {
-      return tasks?.filter((t) => t.workgroupKeys.some(k => workgroup.key === k)) as Task[];
+      return tasks
+        ?.filter((t) => t.workgroupKeys?.some((k) => workgroup.key === k))
+        .filter((t) => t.status !== "DELETED") as Task[];
     }
 
     if (!currentUser?.permissions.includes("ADMIN"))
       return tasks
-        ?.filter((t) => currentUser?.workgroupKeys.some((k) => t.workgroupKey === k))
+        ?.filter((t) =>
+          currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
+        )
         .filter((t) => t.status !== "DELETED") as Task[];
 
-    return tasks !== null ? tasks.filter((t) => t.status !== "DELETED") : [];
+    return tasks !== null
+      ? tasks?.filter(
+          (t) =>
+            t.status !== "DELETED" &&
+            (showArchivedTasks || t.status !== "ARCHIVED")
+        )
+      : [];
   };
 
   return (
@@ -438,7 +457,22 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         }}
         sx={{ border: 0 }}
       />
-      <TaskCreatorRowComponent />
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <TaskCreatorRowComponent />
+        <FormControlLabel
+          sx={{color: 'white'}}
+          control={
+            <Switch
+              color={showArchivedTasks ? 'info' : 'default'}
+              title="ver archivadas"
+              checked={showArchivedTasks}
+              onChange={() => setShowArchivedTasks(!showArchivedTasks)}
+            />
+          }
+          label="ver archivadas"
+          labelPlacement="start"
+        />
+      </div>
     </Paper>
   );
 }
