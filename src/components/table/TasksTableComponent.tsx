@@ -14,6 +14,7 @@ import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
@@ -34,6 +35,7 @@ import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
+import { useTagsStore } from "../../stores/tags/tags.store";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -45,13 +47,17 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
+  const tags = useTagsStore((state) => state.tags);
   const tasks = useTasksStore((state) => state.tasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
-  const [openOwnersDialog, setOpenOwnersDialog] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showArchivedTasks, setShowArchivedTasks] = useState(false);
+  const [openOwnersDialog, setOpenOwnersDialog] = useState<boolean>(false);
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
+  const [openTagsDialog, setOpenTagsDialog] = useState<boolean>(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const handleEditTask = async (
     field: string,
@@ -101,27 +107,30 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     }
   };
 
-  const handleEditOwner = async (ownerNames: string[], task: Task) => {
+  const handleEditOwner = async () => {
     try {
-      task.ownerKeys = getUserKeysByNames(ownerNames, users as User[]) ?? [];
-      const resp = await TaskService.updateTask(task);
-
-      if (resp.result === "OK") {
-        setSnackbar({
-          open: true,
-          message: "Tarea creada exitosamente!",
-          severity: "success",
-        });
-      } else {
-        console.error(
-          "Error creando tarea en Task Creator, ",
-          resp.errorMessage
-        );
-        setSnackbar({
-          open: true,
-          message: "Error creando tarea.",
-          severity: "error",
-        });
+      if (selectedTask) {
+        selectedTask.ownerKeys =
+          getUserKeysByNames(selectedOwners, users as User[]) ?? [];
+        const resp = await TaskService.updateTask(selectedTask);
+        if (resp.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: "Tarea editada exitosamente!",
+            severity: "success",
+          });
+          setSelectedOwners([]);
+        } else {
+          console.error(
+            "Error editando tarea en Task Creator, ",
+            resp.errorMessage
+          );
+          setSnackbar({
+            open: true,
+            message: "Error editando tarea.",
+            severity: "error",
+          });
+        }
       }
     } catch (error) {
       console.error("Error creando tarea en Task Creator, ", { error });
@@ -133,7 +142,85 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     }
   };
 
+  const handleAddTags = async () => {
+    try {
+      if (selectedTask) {
+        selectedTask.tags = selectedTags;
+        TaskService.updateTask(selectedTask);
+        setSelectedTags([]);
+      }
+    } catch (error) {
+      console.error("Error eliminando etiqueta", { selectedTask }, { error });
+      setSnackbar({
+        open: true,
+        message: "Error eliminando etiqueta.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleDeleteTask = async (task: Task) => {
+    task.status = "DELETED";
+    const deleteResult = await TaskService.updateTask(task);
+
+    if (deleteResult)
+      setSnackbar({
+        open: true,
+        message: "Tarea eliminada exitosamente!",
+        severity: "success",
+      });
+    else
+      setSnackbar({
+        open: true,
+        message: "Error al eliminar tarea.",
+        severity: "error",
+      });
+
+    setConfirmation({ open: false, title: "", text: "", actions: null });
+  };
+
+  const handleDeleteConfirmation = (task: Task) => {
+    setConfirmation({
+      open: true,
+      title: "Confirmacion!",
+      text: `Vas a eliminar la tarea "${task.name.toUpperCase()}", no podras volver a verla ni revisar su historial.`,
+      actions: <Button onClick={() => handleDeleteTask(task)}>Eliminar</Button>,
+    });
+  };
+
+  const getTaskByRole = (): Task[] => {
+    if (workgroup) {
+      return tasks
+        ?.filter((t) => t.workgroupKeys?.some((k) => workgroup.key === k))
+        .filter(
+          (t) =>
+            t.status !== "DELETED" &&
+            (showArchivedTasks || t.status !== "ARCHIVED")
+        ) as Task[];
+    }
+
+    if (!currentUser?.permissions.includes("ADMIN"))
+      return tasks
+        ?.filter((t) =>
+          currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
+        )
+        .filter(
+          (t) =>
+            t.status !== "DELETED" &&
+            (showArchivedTasks || t.status !== "ARCHIVED")
+        ) as Task[];
+
+    return tasks !== null
+      ? tasks?.filter(
+          (t) =>
+            t.status !== "DELETED" &&
+            (showArchivedTasks || t.status !== "ARCHIVED")
+        )
+      : [];
+  };
+
   const columns: GridColDef[] = [
+    // actions
     {
       field: "actions",
       type: "actions",
@@ -159,12 +246,21 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         />,
         <GridActionsCellItem
           icon={<ArchiveOutlinedIcon />}
-          onClick={() => handleDeleteConfirmation(params.row)}
+          onClick={() =>
+            TaskService.updateTask({ ...params.row, status: "ARCHIVED" })
+          }
           label="Archivar"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          icon={<ArchiveOutlinedIcon />}
+          onClick={() => handleDeleteConfirmation(params.row)}
+          label="Eliminar"
           showInMenu
         />,
       ],
     },
+    // status
     {
       field: "status",
       headerName: "Estado",
@@ -235,6 +331,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         </>
       ),
     },
+    // name
     {
       field: "name",
       headerName: "Nombre",
@@ -262,6 +359,19 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                   sx={{ fontSize: "12px" }}
                 />
               ))}
+            <Button
+              size="small"
+              color="secondary"
+              sx={{ fontSize: "12px" }}
+              onClick={() => {
+                setSelectedTask(row);
+                setSelectedTags(row.tags || []);
+                setOpenTagsDialog(true);
+              }}
+              title="Agregar etiqueta"
+            >
+              <AddCircleOutlinedIcon />
+            </Button>
           </div>
         </div>
       ),
@@ -279,6 +389,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         </>
       ),
     },
+    // owners
     {
       field: "ownerKeys",
       headerName: "Responsables",
@@ -310,34 +421,25 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             : "Sin asignar"}
         </div>
       ),
-      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => {
-        // setSelectedOwners(users?.filter(u => row.ownerKeys?.some(k => k === u.key)) as User[])
-
-        return (
-          <>
-            <DialogueMultiselect
-              title="Responsables"
-              open={openOwnersDialog}
-              labels={
-                users?.map((u) =>
-                  getUserNameByKey(u.key as string, users)
-                ) as unknown as string[]
-              }
-              setOpen={setOpenOwnersDialog}
-              value={selectedOwners}
-              setValue={setSelectedOwners}
-              okButtonText="Guardar"
-              okButtonAction={() =>
-                handleEditOwner(selectedOwners as unknown as string[], row)
-              }
-            />
-            <Button onClick={() => setOpenOwnersDialog(true)}>
-              <GroupAddOutlinedIcon />
-            </Button>
-          </>
-        );
-      },
+      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
+        <>
+          <Button
+            onClick={() => {
+              setSelectedTask(row);
+              setSelectedOwners(
+                row?.ownerKeys?.map((k) =>
+                  getUserNameByKey(k, users as User[])
+                ) as string[] || []
+              );
+              setOpenOwnersDialog(true);
+            }}
+          >
+            <GroupAddOutlinedIcon />
+          </Button>
+        </>
+      ),
     },
+    // dueDate
     {
       field: "dueDate",
       headerName: "Fecha Limite",
@@ -345,6 +447,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       width: 150,
       valueGetter: (value) => value ?? "Sin fecha límite",
     },
+    // notes
     {
       field: "notes",
       headerName: "Notas",
@@ -352,6 +455,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       width: 150,
       valueGetter: (value: string) => (value.length > 0 ? value : "-"),
     },
+    // priority
     {
       field: "priority",
       headerName: "Prioridad",
@@ -360,6 +464,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       renderCell: (params: GridRenderCellParams<Task>) =>
         params.row?.priority ? translatePriority(params.row.priority) : "-",
     },
+    // createdDate
     {
       field: "createdDate",
       headerName: "Fecha de Creación",
@@ -376,6 +481,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         </span>
       ),
     },
+    // workgroupKeys
     {
       field: "workgroupKeys",
       headerName: "Grupos de Trabajo",
@@ -391,58 +497,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       },
     },
   ];
-
-  const handleDeleteTask = async (task: Task) => {
-    task.status = "DELETED";
-    const deleteResult = await TaskService.updateTask(task);
-
-    if (deleteResult)
-      setSnackbar({
-        open: true,
-        message: "Tarea eliminada exitosamente!",
-        severity: "success",
-      });
-    else
-      setSnackbar({
-        open: true,
-        message: "Error al eliminar tarea.",
-        severity: "error",
-      });
-
-    setConfirmation({ open: false, title: "", text: "", actions: null });
-  };
-
-  const handleDeleteConfirmation = (task: Task) => {
-    setConfirmation({
-      open: true,
-      title: "Confirmacion!",
-      text: `Vas a archivar la tarea "${task.name.toUpperCase()}".`,
-      actions: <Button onClick={() => handleDeleteTask(task)}>Archivar</Button>,
-    });
-  };
-
-  const getTaskByRole = (): Task[] => {
-    if (workgroup) {
-      return tasks
-        ?.filter((t) => t.workgroupKeys?.some((k) => workgroup.key === k))
-        .filter((t) => t.status !== "DELETED") as Task[];
-    }
-
-    if (!currentUser?.permissions.includes("ADMIN"))
-      return tasks
-        ?.filter((t) =>
-          currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
-        )
-        .filter((t) => t.status !== "DELETED") as Task[];
-
-    return tasks !== null
-      ? tasks?.filter(
-          (t) =>
-            t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
-        )
-      : [];
-  };
 
   return (
     <Paper sx={{ height: "calc(100vh - 220px)", width: "100%" }}>
@@ -460,10 +514,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <TaskCreatorRowComponent />
         <FormControlLabel
-          sx={{color: 'white'}}
+          sx={{ color: "white" }}
           control={
             <Switch
-              color={showArchivedTasks ? 'info' : 'default'}
+              color={showArchivedTasks ? "info" : "default"}
               title="ver archivadas"
               checked={showArchivedTasks}
               onChange={() => setShowArchivedTasks(!showArchivedTasks)}
@@ -473,6 +527,31 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           labelPlacement="start"
         />
       </div>
+
+      <DialogueMultiselect
+        title="Etiquetas"
+        open={openTagsDialog}
+        labels={Object.values(tags) as unknown as string[]}
+        setOpen={setOpenTagsDialog}
+        value={selectedTags}
+        setValue={setSelectedTags}
+        okButtonText="Guardar"
+        okButtonAction={() => handleAddTags()}
+      />
+      <DialogueMultiselect
+        title="Responsables"
+        open={openOwnersDialog}
+        labels={
+          users?.map((u) =>
+            getUserNameByKey(u.key as string, users)
+          ) as unknown as string[]
+        }
+        setOpen={setOpenOwnersDialog}
+        value={selectedOwners}
+        setValue={setSelectedOwners}
+        okButtonText="Guardar"
+        okButtonAction={() => handleEditOwner()}
+      />
     </Paper>
   );
 }
