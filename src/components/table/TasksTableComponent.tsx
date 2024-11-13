@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   Input,
   Switch,
+  TextField,
   Tooltip,
 } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
@@ -26,8 +27,10 @@ import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 import SpeakerNotesOutlinedIcon from "@mui/icons-material/SpeakerNotesOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
+import NoteAltOutlinedIcon from "@mui/icons-material/NoteAltOutlined";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import DateRangeOutlinedIcon from "@mui/icons-material/DateRangeOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Priority, Task } from "../../interfaces/Task";
 
@@ -51,6 +54,10 @@ import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
 import { useTagsStore } from "../../stores/tags/tags.store";
 import { PriorityInput } from "../priority-input/PriorityInput";
+import { DialogueCustomContent } from "../dialogs/DialogueCustomContent";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -80,14 +87,25 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const currentUser = useAuhtStore((state) => state.user);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showArchivedTasks, setShowArchivedTasks] = useState(false);
+
   const [openOwnersDialog, setOpenOwnersDialog] = useState<boolean>(false);
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
+
   const [openTagsDialog, setOpenTagsDialog] = useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
   const [openGroupsDialog, setOpenGroupsDialog] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
   const [openPriorityDialog, setOpenPriorityDialog] = useState(false);
   const [priority, setPriority] = useState<Priority | null>();
+
+  const [openDueDateDialog, setOpenDueDateDialog] = useState(false);
+  const [selectedDueDate, setSelectedDueDate] = useState<Dayjs | null>();
+
+  const [openNotesDialog, setOpenNotesDialog] = useState(false);
+  const [taskNotes, setTaskNotes] = useState<string | null>();
+
   const [columWidths, setColumWidths] = useState<ColumnWidhts | null>(
     JSON.parse(sessionStorage.getItem("columWidths") || "{}")
   );
@@ -174,6 +192,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       });
     }
   };
+
   const handleEditPriority = async () => {
     try {
       if (selectedTask) {
@@ -185,7 +204,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             message: "Tarea editada exitosamente!",
             severity: "success",
           });
-          setSelectedOwners([]);
         } else {
           console.error(
             "Error editando tarea en Task Creator, ",
@@ -197,6 +215,73 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             severity: "error",
           });
         }
+      }
+    } catch (error) {
+      console.error("Error creando tarea en Task Creator, ", { error });
+      setSnackbar({
+        open: true,
+        message: "Error creando tarea.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleEditDueDate = async () => {
+    try {
+      if (selectedTask) {
+        selectedTask.dueDate = selectedDueDate ? selectedDueDate?.toDate() as Date : '';
+        const resp = await TaskService.updateTask(selectedTask);
+        if (resp.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: "Tarea editada exitosamente!",
+            severity: "success",
+          });
+        } else {
+          console.error(
+            "Error editando tarea en table Task, ",
+            resp.errorMessage
+          );
+          setSnackbar({
+            open: true,
+            message: "Error editando tarea.",
+            severity: "error",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error editando etiqueta", { selectedTask }, { error });
+      setSnackbar({
+        open: true,
+        message: "Error editando etiqueta.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleEditNotes = async () => {
+    try {
+      if (selectedTask) {
+        selectedTask.notes += `, ${taskNotes}`;
+        const resp = await TaskService.updateTask(selectedTask);
+        if (resp.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: "Tarea editada exitosamente!",
+            severity: "success",
+          });
+        } else {
+          console.error(
+            "Error editando tarea en Table Task, ",
+            resp.errorMessage
+          );
+          setSnackbar({
+            open: true,
+            message: "Error editando tarea.",
+            severity: "error",
+          });
+        }
+        setTaskNotes('')
       }
     } catch (error) {
       console.error("Error creando tarea en Task Creator, ", { error });
@@ -223,10 +308,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             message: "Tarea editada exitosamente!",
             severity: "success",
           });
-          setSelectedOwners([]);
         } else {
           console.error(
-            "Error editando tarea en Task Creator, ",
+            "Error editando tarea en Table Task, ",
             resp.errorMessage
           );
           setSnackbar({
@@ -250,7 +334,24 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     try {
       if (selectedTask) {
         selectedTask.tags = selectedTags;
-        TaskService.updateTask(selectedTask);
+        const resp = await TaskService.updateTask(selectedTask);
+        if (resp.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: "Tarea editada exitosamente!",
+            severity: "success",
+          });
+        } else {
+          console.error(
+            "Error editando tarea en Table Task, ",
+            resp.errorMessage
+          );
+          setSnackbar({
+            open: true,
+            message: "Error editando tarea.",
+            severity: "error",
+          });
+        }
         setSelectedTags([]);
       }
     } catch (error) {
@@ -556,7 +657,19 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Fecha Limite",
       type: "string",
       width: columWidths?.dueDate ?? 150,
-      valueGetter: (value) => value ?? "Sin fecha límite",
+      renderCell: ({row}: GridRenderCellParams<Task>) => row?.dueDate ? dayjs(row.dueDate).format("DD/MM/YYYY") : "Sin fecha límite",
+      editable: true,
+      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
+        <Button
+          onClick={() => {
+            setSelectedTask(row);
+            if (row?.dueDate) setSelectedDueDate(dayjs(row?.dueDate));
+            setOpenDueDateDialog(true);
+          }}
+        >
+          <DateRangeOutlinedIcon />
+        </Button>
+      ),
     },
     // notes
     {
@@ -579,6 +692,17 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         ) : (
           "-"
         ),
+      editable: true,
+      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
+        <Button
+          onClick={() => {
+            setSelectedTask(row);
+            setOpenNotesDialog(true);
+          }}
+        >
+          <NoteAltOutlinedIcon />
+        </Button>
+      ),
     },
     // priority
     {
@@ -711,6 +835,41 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         setValue={setSelectedOwners}
         okButtonText="Guardar"
         okButtonAction={() => handleEditOwner()}
+      />
+      <DialogueCustomContent
+        title="Fecha Límite"
+        open={openDueDateDialog}
+        setOpen={setOpenDueDateDialog}
+        content={
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              disablePast
+              label="Fecha Límite"
+              name="dueDate"
+              format="DD/MM/YYYY"
+              value={selectedDueDate}
+              onChange={(val) => setSelectedDueDate(val)}
+            />
+          </LocalizationProvider>
+        }
+        okText="Guardar"
+        okAction={() => handleEditDueDate()}
+      />
+      <DialogueCustomContent
+        title="Notas"
+        open={openNotesDialog}
+        setOpen={setOpenNotesDialog}
+        content={
+          <TextField
+            id="outlined-basic"
+            variant="standard"
+            value={taskNotes}
+            onChange={({ target }) => setTaskNotes(target.value)}
+            fullWidth
+          />
+        }
+        okText="Guardar"
+        okAction={() => handleEditNotes()}
       />
       <PriorityInput
         open={openPriorityDialog}

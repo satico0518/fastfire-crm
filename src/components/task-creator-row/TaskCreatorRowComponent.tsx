@@ -1,7 +1,4 @@
-import {
-  Button,
-  TextField,
-} from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -177,6 +174,7 @@ export const TaskCreatorRowComponent = () => {
                     disablePast
                     label="Fecha Límite"
                     name="dueDate"
+                    format="DD/MM/YYYY"
                     value={selectedDueDate}
                     onChange={(val) => setSelectedDueDate(val)}
                   />

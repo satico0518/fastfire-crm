@@ -30,7 +30,7 @@ export interface Task {
     priority: Priority;
     history: TaskEvent[];
     createdDate: number;
-    dueDate: Date;
+    dueDate: Date|string;
     createdByUserKey: string;
     workgroupKeys: string[];
     tags: string[];
