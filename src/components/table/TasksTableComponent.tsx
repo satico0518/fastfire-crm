@@ -8,7 +8,14 @@ import {
   GridRowParams,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import { Button, Chip, FormControlLabel, Input, Switch, Tooltip } from "@mui/material";
+import {
+  Button,
+  Chip,
+  FormControlLabel,
+  Input,
+  Switch,
+  Tooltip,
+} from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
@@ -16,14 +23,19 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
-import SpeakerNotesOutlinedIcon from '@mui/icons-material/SpeakerNotesOutlined';
+import SpeakerNotesOutlinedIcon from "@mui/icons-material/SpeakerNotesOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
+import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
-import { Task } from "../../interfaces/Task";
+import { Priority, Task } from "../../interfaces/Task";
 
 import { useUiStore } from "../../stores/ui/ui.store";
 import {
   getUserKeysByNames,
   getUserNameByKey,
+  getWorkgroupNameByKey,
   translatePriority,
   translateStatus,
   translateTimestampToString,
@@ -38,6 +50,7 @@ import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowCompo
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
 import { useTagsStore } from "../../stores/tags/tags.store";
+import { PriorityInput } from "../priority-input/PriorityInput";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -71,7 +84,13 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
   const [openTagsDialog, setOpenTagsDialog] = useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [columWidths, setColumWidths] = useState<ColumnWidhts | null>(JSON.parse(sessionStorage.getItem("columWidths") || "{}"));
+  const [openGroupsDialog, setOpenGroupsDialog] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [openPriorityDialog, setOpenPriorityDialog] = useState(false);
+  const [priority, setPriority] = useState<Priority | null>();
+  const [columWidths, setColumWidths] = useState<ColumnWidhts | null>(
+    JSON.parse(sessionStorage.getItem("columWidths") || "{}")
+  );
 
   const handleEditTask = async (
     field: string,
@@ -155,6 +174,77 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       });
     }
   };
+  const handleEditPriority = async () => {
+    try {
+      if (selectedTask) {
+        selectedTask.priority = priority as Priority;
+        const resp = await TaskService.updateTask(selectedTask);
+        if (resp.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: "Tarea editada exitosamente!",
+            severity: "success",
+          });
+          setSelectedOwners([]);
+        } else {
+          console.error(
+            "Error editando tarea en Task Creator, ",
+            resp.errorMessage
+          );
+          setSnackbar({
+            open: true,
+            message: "Error editando tarea.",
+            severity: "error",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error creando tarea en Task Creator, ", { error });
+      setSnackbar({
+        open: true,
+        message: "Error creando tarea.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleEditGroups = async () => {
+    try {
+      if (selectedTask) {
+        selectedTask.workgroupKeys =
+          (workgroups
+            ?.filter((wg) => selectedGroups.some((sg) => sg === wg.name))
+            .map((wg) => wg.key) as string[]) || [];
+
+        const resp = await TaskService.updateTask(selectedTask);
+        if (resp.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: "Tarea editada exitosamente!",
+            severity: "success",
+          });
+          setSelectedOwners([]);
+        } else {
+          console.error(
+            "Error editando tarea en Task Creator, ",
+            resp.errorMessage
+          );
+          setSnackbar({
+            open: true,
+            message: "Error editando tarea.",
+            severity: "error",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error creando tarea en Task Creator, ", { error });
+      setSnackbar({
+        open: true,
+        message: "Error creando tarea.",
+        severity: "error",
+      });
+    }
+  };
 
   const handleAddTags = async () => {
     try {
@@ -196,8 +286,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const handleDeleteConfirmation = (task: Task) => {
     setConfirmation({
       open: true,
-      title: "Confirmacion!",
-      text: `Vas a eliminar la tarea "${task.name.toUpperCase()}", no podras volver a verla ni revisar su historial.`,
+      title: "Confirmación!",
+      text: `Vas a eliminar la tarea "${task.name.toUpperCase()}", no podrás volver a verla ni revisar su historial.`,
       actions: <Button onClick={() => handleDeleteTask(task)}>Eliminar</Button>,
     });
   };
@@ -243,7 +333,15 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
-          icon={<BlockOutlinedIcon />}
+          icon={<RestoreOutlinedIcon color="info" />}
+          onClick={() =>
+            TaskService.updateTask({ ...params.row, status: "TODO" })
+          }
+          label="Volver a Iniciar"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          icon={<BlockOutlinedIcon color="warning" />}
           onClick={() =>
             TaskService.updateTask({ ...params.row, status: "BLOCKED" })
           }
@@ -252,7 +350,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         />,
         <GridActionsCellItem
           hidden={params.row.status === "DONE"}
-          icon={<TaskAltOutlinedIcon />}
+          icon={<TaskAltOutlinedIcon color="success" />}
           onClick={() =>
             TaskService.updateTask({ ...params.row, status: "DONE" })
           }
@@ -268,7 +366,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           showInMenu
         />,
         <GridActionsCellItem
-          icon={<ArchiveOutlinedIcon />}
+          icon={<DeleteOutlineOutlinedIcon color="error" />}
           onClick={() => handleDeleteConfirmation(params.row)}
           label="Eliminar"
           showInMenu
@@ -437,21 +535,19 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         </div>
       ),
       renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
-        <>
-          <Button
-            onClick={() => {
-              setSelectedTask(row);
-              setSelectedOwners(
-                (row?.ownerKeys?.map((k) =>
-                  getUserNameByKey(k, users as User[])
-                ) as string[]) || []
-              );
-              setOpenOwnersDialog(true);
-            }}
-          >
-            <GroupAddOutlinedIcon />
-          </Button>
-        </>
+        <Button
+          onClick={() => {
+            setSelectedTask(row);
+            setSelectedOwners(
+              (row?.ownerKeys?.map((k) =>
+                getUserNameByKey(k, users as User[])
+              ) as string[]) || []
+            );
+            setOpenOwnersDialog(true);
+          }}
+        >
+          <GroupAddOutlinedIcon />
+        </Button>
       ),
     },
     // dueDate
@@ -467,9 +563,22 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "notes",
       headerName: "Notas",
       type: "string",
-      width: columWidths?.notes ?? 150,
-      renderCell: ({row}: GridRenderCellParams<Task>) => 
-        (row.notes?.length > 0 ? <Tooltip title={row.notes} sx={{cursor: 'context-menu'}}><SpeakerNotesOutlinedIcon /></Tooltip> : "-"),
+      sortable: false,
+      disableColumnMenu: true,
+      width: columWidths?.notes ?? 60,
+      align: "center",
+      renderCell: ({ row }: GridRenderCellParams<Task>) =>
+        row.notes?.length > 0 ? (
+          <div
+            style={{ display: "flex", alignItems: "center", height: "100%" }}
+          >
+            <Tooltip title={row.notes} sx={{ cursor: "context-menu" }}>
+              <SpeakerNotesOutlinedIcon />
+            </Tooltip>
+          </div>
+        ) : (
+          "-"
+        ),
     },
     // priority
     {
@@ -479,6 +588,18 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       width: columWidths?.priority ?? 150,
       renderCell: (params: GridRenderCellParams<Task>) =>
         params.row?.priority ? translatePriority(params.row.priority) : "-",
+      editable: true,
+      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
+        <Button
+          onClick={() => {
+            setSelectedTask(row);
+            setPriority(row?.priority);
+            setOpenPriorityDialog(true);
+          }}
+        >
+          <EmojiFlagsOutlinedIcon />
+        </Button>
+      ),
     },
     // createdDate
     {
@@ -511,6 +632,24 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           <Chip style={{ marginLeft: "5px" }} size="small" label={wg.name} />
         ));
       },
+      editable: true,
+      renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
+        <>
+          <Button
+            onClick={() => {
+              setSelectedTask(row);
+              setSelectedGroups(
+                (row?.workgroupKeys?.map((k) =>
+                  getWorkgroupNameByKey(k, workgroups as Workgroup[])
+                ) as string[]) || []
+              );
+              setOpenGroupsDialog(true);
+            }}
+          >
+            <GroupsOutlinedIcon />
+          </Button>
+        </>
+      ),
     },
   ];
 
@@ -549,7 +688,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           labelPlacement="start"
         />
       </div>
-
       <DialogueMultiselect
         title="Etiquetas"
         open={openTagsDialog}
@@ -573,6 +711,28 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         setValue={setSelectedOwners}
         okButtonText="Guardar"
         okButtonAction={() => handleEditOwner()}
+      />
+      <PriorityInput
+        open={openPriorityDialog}
+        setOpen={setOpenPriorityDialog}
+        priority={priority as Priority}
+        setPriority={setPriority}
+        okText="Guardar"
+        okAction={() => handleEditPriority()}
+      />
+      <DialogueMultiselect
+        title="Grupos"
+        open={openGroupsDialog}
+        labels={
+          workgroups
+            ?.filter((wg) => wg.isActive)
+            .map((wg) => wg.name) as unknown as string[]
+        }
+        setOpen={setOpenGroupsDialog}
+        value={selectedGroups}
+        setValue={setSelectedGroups}
+        okButtonText="Guardar"
+        okButtonAction={() => handleEditGroups()}
       />
     </Paper>
   );

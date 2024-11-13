@@ -1,9 +1,5 @@
 import {
   Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
 } from "@mui/material";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
@@ -28,6 +24,7 @@ import { Dayjs } from "dayjs";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { TaskService } from "../../services/task.service";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
+import { PriorityInput } from "../priority-input/PriorityInput";
 
 export const TaskCreatorRowComponent = () => {
   const tags = Object.values(useTagsStore((state) => state.tags));
@@ -52,7 +49,7 @@ export const TaskCreatorRowComponent = () => {
   const [taskNotes, setTaskNotes] = useState<string | null>();
 
   const [openPriorityDialog, setOpenPriorityDialog] = useState(false);
-  const [priority, setPriority] = useState<string | null>();
+  const [priority, setPriority] = useState<Priority | null>();
 
   const [openGroupsDialog, setOpenGroupsDialog] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -82,12 +79,13 @@ export const TaskCreatorRowComponent = () => {
         name: taskName as string,
         tags: selectedTags,
         ownerKeys: getUserKeysByNames(selectedOwners, users as User[]),
-        dueDate: selectedDueDate?.toDate() as Date || null,
-        notes: taskNotes as string || '',
-        priority: priority as Priority || 'LOW',
-        workgroupKeys: workgroups
-          ?.filter((wg) => selectedGroups.some((sg) => sg === wg.name))
-          .map((wg) => wg.key) as string[] || [],
+        dueDate: (selectedDueDate?.toDate() as Date) || null,
+        notes: (taskNotes as string) || "",
+        priority: (priority as Priority) || "LOW",
+        workgroupKeys:
+          (workgroups
+            ?.filter((wg) => selectedGroups.some((sg) => sg === wg.name))
+            .map((wg) => wg.key) as string[]) || [],
       };
 
       const resp = await TaskService.createTask(newTask as Task);
@@ -209,40 +207,11 @@ export const TaskCreatorRowComponent = () => {
               startIcon={<NoteAltOutlinedIcon />}
               sx={{ color: "black" }}
             />
-            <DialogueCustomContent
-              width="150px"
-              title="Prioridad"
+            <PriorityInput
               open={openPriorityDialog}
               setOpen={setOpenPriorityDialog}
-              content={
-                <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-                  <InputLabel id="demo-select-small-label">
-                    Prioridad
-                  </InputLabel>
-                  <Select
-                    labelId="demo-select-small-label"
-                    id="demo-select-small"
-                    value={priority}
-                    label="Prioridad"
-                    onChange={({ target }) =>
-                      setPriority(target.value as Priority)
-                    }
-                  >
-                    <MenuItem value="LOW">
-                      <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
-                    </MenuItem>
-                    <MenuItem value="NORMAL">
-                      <EmojiFlagsOutlinedIcon sx={{ color: "blue" }} /> Normal
-                    </MenuItem>
-                    <MenuItem value="HIGH">
-                      <EmojiFlagsOutlinedIcon sx={{ color: "orange" }} /> Alta
-                    </MenuItem>
-                    <MenuItem value="URGENT">
-                      <EmojiFlagsOutlinedIcon sx={{ color: "red" }} /> Urgente
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              }
+              priority={priority as Priority}
+              setPriority={setPriority}
             />
             <Button
               onClick={() => setOpenPriorityDialog(!openPriorityDialog)}
@@ -252,7 +221,11 @@ export const TaskCreatorRowComponent = () => {
             <DialogueMultiselect
               title="Grupos"
               open={openGroupsDialog}
-              labels={workgroups?.filter(wg => wg.isActive).map((wg) => wg.name) as unknown as string[]}
+              labels={
+                workgroups
+                  ?.filter((wg) => wg.isActive)
+                  .map((wg) => wg.name) as unknown as string[]
+              }
               setOpen={setOpenGroupsDialog}
               value={selectedGroups}
               setValue={setSelectedGroups}

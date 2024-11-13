@@ -6,9 +6,11 @@ interface DialogueCustomContentProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   content: JSX.Element;
+  okText?: string;
+  okAction?: () => void;
 }
 
-export const DialogueCustomContent = ({width = '300px', title, open, setOpen, content}: DialogueCustomContentProps) => {
+export const DialogueCustomContent = ({width = '300px', title, open, setOpen, content, okText = 'Ok', okAction}: DialogueCustomContentProps) => {
   return (
     <Dialog
       sx={{top: '35%', left: '50%'}}
@@ -20,7 +22,10 @@ export const DialogueCustomContent = ({width = '300px', title, open, setOpen, co
         {content}
         <div style={{ display:'flex', justifyContent: 'end', marginTop: 20 }}>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={() => setOpen(false)}>OK</Button>
+          <Button onClick={() => {
+            setOpen(false);
+            if (okAction) okAction();
+          }}>{okText}</Button>
         </div>
       </div>
     </Dialog>
