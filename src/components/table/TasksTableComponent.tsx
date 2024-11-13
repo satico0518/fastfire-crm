@@ -2,12 +2,13 @@ import {
   DataGrid,
   GridActionsCellItem,
   GridColDef,
+  GridColumnResizeParams,
   GridRenderCellParams,
   GridRenderEditCellParams,
   GridRowParams,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import { Button, Chip, FormControlLabel, Input, Switch } from "@mui/material";
+import { Button, Chip, FormControlLabel, Input, Switch, Tooltip } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
@@ -15,6 +16,7 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
+import SpeakerNotesOutlinedIcon from '@mui/icons-material/SpeakerNotesOutlined';
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
@@ -43,6 +45,17 @@ interface TasksTableProps {
   workgroup?: Workgroup;
 }
 
+interface ColumnWidhts {
+  status: number;
+  name: number;
+  ownerKeys: number;
+  dueDate: number;
+  notes: number;
+  priority: number;
+  createdDate: number;
+  workgroupKeys: number;
+}
+
 export default function TasksTable({ workgroup }: TasksTableProps) {
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
@@ -58,6 +71,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
   const [openTagsDialog, setOpenTagsDialog] = useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [columWidths, setColumWidths] = useState<ColumnWidhts | null>(JSON.parse(sessionStorage.getItem("columWidths") || "{}"));
 
   const handleEditTask = async (
     field: string,
@@ -225,6 +239,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "actions",
       type: "actions",
       width: 50,
+      resizable: false,
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
@@ -265,7 +280,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "status",
       headerName: "Estado",
       type: "string",
-      width: 180,
+      width: columWidths?.status ?? 180,
       renderCell: (params: GridRenderCellParams<Task>) => (
         <>
           {params.row.status === "IN_PROGRESS" && (
@@ -336,7 +351,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "name",
       headerName: "Nombre",
       type: "string",
-      width: 450,
+      width: columWidths?.name ?? 380,
       editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -394,7 +409,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "ownerKeys",
       headerName: "Responsables",
       sortable: false,
-      width: 150,
+      width: columWidths?.ownerKeys ?? 150,
       align: "center",
       editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
@@ -427,9 +442,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             onClick={() => {
               setSelectedTask(row);
               setSelectedOwners(
-                row?.ownerKeys?.map((k) =>
+                (row?.ownerKeys?.map((k) =>
                   getUserNameByKey(k, users as User[])
-                ) as string[] || []
+                ) as string[]) || []
               );
               setOpenOwnersDialog(true);
             }}
@@ -444,7 +459,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "dueDate",
       headerName: "Fecha Limite",
       type: "string",
-      width: 150,
+      width: columWidths?.dueDate ?? 150,
       valueGetter: (value) => value ?? "Sin fecha límite",
     },
     // notes
@@ -452,15 +467,16 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "notes",
       headerName: "Notas",
       type: "string",
-      width: 150,
-      valueGetter: (value: string) => (value.length > 0 ? value : "-"),
+      width: columWidths?.notes ?? 150,
+      renderCell: ({row}: GridRenderCellParams<Task>) => 
+        (row.notes?.length > 0 ? <Tooltip title={row.notes} sx={{cursor: 'context-menu'}}><SpeakerNotesOutlinedIcon /></Tooltip> : "-"),
     },
     // priority
     {
       field: "priority",
       headerName: "Prioridad",
       type: "string",
-      width: 150,
+      width: columWidths?.priority ?? 150,
       renderCell: (params: GridRenderCellParams<Task>) =>
         params.row?.priority ? translatePriority(params.row.priority) : "-",
     },
@@ -469,7 +485,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "createdDate",
       headerName: "Fecha de Creación",
       type: "string",
-      width: 180,
+      width: columWidths?.createdDate ?? 180,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <span
           style={{ cursor: "pointer" }}
@@ -486,7 +502,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "workgroupKeys",
       headerName: "Grupos de Trabajo",
       type: "string",
-      width: 200,
+      width: columWidths?.workgroupKeys ?? 250,
       renderCell: ({ row }: GridRenderCellParams<Task>) => {
         const taskWorkgroups = workgroups?.filter((wg) =>
           row.workgroupKeys?.some((k) => k === (wg.key as string))
@@ -505,11 +521,17 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         rows={getTaskByRole()}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[15, 30]}
+        pageSizeOptions={[20]}
         localeText={{
           MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
         }}
         sx={{ border: 0 }}
+        rowHeight={35}
+        onColumnWidthChange={({ colDef, width }: GridColumnResizeParams) => {
+          const widths = { ...columWidths, [colDef.field]: width };
+          setColumWidths(widths as ColumnWidhts);
+          sessionStorage.setItem("columWidths", JSON.stringify(widths));
+        }}
       />
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <TaskCreatorRowComponent />

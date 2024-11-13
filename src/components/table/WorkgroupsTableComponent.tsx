@@ -102,9 +102,43 @@ export default function WorksgroupTable() {
 
   const columns: GridColDef[] = [
     {
+      field: "actions",
+      type: "actions",
+      maxWidth: 50,
+      resizable: false,
+      align: "right",
+      getActions: (params: GridRowParams<Workgroup>) => [
+        <GridActionsCellItem
+          onClick={() =>
+            setModal({
+              ...modal,
+              open: true,
+              title: "Nueva Tarea",
+              text: "Ingrese los datos de la tarea.",
+              content: (
+                <TasksFormComponent workgroupKey={params.row.key as string} />
+              ),
+            })
+          }
+          label="Nueva tarea"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          onClick={() => handleModifyWorkgroup(params.row)}
+          label="Modificar"
+          showInMenu
+        />,
+        <GridActionsCellItem
+          onClick={() => handleDeleteConfirmation(params.row)}
+          label="Eliminar"
+          showInMenu
+        />,
+      ],
+    },
+    {
       field: "name",
       headerName: "Nombre",
-      width: 300,
+      flex: 1,
     },
     {
       field: "memberKeys",
@@ -153,39 +187,6 @@ export default function WorksgroupTable() {
       field: "description",
       headerName: "Descripción",
       width: 450,
-    },
-    {
-      field: "actions",
-      type: "actions",
-      width: 100,
-      align: "right",
-      getActions: (params: GridRowParams<Workgroup>) => [
-        <GridActionsCellItem
-          onClick={() =>
-            setModal({
-              ...modal,
-              open: true,
-              title: "Nueva Tarea",
-              text: "Ingrese los datos de la tarea.",
-              content: (
-                <TasksFormComponent workgroupKey={params.row.key as string} />
-              ),
-            })
-          }
-          label="Nueva tarea"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          onClick={() => handleModifyWorkgroup(params.row)}
-          label="Modificar"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          onClick={() => handleDeleteConfirmation(params.row)}
-          label="Eliminar"
-          showInMenu
-        />,
-      ],
     },
   ];
 

@@ -70,8 +70,6 @@ export const TaskCreatorRowComponent = () => {
 
   const handleCreateTask = async () => {
     try {
-      console.log({ taskName });
-
       if (!taskName) {
         setSnackbar({
           open: true,
