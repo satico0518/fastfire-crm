@@ -31,60 +31,10 @@ export default function UsersTable() {
 
   const columns: GridColDef[] = [
     {
-      field: "fullName",
-      headerName: "Nombre",
-      sortable: false,
-      width: 250,
-      renderCell: (params: GridRenderCellParams) => (
-        <>
-          <img
-            className="user-image"
-            src={
-              params.row?.avatar?.lenght > 0 ? params.row.avatar : userNoImage
-            }
-          />{" "}
-          <span>
-            {params.row.firstName || ""} {params.row.lastName || ""}
-          </span>
-        </>
-      ),
-    },
-    {
-      field: "email",
-      headerName: "Correo",
-      type: "string",
-      width: 300,
-    },
-    {
-      field: "workgroupKeys",
-      headerName: "Grupos de trabajo",
-      type: "string",
-      width: 300,
-      renderCell: (params: GridRenderCellParams<User>) => (
-        <div className="permissions">
-          {params.row?.workgroupKeys?.map((wg: string) => (
-            <Chip size="small" key={wg} label={getWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
-          )) || <Chip label="Sin grupo" color="warning"/>}
-        </div>
-      ),
-    },
-    {
-      field: "permissions",
-      headerName: "Permisos",
-      type: "string",
-      width: 300,
-      renderCell: (params: GridRenderCellParams) => (
-        <div className="permissions">
-          {params.row.permissions.map((acc: Access) => (
-            <Chip size="small" key={acc} label={translateAccess(acc)} color="primary" />
-          ))}
-        </div>
-      ),
-    },
-    {
       field: "actions",
       type: "actions",
-      width: 100,
+      maxWidth: 50,
+      resizable: false,
       align: "right",
       getActions: (params: GridRowParams) => [
         <GridActionsCellItem
@@ -112,6 +62,58 @@ export default function UsersTable() {
           showInMenu
         />,
       ],
+    },
+    {
+      field: "fullName",
+      headerName: "Nombre",
+      sortable: false,
+      width: 250,
+      flex: 1,
+      renderCell: (params: GridRenderCellParams) => (
+        <>
+          <img
+            className="user-image"
+            src={
+              params.row?.avatar?.lenght > 0 ? params.row.avatar : userNoImage
+            }
+          />{" "}
+          <span>
+            {params.row.firstName || ""} {params.row.lastName || ""}
+          </span>
+        </>
+      ),
+    },
+    {
+      field: "email",
+      headerName: "Correo",
+      type: "string",
+      width: 350,
+    },
+    {
+      field: "workgroupKeys",
+      headerName: "Grupos de trabajo",
+      type: "string",
+      width: 300,
+      renderCell: (params: GridRenderCellParams<User>) => (
+        <div className="permissions">
+          {params.row?.workgroupKeys?.map((wg: string) => (
+            <Chip size="small" key={wg} label={getWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
+          )) || <Chip label="Sin grupo" color="warning"/>}
+        </div>
+      ),
+    },
+    {
+      field: "permissions",
+      headerName: "Permisos",
+      type: "string",
+      width: 300,
+      renderCell: (params: GridRenderCellParams) => (
+        <div className="permissions">
+          {params.row.permissions.map((acc: Access) => (
+            <Chip size="small" key={acc} label={translateAccess(acc)} color="primary" />
+          ))}
+        </div>
+      ),
     },
   ];
 

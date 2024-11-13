@@ -22,42 +22,38 @@ export const DialogueMultiselect = ({
   setValue,
   okButtonText = "Ok",
   okButtonAction = () => {},
-}: DialogueMultiselectProps) => {
-  console.log('entroo');
-  
-  return (
-    <Dialog
-      sx={{ top: "35%", left: "50%" }}
-      onClose={() => setOpen(false)}
-      open={open}
-    >
-      <DialogTitle>{title}</DialogTitle>
-      <div style={{ width: "300px", padding: 20 }}>
-        <MultiselectComponent
-          labels={labels}
-          title={title}
-          value={value as string[]}
-          setValue={setValue}
-        />
-        <div style={{ display: "flex", justifyContent: "end", marginTop: 20 }}>
-          <Button
-            onClick={() => {
-              setValue([]);
-              setOpen(false);
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={() => {
-              setOpen(false);
-              okButtonAction();
-            }}
-          >
-            {okButtonText}
-          </Button>
-        </div>
+}: DialogueMultiselectProps) => (
+  <Dialog
+    sx={{ top: "35%", left: "50%" }}
+    onClose={() => setOpen(false)}
+    open={open}
+  >
+    <DialogTitle>{title}</DialogTitle>
+    <div style={{ width: "300px", padding: 20 }}>
+      <MultiselectComponent
+        labels={labels}
+        title={title}
+        value={value as string[]}
+        setValue={setValue}
+      />
+      <div style={{ display: "flex", justifyContent: "end", marginTop: 20 }}>
+        <Button
+          onClick={() => {
+            setValue([]);
+            setOpen(false);
+          }}
+        >
+          Cancelar
+        </Button>
+        <Button
+          onClick={() => {
+            setOpen(false);
+            okButtonAction();
+          }}
+        >
+          {okButtonText}
+        </Button>
       </div>
-    </Dialog>
-  );
-};
+    </div>
+  </Dialog>
+);

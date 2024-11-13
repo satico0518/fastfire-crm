@@ -33,10 +33,66 @@ export default function ProjectsTable() {
 
   const columns: GridColDef[] = [
     {
+      field: "actions",
+      type: "actions",
+      headerAlign: "right",
+      align: "right",
+      maxWidth: 50,
+      resizable: false,
+      getActions: (params: GridRowParams<Project>) => {
+        if (params.row.status === "DONE")
+          return [
+            <GridActionsCellItem
+              onClick={() =>
+                handleDeleteConfirmation(
+                  params.row.key as string,
+                  params.row.name
+                )
+              }
+              label="Eliminar"
+              showInMenu
+            />,
+          ];
+        return [
+          <GridActionsCellItem
+            icon={<ModeEditOutlineOutlinedIcon />}
+            onClick={() =>
+              setModal({
+                ...modal,
+                open: true,
+                title: "Modificar Proyecto",
+                text: "Ingrese los datos del proyecto a modificar.",
+                content: <ProjectsFormComponent editingProject={params.row} />,
+              })
+            }
+            label="Modificar"
+            showInMenu
+          />,
+          <GridActionsCellItem
+            icon={<BlockOutlinedIcon />}
+            onClick={() =>
+              ProjectService.updateProject({ ...params.row, status: "BLOCKED" })
+            }
+            label="Bloquear"
+            showInMenu
+          />,
+          <GridActionsCellItem
+            icon={<TaskAltOutlinedIcon />}
+            onClick={() =>
+              ProjectService.updateProject({ ...params.row, status: "DONE" })
+            }
+            label="Finalizar"
+            showInMenu
+          />,
+        ];
+      },
+    },
+    {
       field: "name",
       headerName: "Nombre",
       type: "string",
       width: 300,
+      flex: 1,
       renderCell: ({ row }: GridRenderCellParams<Project>) => (
         <span
           style={{
@@ -130,59 +186,6 @@ export default function ProjectsTable() {
       type: "number",
       width: 200,
       valueGetter: (value) => formatToCOP(value),
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerAlign: "right",
-      align: "right",
-      getActions: (params: GridRowParams<Project>) => {
-        if (params.row.status === "DONE")
-          return [
-            <GridActionsCellItem
-              onClick={() =>
-                handleDeleteConfirmation(
-                  params.row.key as string,
-                  params.row.name
-                )
-              }
-              label="Eliminar"
-              showInMenu
-            />,
-          ];
-        return [
-          <GridActionsCellItem
-            icon={<ModeEditOutlineOutlinedIcon />}
-            onClick={() =>
-              setModal({
-                ...modal,
-                open: true,
-                title: "Modificar Proyecto",
-                text: "Ingrese los datos del proyecto a modificar.",
-                content: <ProjectsFormComponent editingProject={params.row} />,
-              })
-            }
-            label="Modificar"
-            showInMenu
-          />,
-          <GridActionsCellItem
-            icon={<BlockOutlinedIcon />}
-            onClick={() =>
-              ProjectService.updateProject({ ...params.row, status: "BLOCKED" })
-            }
-            label="Bloquear"
-            showInMenu
-          />,
-          <GridActionsCellItem
-            icon={<TaskAltOutlinedIcon />}
-            onClick={() =>
-              ProjectService.updateProject({ ...params.row, status: "DONE" })
-            }
-            label="Finalizar"
-            showInMenu
-          />,
-        ];
-      },
     },
   ];
 

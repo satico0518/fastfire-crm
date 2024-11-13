@@ -22,7 +22,6 @@ export class WorkgroupService {
       for (const memberKey of wg.memberKeys) {
         const workgroupKeysRef = ref(db, `users/${memberKey}/workgroupKeys`);
         const user = users.filter((u) => u.key === memberKey)[0];
-        console.log({user});
         
         await set(workgroupKeysRef, [...user.workgroupKeys ?? [], wg.key]);
       }
