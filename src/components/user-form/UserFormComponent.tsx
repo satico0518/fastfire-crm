@@ -62,7 +62,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       });
       setLabelWg(
         workgroups
-          ?.filter((wg) => editingUser.workgroupKeys.includes(wg.key as string))
+          ?.filter((wg) => editingUser.workgroupKeys?.includes(wg.key as string))
           .map((wg) => wg.name) as string[]
       );
     }

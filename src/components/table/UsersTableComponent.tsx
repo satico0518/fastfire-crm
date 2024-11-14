@@ -7,13 +7,16 @@ import {
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import { useUiStore } from "../../stores/ui/ui.store";
-import userNoImage from "../../assets/img/user-no-image.png";
-import { Button, Chip } from "@mui/material";
+import { Avatar, Button, Chip } from "@mui/material";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
-import { getWorkgroupNameByKey, translateAccess } from "../../utils/utils";
+import {
+  getWorkgroupColorByKey,
+  getWorkgroupNameByKey,
+  translateAccess,
+} from "../../utils/utils";
 import { UserFormComponent } from "../user-form/UserFormComponent";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
@@ -24,8 +27,8 @@ const paginationModel = { page: 0, pageSize: 15 };
 export default function UsersTable() {
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
-  const users = useUsersStore(state => state.users);
-  const workgroups = useWorkgroupStore(state => state.workgroups);
+  const users = useUsersStore((state) => state.users);
+  const workgroups = useWorkgroupStore((state) => state.workgroups);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
 
@@ -38,20 +41,21 @@ export default function UsersTable() {
       align: "right",
       getActions: (params: GridRowParams) => [
         <GridActionsCellItem
-        icon={<ModeEditOutlineOutlinedIcon />}
-          onClick={() => 
+          icon={<ModeEditOutlineOutlinedIcon />}
+          onClick={() =>
             setModal({
-            ...modal,
-            open: true,
-            title: "Editar Usuario",
-            text: "Ingrese las modificaciones del usuario.",
-            content: <UserFormComponent editingUser={params.row}/>,
-          })}
+              ...modal,
+              open: true,
+              title: "Editar Usuario",
+              text: "Ingrese las modificaciones del usuario.",
+              content: <UserFormComponent editingUser={params.row} />,
+            })
+          }
           label="Modificar"
           showInMenu
         />,
         <GridActionsCellItem
-        icon={<DeleteOutlineOutlinedIcon />}
+          icon={<DeleteOutlineOutlinedIcon />}
           onClick={() =>
             handleDeleteConfirmation(
               params.row.key,
@@ -67,17 +71,21 @@ export default function UsersTable() {
       field: "fullName",
       headerName: "Nombre",
       sortable: false,
-      width: 250,
-      flex: 1,
-      renderCell: (params: GridRenderCellParams) => (
+      width: 220,
+      renderCell: (params: GridRenderCellParams<User>) => (
         <div className="user-name">
-          <img
-            className="user-image"
-            src={
-              params.row?.avatar?.lenght > 0 ? params.row.avatar : userNoImage
-            }
-          />{" "}
-          <span>
+          {params.row.avatarURL ? (
+            <Avatar src={params.row.avatarURL} />
+          ) : (
+            <Avatar
+              sx={{
+                color: params.row.color ?? "purple",
+                height: "30px",
+                width: "30px",
+              }}
+            />
+          )}
+          <span style={{ marginLeft: "10px" }}>
             {params.row.firstName || ""} {params.row.lastName || ""}
           </span>
         </div>
@@ -87,18 +95,43 @@ export default function UsersTable() {
       field: "email",
       headerName: "Correo",
       type: "string",
-      width: 350,
+      width: 320,
     },
     {
       field: "workgroupKeys",
       headerName: "Grupos de trabajo",
       type: "string",
-      width: 300,
+      width: 280,
       renderCell: (params: GridRenderCellParams<User>) => (
         <div className="permissions">
-          {params.row?.workgroupKeys?.map((wg: string) => (
-            <Chip size="small" key={wg} label={getWorkgroupNameByKey(wg, workgroups as Workgroup[])} color="secondary" />
-          )) || <Chip label="Sin grupo" color="warning"/>}
+          {params.row?.workgroupKeys?.length > 0 ? (
+            params.row?.workgroupKeys?.map((key: string) => {
+              const groupName = getWorkgroupNameByKey(
+                key,
+                workgroups as Workgroup[]
+              );
+              if (key && groupName !== "NA") {
+                return (
+                  <Chip
+                    size="small"
+                    key={key}
+                    label={groupName}
+                    sx={{
+                      backgroundColor:
+                        getWorkgroupColorByKey(
+                          key,
+                          workgroups as Workgroup[]
+                        ) || "deepskyblue",
+                      color: "white",
+                      fontWeight: "bold",
+                    }}
+                  />
+                );
+              }
+            })
+          ) : (
+            <Chip label="Sin grupo" color="warning" />
+          )}
         </div>
       ),
     },
@@ -106,11 +139,16 @@ export default function UsersTable() {
       field: "permissions",
       headerName: "Permisos",
       type: "string",
-      width: 300,
+      width: 250,
       renderCell: (params: GridRenderCellParams) => (
         <div className="permissions">
           {params.row.permissions.map((acc: Access) => (
-            <Chip size="small" key={acc} label={translateAccess(acc)} color="primary" />
+            <Chip
+              size="small"
+              key={acc}
+              label={translateAccess(acc)}
+              color="primary"
+            />
           ))}
         </div>
       ),
@@ -150,7 +188,7 @@ export default function UsersTable() {
   return (
     <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
       <DataGrid
-        rows={users?.filter(u => u.isActive) as User[]}
+        rows={users?.filter((u) => u.isActive) as User[]}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}

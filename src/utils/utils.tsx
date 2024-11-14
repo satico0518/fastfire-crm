@@ -120,3 +120,14 @@ export const getWorkgroupNameByKey = (
   }
   return "NA";
 };
+
+export const getWorkgroupColorByKey = (
+  workgroupKey: string,
+  workgroups: Workgroup[]
+): string => {
+  if (workgroups.length) {
+    const workgroup = workgroups.filter((wg) => wg.key === workgroupKey)[0];
+    return workgroup?.color ?? "secondary";
+  }
+  return "secondary";
+};

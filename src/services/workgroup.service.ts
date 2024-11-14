@@ -20,10 +20,11 @@ export class WorkgroupService {
       wg.key = wgDoc.key as string;
 
       for (const memberKey of wg.memberKeys) {
-        const workgroupKeysRef = ref(db, `users/${memberKey}/workgroupKeys`);
+        const userRef = ref(db, `users/${memberKey}`);
         const user = users.filter((u) => u.key === memberKey)[0];
+        user.workgroupKeys = [...user.workgroupKeys, wg.key];
         
-        await set(workgroupKeysRef, [...user.workgroupKeys ?? [], wg.key]);
+        await update(userRef, user);
       }
 
       await set(wgDoc, wg);
