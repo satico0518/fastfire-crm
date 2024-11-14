@@ -19,8 +19,9 @@
 
 .page-container {
   display: flex;
-  width: calc(100% - 300px);;
+  width: calc(100% - 300px);
   padding: 20px;
+  height: 90vh;
 }
 
 a {

@@ -26,6 +26,8 @@
     &__user {
         display: flex;
         align-items: center;
+        position: relative;
+        right: 20px;
     }
 
     &__user-image {

@@ -1,7 +1,12 @@
-.user-image {
-  width: 34px;
-  position: relative;
-  top: 10px;
+.user-name {
+  height: 33px;
+  display: flex;
+  align-items: center;
+
+  .user-image {
+    width: 34px;
+    padding-right: 10px;
+  }
 }
 
 .permissions,
