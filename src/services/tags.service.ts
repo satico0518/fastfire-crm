@@ -1,5 +1,5 @@
 import { db } from "../firebase/firebase.config";
-import { push, ref, set, update } from "firebase/database";
+import { push, ref, remove, set, update } from "firebase/database";
 import { ServiceResponse } from "../interfaces/Shared";
 
 export class TagsService {
@@ -37,8 +37,24 @@ export class TagsService {
       console.error(`Error al intentar editar la Etiqueta.`, {error});
       return {
         result: 'ERROR',
-        message: null,
         errorMessage: 'Error al intentar editar la Etiqueta.'
+      }
+    }
+  }
+
+  static async deleteTagByKey(key: string): Promise<ServiceResponse> {
+    try {
+      const tagRef = ref(db, `tags/${key}`);
+      await remove(tagRef);
+      return {
+        result: "OK",
+        message: "Etiqueta eliminada exitosamente!",
+      };
+    } catch (error) {
+      console.error(`Error al intentar eliminar la etiqueta.`, {error});
+      return {
+        result: 'ERROR',
+        errorMessage: 'Error al intentar eliminar la etiqueta.'
       }
     }
   }

@@ -131,3 +131,10 @@ export const getWorkgroupColorByKey = (
   }
   return "secondary";
 };
+
+export const changeDateFromDMA_MDA = (date: string): string => {
+  if (date.length) {
+    return `${date.split('/')[1]}/${date.split('/')[0]}/${date.split('/')[2]}`
+  }
+  return '';
+};

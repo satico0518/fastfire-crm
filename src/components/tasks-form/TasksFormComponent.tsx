@@ -148,7 +148,6 @@ export const TasksFormComponent = ({
           autoCapitalize="words"
           required
         />
-
         <div style={{ maxWidth: "500px" }}>
           <Typography component="span" fontSize={"15px"}>
             Etiquetas:
@@ -268,7 +267,6 @@ export const TasksFormComponent = ({
           error={!!errors.notes}
           helperText={errors.notes?.message as string}
           autoCapitalize="words"
-          required
         />
         <Button
           fullWidth
