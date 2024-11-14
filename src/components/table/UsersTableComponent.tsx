@@ -70,7 +70,7 @@ export default function UsersTable() {
       width: 250,
       flex: 1,
       renderCell: (params: GridRenderCellParams) => (
-        <>
+        <div className="user-name">
           <img
             className="user-image"
             src={
@@ -80,7 +80,7 @@ export default function UsersTable() {
           <span>
             {params.row.firstName || ""} {params.row.lastName || ""}
           </span>
-        </>
+        </div>
       ),
     },
     {
@@ -154,6 +154,7 @@ export default function UsersTable() {
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
+        rowHeight={35}
         localeText={{
           MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
         }}

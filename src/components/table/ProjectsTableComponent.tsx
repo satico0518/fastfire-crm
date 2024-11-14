@@ -231,6 +231,7 @@ export default function ProjectsTable() {
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
+        rowHeight={35}
         localeText={{
           MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
         }}

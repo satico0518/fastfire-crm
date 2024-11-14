@@ -8,4 +8,9 @@ export interface ColorPickerComponentProps {
 export const ColorPickerComponent = ({
   visible,
   handleChange,
-}: ColorPickerComponentProps) => visible && <SwatchesPicker onChangeComplete={handleChange} />;
+}: ColorPickerComponentProps) =>
+  visible && (
+    <div style={{position: 'absolute', zIndex: 1000, top: '32px', right: '20px'}}>
+      <SwatchesPicker onChangeComplete={handleChange} />
+    </div>
+  );

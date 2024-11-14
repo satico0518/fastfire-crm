@@ -1,37 +1,11 @@
-import { Avatar, Button, Chip } from "@mui/material";
 import logo from "../../assets/img/Logo.jpg";
-import userNoImage from "../../assets/img/user-no-image.png";
 import { useAuhtStore } from "../../stores";
-
-import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
-import { AuthService } from "../../services/auth.service";
-import { useUiStore } from "../../stores/ui/ui.store";
+import ProfileMenu from "../profile-menu/ProfileMenuComponent";
 
 export const Header = () => {
   const isAuth = useAuhtStore((state) => state.isAuth);
-  const setIsAuth = useAuhtStore((state) => state.setIsAuth);
-  const firstName = useAuhtStore((state) => state.user?.firstName);
-  const lastName = useAuhtStore((state) => state.user?.lastName);
-  const setIsLoading = useUiStore(state => state.setIsLoading);
-  const setSnackbar = useUiStore(state => state.setSnackbar);
 
   if (!isAuth) return null;
-
-  const handleLogOut = async () => {
-    setIsLoading(true);
-    const response = await AuthService.LogOut();
-    if (response?.result === 'OK')
-      setIsAuth(false);
-    else {
-      setSnackbar({
-        open: true,
-        severity: 'error',
-        message: response.errorMessage ?? 'Error cerrando sesión!',
-      })
-    }
-
-    setIsLoading(false);
-  }
 
   return (
     <div className="header">
@@ -45,15 +19,7 @@ export const Header = () => {
       </div>
       <div>
         <div className="header__user">
-          <Chip
-            avatar={<Avatar alt={`${firstName} ${lastName}`} src={userNoImage} />}
-            label={`${firstName} ${lastName}`}
-            variant="outlined"
-            sx={{color: 'white'}}
-          />
-          <Button onClick={handleLogOut} title="Salir">
-            <LogoutOutlinedIcon sx={{ color: 'white' }} />
-          </Button>
+          <ProfileMenu />
         </div>
       </div>
     </div>

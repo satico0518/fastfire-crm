@@ -1,6 +1,7 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
 import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCreateResponse";
@@ -85,6 +86,21 @@ export class AuthService {
         result: "ERROR",
         error: "Error al intentar iniciar sesión, revise sus credenciales.",
       };
+    }
+  }
+
+  static async changePassword(userEmail: string): Promise<ServiceResponse> {
+    try {
+      await sendPasswordResetEmail(auth, userEmail);
+      return {
+        result: 'OK'
+      }
+    } catch (error) {
+      console.error('Error enviando correo para cambiar contraseña', {error});
+      return {
+        result: 'ERROR',
+        errorMessage: 'Error enviando correo para cambiar contraseña'
+      }
     }
   }
 
