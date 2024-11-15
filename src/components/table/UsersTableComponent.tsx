@@ -75,7 +75,7 @@ export default function UsersTable() {
       renderCell: (params: GridRenderCellParams<User>) => (
         <div className="user-name">
           {params.row.avatarURL ? (
-            <Avatar src={params.row.avatarURL} />
+            <Avatar src={params.row.avatarURL} sx={{width: '30px', height: '30px'}}/>
           ) : (
             <Avatar
               sx={{

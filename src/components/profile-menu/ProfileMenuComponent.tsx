@@ -15,7 +15,6 @@ import { getUserNameByKey } from "../../utils/utils";
 import { useAuhtStore } from "../../stores";
 import { useUsersStore } from "../../stores/users/users.store";
 import { User } from "../../interfaces/User";
-import userNoImage from "../../assets/img/user-no-image.png";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { AuthService } from "../../services/auth.service";
 import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
@@ -127,10 +126,7 @@ export default function ProfileMenu() {
                   aria-expanded={open ? "true" : undefined}
                 >
                   {currentUser?.avatarURL ? (
-                    <Avatar
-                      sx={{ width: 25, height: 25 }}
-                      src={currentUser.color || userNoImage}
-                    />
+                    <Avatar src={currentUser.avatarURL} sx={{position: 'relative', right: '10px', border: 'solid #FFF 2px'}}/>
                   ) : (
                     <Avatar
                       sx={{ width: 25, height: 25, color: currentUser?.color }}
@@ -145,7 +141,7 @@ export default function ProfileMenu() {
               users as User[]
             )}
             variant="outlined"
-            sx={{ color: "white" }}
+            sx={{ color: "white", fontSize: '15px', fontWeight: '600' }}
           />
         </>
       </Box>
@@ -187,7 +183,7 @@ export default function ProfileMenu() {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem onClick={handleClose}>
-          <Avatar sx={{ color: currentUser?.color }} />{" "}
+          <Avatar sx={{ color: currentUser?.color }} src={currentUser?.avatarURL}/>{" "}
           {currentUser?.avatarURL ? "Editar Foto" : "Agregar foto"}
         </MenuItem>
         <MenuItem onClick={() => setIsColorVisible(true)}>

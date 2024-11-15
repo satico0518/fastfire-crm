@@ -10,6 +10,7 @@ import {
 import Paper from "@mui/material/Paper";
 import {
   Autocomplete,
+  Avatar,
   Button,
   Chip,
   FormControlLabel,
@@ -667,7 +668,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div className={`${!row.ownerKeys && "no-owner"} owners-container`}>
           {row.ownerKeys
-            ? row.ownerKeys.map((k) => (
+            ? row.ownerKeys.map((k) => {
+              const userAvatar = users?.find(u => u.key === k)?.avatarURL;
+
+              if (userAvatar) return <Avatar src={userAvatar} sx={{width: '30px', height: '30px'}}/>
+              
+              return (
                 <div
                   key={k}
                   className="owner-circle"
@@ -684,7 +690,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                     ?.filter((u) => u.key === k)[0]
                     ?.lastName.charAt(0)}`}
                 </div>
-              ))
+              )})
             : "Sin asignar"}
         </div>
       ),
