@@ -7,6 +7,16 @@ import "./index.css";
 
 import { Header } from "./components/header/HeaderComponent.tsx";
 import { MenuComponent } from "./components/menu/MenuComponent.tsx";
+declare global {
+  interface Window {
+    cloudinary?: {
+      createUploadWidget: (
+        uwConfig: unknown,
+        func: unknown
+      ) => {open: () => void};
+    };
+  }
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

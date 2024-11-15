@@ -671,7 +671,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             ? row.ownerKeys.map((k) => {
               const userAvatar = users?.find(u => u.key === k)?.avatarURL;
 
-              if (userAvatar) return <Avatar src={userAvatar} sx={{width: '30px', height: '30px'}}/>
+              if (userAvatar) return <Avatar src={userAvatar} sx={{width: '30px', height: '30px', marginLeft: '-5px'}}/>
               
               return (
                 <div

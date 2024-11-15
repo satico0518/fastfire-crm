@@ -20,6 +20,7 @@ import { AuthService } from "../../services/auth.service";
 import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
 import { ColorResult } from "react-color";
 import { UsersService } from "../../services/users.service";
+import CloudinaryUploadWidget from "../cloudinary/CloudinaryWidget";
 
 export default function ProfileMenu() {
   const users = useUsersStore((state) => state.users);
@@ -31,6 +32,10 @@ export default function ProfileMenu() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [isColorVisible, setIsColorVisible] = React.useState<boolean>(false);
   const open = Boolean(anchorEl);
+
+  const [uwConfig] = React.useState({
+    cloudName: "fastfire",
+    uploadPreset: "vr0sleie"});
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -150,7 +155,6 @@ export default function ProfileMenu() {
         id="account-menu"
         open={open}
         onClose={handleClose}
-        onClick={handleClose}
         slotProps={{
           paper: {
             elevation: 0,
@@ -182,11 +186,12 @@ export default function ProfileMenu() {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={() => {}}>
           <Avatar sx={{ color: currentUser?.color }} src={currentUser?.avatarURL}/>{" "}
           {currentUser?.avatarURL ? "Editar Foto" : "Agregar foto"}
+          <CloudinaryUploadWidget uwConfig={uwConfig} />
         </MenuItem>
-        <MenuItem onClick={() => setIsColorVisible(true)}>
+        <MenuItem onClick={() => {setIsColorVisible(true); handleClose();}}>
           <ColorLensOutlinedIcon sx={{color: currentUser?.color || '#f3f3f3'}}/>{" "}
           <span style={{ marginLeft: "10px" }}>
             {currentUser?.color ? "Cambiar mi color" : "Definir mi color"}
