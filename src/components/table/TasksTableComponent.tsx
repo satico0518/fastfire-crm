@@ -274,7 +274,11 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const handleEditNotes = async () => {
     try {
       if (selectedTask) {
-        selectedTask.notes += `, ${taskNotes}`;
+        selectedTask.notes = `${
+          selectedTask.notes && selectedTask.notes.length > 0
+            ? `${selectedTask.notes}, `
+            : ""
+        }[${dayjs(Date.now()).format("DDMMMYY HH:MM")}] ${taskNotes}`;
         const resp = await TaskService.updateTask(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
@@ -669,28 +673,35 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <div className={`${!row.ownerKeys && "no-owner"} owners-container`}>
           {row.ownerKeys
             ? row.ownerKeys.map((k) => {
-              const userAvatar = users?.find(u => u.key === k)?.avatarURL;
+                const userAvatar = users?.find((u) => u.key === k)?.avatarURL;
 
-              if (userAvatar) return <Avatar src={userAvatar} sx={{width: '30px', height: '30px', marginLeft: '-5px'}}/>
-              
-              return (
-                <div
-                  key={k}
-                  className="owner-circle"
-                  title={(users && getUserNameByKey(k, users)) || "NA"}
-                  style={{
-                    backgroundColor:
-                      users?.filter((u) => u.key === k)[0]?.color ??
-                      "blueviolet",
-                  }}
-                >
-                  {`${users
-                    ?.filter((u) => u.key === k)[0]
-                    ?.firstName.charAt(0)}${users
-                    ?.filter((u) => u.key === k)[0]
-                    ?.lastName.charAt(0)}`}
-                </div>
-              )})
+                if (userAvatar)
+                  return (
+                    <Avatar
+                      src={userAvatar}
+                      sx={{ width: "30px", height: "30px", marginLeft: "-5px" }}
+                    />
+                  );
+
+                return (
+                  <div
+                    key={k}
+                    className="owner-circle"
+                    title={(users && getUserNameByKey(k, users)) || "NA"}
+                    style={{
+                      backgroundColor:
+                        users?.filter((u) => u.key === k)[0]?.color ??
+                        "blueviolet",
+                    }}
+                  >
+                    {`${users
+                      ?.filter((u) => u.key === k)[0]
+                      ?.firstName.charAt(0)}${users
+                      ?.filter((u) => u.key === k)[0]
+                      ?.lastName.charAt(0)}`}
+                  </div>
+                );
+              })
             : "Sin asignar"}
         </div>
       ),
@@ -884,8 +895,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         open={openTagsDialog}
         setOpen={setOpenTagsDialog}
         content={
-          <div style={{height: '100px'}}>
-            <div style={{ maxWidth: "500px" , position: 'relative', top: '-35px'}}>
+          <div style={{ height: "100px" }}>
+            <div
+              style={{ maxWidth: "500px", position: "relative", top: "-35px" }}
+            >
               <div className="selected-members">
                 {selectedTags.map((st: Tag | string) => (
                   <div
