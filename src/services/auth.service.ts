@@ -25,6 +25,7 @@ export class AuthService {
           isActive: true,
         };
         const docRef = push(ref(db, "users"));
+        userToPush.key = docRef.key as string;
         await set(docRef, userToPush);
 
         return {
