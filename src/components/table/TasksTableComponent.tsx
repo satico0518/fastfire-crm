@@ -278,7 +278,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           selectedTask.notes && selectedTask.notes.length > 0
             ? `${selectedTask.notes}, `
             : ""
-        }[${dayjs(Date.now()).format("DDMMMYY HH:MM")}] ${taskNotes}`;
+        }[${dayjs(Date.now()).format("DDMMMYY hh:mm")}] ${taskNotes}`;
         const resp = await TaskService.updateTask(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
