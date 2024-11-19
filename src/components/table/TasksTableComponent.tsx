@@ -9,12 +9,10 @@ import {
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import {
-  Autocomplete,
   Avatar,
   Button,
   Chip,
   FormControlLabel,
-  IconButton,
   Input,
   Switch,
   TextField,
@@ -26,7 +24,6 @@ import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
-import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import SpeakerNotesOutlinedIcon from "@mui/icons-material/SpeakerNotesOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
@@ -35,7 +32,6 @@ import NoteAltOutlinedIcon from "@mui/icons-material/NoteAltOutlined";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import DateRangeOutlinedIcon from "@mui/icons-material/DateRangeOutlined";
-import RemoveCircleOutlinedIcon from "@mui/icons-material/RemoveCircleOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Priority, Task } from "../../interfaces/Task";
 
@@ -58,14 +54,12 @@ import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
-import { useTagsStore } from "../../stores/tags/tags.store";
 import { PriorityInput } from "../priority-input/PriorityInput";
 import { DialogueCustomContent } from "../dialogs/DialogueCustomContent";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
-import { Tag } from "../../interfaces/Tag";
-import { TagsService } from "../../services/tags.service";
+import { TagsInput } from "../tags-input/TagsInput";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -88,7 +82,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
-  const tags = useTagsStore((state) => state.tags);
   const tasks = useTasksStore((state) => state.tasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
@@ -346,40 +339,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     }
   };
 
-  const handleAddTags = async () => {
-    try {
-      if (selectedTask) {
-        selectedTask.tags = selectedTags;
-        const resp = await TaskService.updateTask(selectedTask);
-        if (resp.result === "OK") {
-          setSnackbar({
-            open: true,
-            message: "Tarea editada exitosamente!",
-            severity: "success",
-          });
-        } else {
-          console.error(
-            "Error editando tarea en Table Task, ",
-            resp.errorMessage
-          );
-          setSnackbar({
-            open: true,
-            message: "Error editando tarea.",
-            severity: "error",
-          });
-        }
-        setSelectedTags([]);
-      }
-    } catch (error) {
-      console.error("Error eliminando etiqueta", { selectedTask }, { error });
-      setSnackbar({
-        open: true,
-        message: "Error eliminando etiqueta.",
-        severity: "error",
-      });
-    }
-  };
-
   const handleDeleteTask = async (task: Task) => {
     task.status = "DELETED";
     const deleteResult = await TaskService.updateTask(task);
@@ -438,48 +397,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             (showArchivedTasks || t.status !== "ARCHIVED")
         )
       : [];
-  };
-
-  const handleAddTag = (tag: Tag | string) => {
-    if (!Object.values(tags).some((t) => t === tag)) {
-      TagsService.createTag(tag as string);
-    }
-    if (!selectedTags.some((t) => t === tag)) {
-      setSelectedTags([...selectedTags, tag as string]);
-    }
-  };
-
-  const handleDeleteTagFromDB = async (tag: string) => {
-    try {
-      for (const key in tags) {
-        if (tags[key].toString() === tag) {
-          const resp = await TagsService.deleteTagByKey(key);
-          if (resp.result === "OK") {
-            setSnackbar({
-              open: true,
-              message: resp.message as string,
-              severity: "success",
-            });
-
-            setSelectedTags(selectedTags.filter((t) => t !== tag));
-          } else {
-            setSnackbar({
-              open: true,
-              message: resp.errorMessage as string,
-              severity: "error",
-            });
-          }
-          break;
-        }
-      }
-    } catch (error) {
-      console.error("Error al intentar eliminar la etiqueta", { error });
-      setSnackbar({
-        open: true,
-        message: "Error al intentar eliminar la etiqueta",
-        severity: "error",
-      });
-    }
   };
 
   const columns: GridColDef[] = [
@@ -890,76 +807,13 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           labelPlacement="start"
         />
       </div>
-      <DialogueCustomContent
-        title="Etiquetas"
-        open={openTagsDialog}
-        setOpen={setOpenTagsDialog}
-        content={
-          <div style={{ height: "100px" }}>
-            <div
-              style={{ maxWidth: "500px", position: "relative", top: "-35px" }}
-            >
-              <div className="selected-members">
-                {selectedTags.map((st: Tag | string) => (
-                  <div
-                    key={Object.values(st)[0] as string}
-                    className="selected-chip"
-                  >
-                    <Chip
-                      className="selected-chip"
-                      size="small"
-                      color="success"
-                      label={Object.values(st)}
-                      onDelete={() =>
-                        handleDeleteTag(selectedTask as Task, st as string)
-                      }
-                    />
-                    <IconButton
-                      title="Eliminar etiqueta de la base de datos"
-                      sx={{ width: "20px" }}
-                      onClick={() => handleDeleteTagFromDB(st as string)}
-                    >
-                      <RemoveCircleOutlinedIcon color="error" />
-                    </IconButton>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <Autocomplete
-              disablePortal
-              options={Object.values(tags)}
-              includeInputInList
-              fullWidth
-              onChange={(_, tag) => tag && handleAddTag(tag)}
-              renderInput={(params) => (
-                <div className="tags-selector">
-                  <TextField
-                    {...params}
-                    name="tags"
-                    label="Etiquetas creadas"
-                    type="text"
-                    variant="standard"
-                    autoCapitalize="words"
-                  />
-                  {
-                    <Button
-                      onClick={() =>
-                        handleAddTag(params.inputProps.value as string)
-                      }
-                      title="Nueva etiqueta"
-                    >
-                      <AddCircleOutlinedIcon color="success" />
-                    </Button>
-                  }
-                </div>
-              )}
-            />
-          </div>
-        }
-        okText="Guardar"
-        okAction={() => handleAddTags()}
+      <TagsInput
+        openTagsDialog={openTagsDialog}
+        setOpenTagsDialog={setOpenTagsDialog}
+        selectedTags={selectedTags}
+        setSelectedTags={setSelectedTags}
+        selectedTask={selectedTask as Task}
       />
-
       <DialogueMultiselect
         title="Responsables"
         open={openOwnersDialog}

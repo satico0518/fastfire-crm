@@ -1,4 +1,4 @@
-import { Button, TextField } from "@mui/material";
+import { Autocomplete, Button, Chip, TextField } from "@mui/material";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -7,6 +7,7 @@ import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import DateRangeOutlinedIcon from "@mui/icons-material/DateRangeOutlined";
 import NoteAltOutlinedIcon from "@mui/icons-material/NoteAltOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 import { useState } from "react";
 import { useTagsStore } from "../../stores/tags/tags.store";
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
@@ -22,6 +23,8 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { TaskService } from "../../services/task.service";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { PriorityInput } from "../priority-input/PriorityInput";
+import { TagsService } from "../../services/tags.service";
+import { Tag } from "../../interfaces/Tag";
 
 export const TaskCreatorRowComponent = () => {
   const tags = Object.values(useTagsStore((state) => state.tags));
@@ -92,6 +95,8 @@ export const TaskCreatorRowComponent = () => {
           message: "Tarea creada exitosamente!",
           severity: "success",
         });
+        resetForm();
+        setIsEditing(false);
       } else {
         console.error(
           "Error creando tarea en Task Creator ,",
@@ -111,6 +116,19 @@ export const TaskCreatorRowComponent = () => {
         severity: "error",
       });
     }
+  };
+
+  const handleAddTag = (tag: Tag | string) => {
+    if (!Object.values(tags).some((t) => t === tag)) {
+      TagsService.createTag(tag as string);
+    }
+    if (!selectedTags.some((t) => t === tag)) {
+      setSelectedTags([...selectedTags, tag as string]);
+    }
+  };
+
+  const handleDeleteTag = (tag: string) => {
+    setSelectedTags(selectedTags.filter((st) => st !== tag));
   };
 
   return (
@@ -134,13 +152,61 @@ export const TaskCreatorRowComponent = () => {
             fullWidth
           />
           <div className="task-creator__row-actions">
-            <DialogueMultiselect
+            <DialogueCustomContent
               title="Etiquetas"
               open={openTagsDialog}
-              labels={tags as unknown as string[]}
               setOpen={setOpenTagsDialog}
-              value={selectedTags}
-              setValue={setSelectedTags}
+              content={
+                <>
+                  <div style={{ maxWidth: "500px" }}>
+                    <div className="selected-members" style={{position: 'relative', top: '-30px'}}>
+                      {selectedTags.map((st: Tag | string) => (
+                        <div
+                          key={st as string}
+                          className="selected-chip"
+                        >
+                          <Chip
+                            className="selected-chip"
+                            size="small"
+                            color="success"
+                            label={Object.values(st)}
+                            onDelete={() => handleDeleteTag(st as string)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Autocomplete
+                    disablePortal
+                    options={Object.values(tags)}
+                    includeInputInList
+                    fullWidth
+                    onChange={(_, tag) => tag && handleAddTag(tag)}
+                    renderInput={(params) => (
+                      <div className="tags-selector">
+                        <TextField
+                          {...params}
+                          name="tags"
+                          label="Etiquetas creadas"
+                          type="text"
+                          variant="standard"
+                          autoCapitalize="words"
+                        />
+                        {
+                          <Button
+                            onClick={() =>
+                              handleAddTag(params.inputProps.value as string)
+                            }
+                            title="Nueva etiqueta"
+                          >
+                            <AddCircleOutlinedIcon color="success" />
+                          </Button>
+                        }
+                      </div>
+                    )}
+                  />
+                </>
+              }
             />
             <Button
               onClick={() => setOpenTagsDialog(!openTagsDialog)}
