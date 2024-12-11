@@ -10,6 +10,7 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { Avatar, Button, Chip } from "@mui/material";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
 import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
 import {
@@ -41,7 +42,7 @@ export default function UsersTable() {
       align: "right",
       getActions: (params: GridRowParams) => [
         <GridActionsCellItem
-          icon={<ModeEditOutlineOutlinedIcon />}
+          icon={<ModeEditOutlineOutlinedIcon color="info"/>}
           onClick={() =>
             setModal({
               ...modal,
@@ -55,7 +56,7 @@ export default function UsersTable() {
           showInMenu
         />,
         <GridActionsCellItem
-          icon={<DeleteOutlineOutlinedIcon />}
+          icon={<DeleteOutlineOutlinedIcon color="error"/>}
           onClick={() =>
             handleDeleteConfirmation(
               params.row.key,
@@ -72,21 +73,21 @@ export default function UsersTable() {
       headerName: "Nombre",
       sortable: false,
       width: 220,
-      renderCell: (params: GridRenderCellParams<User>) => (
+      renderCell: ({row}: GridRenderCellParams<User>) => (
         <div className="user-name">
-          {params.row.avatarURL ? (
-            <Avatar src={params.row.avatarURL} sx={{width: '30px', height: '30px'}}/>
+          {row.avatarURL ? (
+            <Avatar src={row.avatarURL} sx={{width: '30px', height: '30px'}}/>
           ) : (
-            <Avatar
+          (!row.permissions.includes('PROVIDER') ? <Avatar
               sx={{
-                color: params.row.color ?? "purple",
+                color: row.color ?? "purple",
                 height: "30px",
                 width: "30px",
               }}
-            />
+            /> : <StoreOutlinedIcon fontSize="large"/>)
           )}
           <span style={{ marginLeft: "10px" }}>
-            {params.row.firstName || ""} {params.row.lastName || ""}
+            {row.firstName || ""} {row.lastName || ""}
           </span>
         </div>
       ),
@@ -102,10 +103,10 @@ export default function UsersTable() {
       headerName: "Grupos de trabajo",
       type: "string",
       width: 280,
-      renderCell: (params: GridRenderCellParams<User>) => (
+      renderCell: ({row}: GridRenderCellParams<User>) => (
         <div className="permissions">
-          {params.row?.workgroupKeys?.length > 0 ? (
-            params.row?.workgroupKeys?.map((key: string) => {
+          {row?.workgroupKeys?.length > 0 ? (
+            row?.workgroupKeys?.map((key: string) => {
               const groupName = getWorkgroupNameByKey(
                 key,
                 workgroups as Workgroup[]
@@ -130,7 +131,7 @@ export default function UsersTable() {
               }
             })
           ) : (
-            <Chip label="Sin grupo" color="warning" />
+            !row.permissions.includes('PROVIDER') && <Chip label="Sin grupo" color="warning" />
           )}
         </div>
       ),
@@ -140,14 +141,14 @@ export default function UsersTable() {
       headerName: "Permisos",
       type: "string",
       width: 250,
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: ({row}: GridRenderCellParams<User>) => (
         <div className="permissions">
-          {params.row.permissions.map((acc: Access) => (
+          {row.permissions.map((acc: Access) => (
             <Chip
               size="small"
               key={acc}
               label={translateAccess(acc)}
-              color="primary"
+              color={row.permissions.includes('PROVIDER') ? 'secondary' : 'info'}
             />
           ))}
         </div>

@@ -34,6 +34,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
     TYG: true,
     ADMIN: false,
     PURCHASE: false,
+    PROVIDER: false,
   });
 
   const {
@@ -44,25 +45,37 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
   } = useForm();
 
   const handleAccessChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAccessState({
-      ...accessState,
-      [event.target.name]: event.target.checked,
-    });
+    if (event.target.name === "PROVIDER") {
+      setAccessState({
+        ADMIN: false,
+        TYG: false,
+        PURCHASE: false,
+        PROVIDER: event.target.checked,
+      });
+    } else {
+      setAccessState({
+        ...accessState,
+        [event.target.name]: event.target.checked,
+      });
+    }
   };
 
   useEffect(() => {
     if (editingUser) {
-      setValue("firstName", editingUser.firstName);
-      setValue("lastName", editingUser.lastName);
+      setValue("firstName", editingUser.firstName || "");
+      setValue("lastName", editingUser.lastName || "");
       setValue("email", editingUser.email);
       setAccessState({
         ADMIN: editingUser.permissions.includes("ADMIN"),
         TYG: editingUser.permissions.includes("TYG"),
         PURCHASE: editingUser.permissions.includes("PURCHASE"),
+        PROVIDER: editingUser.permissions.includes("PROVIDER"),
       });
       setLabelWg(
         workgroups
-          ?.filter((wg) => editingUser.workgroupKeys?.includes(wg.key as string))
+          ?.filter((wg) =>
+            editingUser.workgroupKeys?.includes(wg.key as string)
+          )
           .map((wg) => wg.name) as string[]
       );
     }
@@ -70,7 +83,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
 
   const onSubmit = async (data: User) => {
     try {
-      if (!labelWg.length) {
+      if (!labelWg.length && !accessState.PROVIDER) {
         setSnackbar({
           open: true,
           message: "Debe seleccionar al menos un grupo de trabajo!",
@@ -81,20 +94,25 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
 
       setModal({ ...modal, open: false });
       setIsLoading(true);
-      const selectedWorkgroups = workgroups?.filter((wg) =>
-        labelWg.includes(wg.name)
-      );
-      const workgroupKeys = selectedWorkgroups?.map(
-        (swg) => swg.key
-      ) as string[];
 
-      data = {
-        ...data,
-        permissions: Object.keys(accessState).filter(
-          (key) => accessState[key as Access] === true
-        ) as Access[],
-        workgroupKeys,
-      };
+      if (!accessState.PROVIDER) {
+        const selectedWorkgroups = workgroups?.filter((wg) =>
+          labelWg.includes(wg.name)
+        );
+        const workgroupKeys = selectedWorkgroups?.map(
+          (swg) => swg.key
+        ) as string[];
+
+        data = {
+          ...data,
+          permissions: Object.keys(accessState).filter(
+            (key) => accessState[key as Access] === true
+          ) as Access[],
+          workgroupKeys,
+        };
+      } else {
+        data = { ...data, permissions: ["PROVIDER"] };
+      }
 
       let signInResponse;
       if (editingUser)
@@ -177,50 +195,72 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
             autoCapitalize="none"
           />
         )}
-        <MultiselectComponent
-          title="Grupos de trabajo"
-          labels={workgroups?.map((wg) => wg.name) || []}
-          value={labelWg}
-          setValue={setLabelWg}
-        />
-        <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
-          <FormLabel component="legend">Permisos</FormLabel>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="small"
-                  checked={accessState.TYG}
-                  onChange={handleAccessChange}
-                  name="TYG"
+        {!editingUser &&
+          !(editingUser as unknown as User)?.permissions.includes(
+            "PROVIDER"
+          ) && (
+            <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
+              <FormLabel component="legend">Permisos</FormLabel>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.TYG}
+                      onChange={handleAccessChange}
+                      name="TYG"
+                      disabled={accessState.PROVIDER}
+                    />
+                  }
+                  label="Tareas y Grupos"
                 />
-              }
-              label="Tareas y Grupos"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="small"
-                  checked={accessState.PURCHASE}
-                  onChange={handleAccessChange}
-                  name="PURCHASE"
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.PURCHASE}
+                      onChange={handleAccessChange}
+                      name="PURCHASE"
+                      disabled={accessState.PROVIDER}
+                    />
+                  }
+                  label="Compras"
                 />
-              }
-              label="Compras"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="small"
-                  checked={accessState.ADMIN}
-                  onChange={handleAccessChange}
-                  name="ADMIN"
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.ADMIN}
+                      onChange={handleAccessChange}
+                      name="ADMIN"
+                      disabled={accessState.PROVIDER}
+                    />
+                  }
+                  label="Admin"
                 />
-              }
-              label="Admin"
-            />
-          </FormGroup>
-        </FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.PROVIDER}
+                      onChange={handleAccessChange}
+                      name="PROVIDER"
+                    />
+                  }
+                  label="Proveedor"
+                />
+              </FormGroup>
+            </FormControl>
+          )}
+
+        {!accessState.PROVIDER && (
+          <MultiselectComponent
+            title="Grupos de trabajo"
+            labels={workgroups?.map((wg) => wg.name) || []}
+            value={labelWg}
+            setValue={setLabelWg}
+          />
+        )}
         <Button
           fullWidth
           type="submit"

@@ -12,6 +12,7 @@ export class TaskService {
       task.createdDate = Date.now();
       const tasksRef = ref(db, "tasks");
       const doc = push(tasksRef);
+      task.key = doc.key as string;
       await set(doc, task);
 
       return {
@@ -44,6 +45,25 @@ export class TaskService {
         result: 'ERROR',
         message: null,
         errorMessage: 'Error al intentar editar la tarea.'
+      }
+    }
+  }
+
+  static async deleteTask(task: Task): Promise<ServiceResponse> {
+    try {
+      const tasksRef = ref(db, `tasks/${task.key}`);
+      await remove(tasksRef);
+
+      return {
+        result: "OK",
+        message: "Tarea eliminada exitosamente!",
+      };
+    } catch (error) {
+      console.error(`Error al intentar eliminar la tarea [key:${task.id}]`, {error});
+      return {
+        result: 'ERROR',
+        message: null,
+        errorMessage: 'Error al intentar eliminar la tarea.'
       }
     }
   }

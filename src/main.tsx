@@ -12,7 +12,8 @@ declare global {
     cloudinary?: {
       createUploadWidget: (
         uwConfig: unknown,
-        func: unknown
+        func: unknown,
+        // options: unknown,
       ) => {open: () => void};
     };
   }

@@ -17,14 +17,10 @@ export const useProjectsStore = create<ProjectsState>()(
       try {
         const projects = ref(db, "projects");
         onValue(projects, (snapshot) => {
-          const data = snapshot.val();
+          const data = Object.values(snapshot.val()) as Project[] | [];
 
           if (data) {
-            const values: Project[] = Object.entries<Project>(data).map(
-              ([key, value]) => ({ ...value, key })
-            ) as Project[];
-
-            set({ projects: values });
+            set({ projects: data });
           } else {
             set({ projects: [] });
           }

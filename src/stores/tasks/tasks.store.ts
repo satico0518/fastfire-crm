@@ -17,13 +17,10 @@ export const useTasksStore = create<TasksState>()(
       try {
         const tasksRef = ref(db, "tasks");
         onValue(tasksRef, (snapshot) => {
-          const data = snapshot.val();
+          const data = Object.values(snapshot.val()) as Task[] || [];
+          
           if (data) {
-            const values = Object.entries<Task>(data).map(([key, value]) => ({
-              ...value,
-              key,
-            }));
-            set({ tasks: values });
+            set({ tasks: data });
           } else set({ tasks: [] });
         });
       } catch (error) {

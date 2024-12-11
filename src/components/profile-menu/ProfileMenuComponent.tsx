@@ -1,4 +1,5 @@
-import * as React from "react";
+import React from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
@@ -29,13 +30,14 @@ export default function ProfileMenu() {
   const setIsAuth = useAuhtStore((state) => state.setIsAuth);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [isColorVisible, setIsColorVisible] = React.useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isColorVisible, setIsColorVisible] = useState<boolean>(false);
   const open = Boolean(anchorEl);
 
-  const [uwConfig] = React.useState({
+  const [uwConfig] = useState({
     cloudName: "fastfire",
-    uploadPreset: "vr0sleie"});
+    uploadPreset: "vr0sleie",
+  });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -106,7 +108,6 @@ export default function ProfileMenu() {
   };
 
   const handleChangeColor = async (color: ColorResult) => {
-    console.log(color.hex);
     if (currentUser) {
       currentUser.color = color.hex;
       UsersService.modifyUser(currentUser);

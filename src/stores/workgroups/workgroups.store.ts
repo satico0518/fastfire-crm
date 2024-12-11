@@ -17,14 +17,10 @@ export const useWorkgroupStore = create<WorkgroupState>()(
       try {
         const usersRef = ref(db, "workgroups");
         onValue(usersRef, (snapshot) => {
-          const data = snapshot.val();
+          const data = Object.values(snapshot.val()) as Workgroup[] || [];
 
           if (data) {
-            const values: Workgroup[] = Object.entries<Workgroup>(data).map(
-              ([key, value]) => ({ ...value, key })
-            ) as Workgroup[];
-
-            set({ workgroups: values });
+            set({ workgroups: data });
           } else set({ workgroups: [] });
         });
       } catch (error) {

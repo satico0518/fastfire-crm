@@ -24,6 +24,8 @@ export const translateAccess = (access: Access) => {
       return "COMPRAS";
     case "TYG":
       return "T&G";
+    case "PROVIDER":
+      return "Provedor";
     default:
       return "NA";
   }
@@ -80,6 +82,7 @@ export const translatePriority = (priority: Priority): JSX.Element => {
 export const getUserNameByKey = (userKey: string, users: User[]): string => {
   if (users.length) {
     const user = users.filter((u) => u.key === userKey)[0];
+    
     return `${user?.firstName} ${user?.lastName}`;
   }
   return "NA";

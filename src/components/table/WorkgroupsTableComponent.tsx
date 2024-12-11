@@ -16,6 +16,9 @@ import {
 import Paper from "@mui/material/Paper";
 import Groups2OutlinedIcon from "@mui/icons-material/Groups2Outlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 
 import { Workgroup } from "../../interfaces/Workgroup";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -109,6 +112,7 @@ export default function WorksgroupTable() {
       align: "right",
       getActions: (params: GridRowParams<Workgroup>) => [
         <GridActionsCellItem
+          icon={<AddTaskOutlinedIcon color="success" />}
           onClick={() =>
             setModal({
               ...modal,
@@ -124,11 +128,13 @@ export default function WorksgroupTable() {
           showInMenu
         />,
         <GridActionsCellItem
+          icon={<ModeEditOutlineOutlinedIcon color="info" />}
           onClick={() => handleModifyWorkgroup(params.row)}
           label="Modificar"
           showInMenu
         />,
         <GridActionsCellItem
+          icon={<DeleteOutlineOutlinedIcon color="error" />}
           onClick={() => handleDeleteConfirmation(params.row)}
           label="Eliminar"
           showInMenu
@@ -191,7 +197,11 @@ export default function WorksgroupTable() {
   ];
 
   const handleDeleteWorkgroup = async (workgroup: Workgroup) => {
-    const deleteResult = await WorkgroupService.deleteWorkgroup(workgroup, tasks as Task[], users as User[]);
+    const deleteResult = await WorkgroupService.deleteWorkgroup(
+      workgroup,
+      tasks as Task[],
+      users as User[]
+    );
 
     if (deleteResult)
       setSnackbar({

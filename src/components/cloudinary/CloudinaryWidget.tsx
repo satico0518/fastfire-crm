@@ -8,7 +8,14 @@ import { useUiStore } from "../../stores/ui/ui.store";
 // Create a context to manage the script loading state
 const CloudinaryScriptContext = createContext<unknown>({});
 
-function CloudinaryUploadWidget({ uwConfig }: { uwConfig: unknown }) {
+function CloudinaryUploadWidget({
+  uwConfig,
+  color = "black",
+}: {
+  uwConfig: unknown;
+  color?: string;
+  isXLS?: boolean;
+}) {
   const [loaded, setLoaded] = useState(false);
   const currentUser = useAuhtStore((state) => state.user);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
@@ -38,11 +45,12 @@ function CloudinaryUploadWidget({ uwConfig }: { uwConfig: unknown }) {
         uwConfig,
         async (
           error: unknown,
-          result: { event: string; info: { url: string } }
+          result: { event: string; info: { url: string } },
         ) => {
           if (!error && result && result.event === "success") {
-            currentUser.avatarURL = result.info.url as string;
-            const resp = await UsersService.modifyUser(currentUser);
+              currentUser.avatarURL = result.info.url as string;
+              const resp = await UsersService.modifyUser(currentUser);
+
             if (resp.result === "OK") {
               setSnackbar({
                 open: true,
@@ -52,8 +60,8 @@ function CloudinaryUploadWidget({ uwConfig }: { uwConfig: unknown }) {
             } else {
               setSnackbar({
                 open: true,
-                message: "Foto cargada exitosamente!",
-                severity: "success",
+                message: "Error cargando foto!",
+                severity: "error",
               });
             }
           }
@@ -75,7 +83,7 @@ function CloudinaryUploadWidget({ uwConfig }: { uwConfig: unknown }) {
   return (
     <CloudinaryScriptContext.Provider value={{ loaded }}>
       <IconButton id="upload_widget" onClick={initializeCloudinaryWidget}>
-        <CloudUploadOutlinedIcon />
+        <CloudUploadOutlinedIcon sx={{ color }} />
       </IconButton>
     </CloudinaryScriptContext.Provider>
   );

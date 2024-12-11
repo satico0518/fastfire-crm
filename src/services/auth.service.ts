@@ -16,7 +16,7 @@ export class AuthService {
       const createUserResponse = await createUserWithEmailAndPassword(
         auth,
         user.email,
-        "Ff12345" // TODO env Var
+        user.permissions.includes('PROVIDER') ? 'P12345' : 'Ff12345' // TODO env Var
       );
       if (createUserResponse.user && createUserResponse.user.uid) {
         const userToPush: User = {

@@ -14,6 +14,7 @@ export class ProjectService {
 
       const projectRef = ref(db, "projects");
       const doc = push(projectRef);
+      project.key = doc.key as string;
       await set(doc, project);
       return {
         result: "OK",
