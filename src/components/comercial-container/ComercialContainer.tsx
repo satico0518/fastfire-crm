@@ -8,7 +8,7 @@ import StockTableComponent from "../table/StockTableComponent";
 import HandymanOutlinedIcon from "@mui/icons-material/HandymanOutlined";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { StockFormComponent } from "../stock-form/StockFormComponent";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import { PurchaseService } from "../../services/purchase.service";
 import { ItemExcel } from "../../interfaces/Item";
 
@@ -57,57 +57,61 @@ export const ComercialContainer = () => {
     setTabsValue(newValue);
   };
 
-  const readExcel = (event: ChangeEvent<HTMLInputElement>|null) => {
-    const files = event?.target?.files || null; 
+  const readExcel = (event: ChangeEvent<HTMLInputElement> | null) => {
+    const files = event?.target?.files || null;
     if (!files || files.length === 0) return;
-    
+
     const promise = new Promise<ItemExcel[]>((resolve, reject) => {
       const fr = new FileReader();
       fr.readAsArrayBuffer(files[0]);
 
-      fr.onload = e => {
+      fr.onload = (e) => {
         const ba = e.target?.result;
-        const wb = XLSX.read(ba, {type: 'buffer'});
+        const wb = XLSX.read(ba, { type: "buffer" });
         const wsName = wb.SheetNames[0];
         const ws = wb.Sheets[wsName];
         const data = XLSX.utils.sheet_to_json(ws);
         resolve(data as ItemExcel[]);
-      }
+      };
 
-      fr.onerror = err => reject(err);
-      
+      fr.onerror = (err) => reject(err);
     });
 
-    promise.then(async (data: ItemExcel[]) => {
-      const requiredKeys = ['codigo', 'item', 'licitar', 'valor', 'cantidad'];
-      if (!requiredKeys.every(key => Object.keys(data[0]).includes(key))) {
+    promise
+      .then(async (data: ItemExcel[]) => {
+        const requiredKeys = ["codigo", "item", "licitar", "valor", "cantidad"];
+        if (!requiredKeys.every((key) => Object.keys(data[0]).includes(key))) {
+          setSnackbar({
+            open: true,
+            message:
+              'La tabla no tiene el formato requerido, debe incluir las columnas "licitar", "codigo", "item",  "valor", "cantidad" y no llevar espacios en blanco.',
+            severity: "error",
+            duration: 10000,
+          });
+          console.error(
+            'La tabla no tiene el formato requerido, debe incluir las columnas "codigo", "item", "licitar", "valor", "cantidad"'
+          );
+          return;
+        }
+
+        const response = await PurchaseService.addStockFromExcel(data);
+        if (response.result === "OK") {
+          setSnackbar({
+            open: true,
+            message: response.message as string,
+            severity: "success",
+          });
+        }
+      })
+      .catch((error) => {
         setSnackbar({
           open: true,
-          message: 'La tabla no tiene el formato requerido, debe incluir las columnas "codigo", "item", "licitar", "valor", "cantidad" y no llevar espacios en blanco.',
-          severity: 'error',
-          duration: 10000
+          message: "Error tratando de cargar el Excel" + JSON.stringify(error),
+          severity: "error",
         });
-        console.error('La tabla no tiene el formato requerido, debe incluir las columnas "codigo", "item", "licitar", "valor", "cantidad"');
-        return;
-      }
-        
-      const response = await PurchaseService.addStockFromExcel(data);
-      if (response.result === 'OK') {
-        setSnackbar({
-          open: true,
-          message: response.message as string,
-          severity: 'success'
-        });
-      }
-    }).catch(error => {
-      setSnackbar({
-        open: true,
-        message: 'Error tratando de cargar el Excel' + JSON.stringify(error),
-        severity: 'error'
+        console.error({ error });
       });
-      console.error({error});
-    })
-  }
+  };
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -141,7 +145,33 @@ export const ComercialContainer = () => {
         </Button>
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={1}>
-        <h1>Licitaciones</h1>
+        <table border={1}>
+          <thead>
+            <tr>
+              <th rowSpan={2}>Item</th>
+              <th colSpan={3}>Proveedores</th>
+            </tr>
+            <tr>
+              <th>Prov 1</th>
+              <th>Prov 2</th>
+              <th>Prov 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tubo</td>
+              <td>2000</td>
+              <td>2100</td>
+              <td>2200</td>
+            </tr>
+            <tr>
+              <td>Roceador</td>
+              <td>5000</td>
+              <td>4900</td>
+              <td>4850</td>
+            </tr>
+          </tbody>
+        </table>
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={2}>
         <StockTableComponent />
@@ -170,7 +200,7 @@ export const ComercialContainer = () => {
           <UploadFileIcon />
           <VisuallyHiddenInput
             type="file"
-            onChange={e => readExcel(e || null)}
+            onChange={(e) => readExcel(e || null)}
           />
         </Button>
       </CustomTabPanel>

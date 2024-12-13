@@ -51,7 +51,11 @@ export const translateStatus = (status: Status): string => {
   }
 };
 
-export const translateTimestampToString = (date: number): string => {
+export const translateTimestampToString = (
+  date: number
+): string | undefined => {
+  if (!date) return;
+
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "short",
@@ -175,10 +179,16 @@ export const changeDateFromDMA_MDA = (date: string): string => {
 };
 
 export const downloadExcelFile = (jsonData: unknown[], fileName: string) => {
-  const libro = XLSX.utils.book_new();
-  const hoja = XLSX.utils.json_to_sheet(jsonData);
-  XLSX.utils.book_append_sheet(libro, hoja);
-  const wbout = XLSX.write(libro, { bookType: "xlsx", type: "array" });
+  const book = XLSX.utils.book_new();
+  const sheet = XLSX.utils.json_to_sheet(jsonData);
+  XLSX.utils.book_append_sheet(book, sheet);
+  sheet['!cols'] = [
+    { hidden: true },
+    { hidden: false },
+    { hidden: false },
+  ];
+  
+  const wbout = XLSX.write(book, { bookType: "xlsx", type: "array" });
   const blob = new Blob([new Uint8Array(wbout)], {
     type: "application/octet-stream",
   });

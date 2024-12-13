@@ -1,5 +1,5 @@
 import { db } from "../firebase/firebase.config";
-import { push, ref, remove, set, update } from "firebase/database";
+import { get, push, ref, remove, set, update } from "firebase/database";
 import { ServiceResponse } from "../interfaces/Shared";
 import { Item, ItemExcel } from "../interfaces/Item";
 import { ProviderLicitation } from "../interfaces/Licitation";
@@ -139,6 +139,21 @@ export class PurchaseService {
         result: "ERROR",
         errorMessage,
       };
+    }
+  }
+
+
+  static async getProviderLicitation(providerKey: string): Promise<ProviderLicitation|null> {
+    try {
+      const itemRef = ref(db, `purchase/providers/${providerKey}`);
+      const snapshot = await get(itemRef);
+
+      return snapshot.toJSON() as ProviderLicitation;
+    } catch (error) {
+      const errorMessage = `Error tratando de obtener licitación anterior del proveeedor [${providerKey}]`;
+      console.error(errorMessage, error);
+
+      return null;
     }
   }
 }

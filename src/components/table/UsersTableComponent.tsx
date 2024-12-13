@@ -10,7 +10,7 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { Avatar, Button, Chip } from "@mui/material";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
+import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
 import { Access, User } from "../../interfaces/User";
 import { useUsersStore } from "../../stores/users/users.store";
 import {
@@ -40,9 +40,9 @@ export default function UsersTable() {
       maxWidth: 50,
       resizable: false,
       align: "right",
-      getActions: (params: GridRowParams) => [
+      getActions: (params: GridRowParams<User>) => [
         <GridActionsCellItem
-          icon={<ModeEditOutlineOutlinedIcon color="info"/>}
+          icon={<ModeEditOutlineOutlinedIcon color="info" />}
           onClick={() =>
             setModal({
               ...modal,
@@ -56,11 +56,12 @@ export default function UsersTable() {
           showInMenu
         />,
         <GridActionsCellItem
-          icon={<DeleteOutlineOutlinedIcon color="error"/>}
+          icon={<DeleteOutlineOutlinedIcon color="error" />}
           onClick={() =>
             handleDeleteConfirmation(
-              params.row.key,
-              `${params.row.firstName || ""} ${params.row.lastName || ""}`
+              params?.row?.key as string,
+              `${params.row.firstName || ""} ${params.row.lastName || ""}`,
+              params.row.permissions.includes("PROVIDER")
             )
           }
           label="Eliminar"
@@ -73,18 +74,23 @@ export default function UsersTable() {
       headerName: "Nombre",
       sortable: false,
       width: 220,
-      renderCell: ({row}: GridRenderCellParams<User>) => (
+      renderCell: ({ row }: GridRenderCellParams<User>) => (
         <div className="user-name">
           {row.avatarURL ? (
-            <Avatar src={row.avatarURL} sx={{width: '30px', height: '30px'}}/>
-          ) : (
-          (!row.permissions.includes('PROVIDER') ? <Avatar
+            <Avatar
+              src={row.avatarURL}
+              sx={{ width: "30px", height: "30px" }}
+            />
+          ) : !row.permissions.includes("PROVIDER") ? (
+            <Avatar
               sx={{
                 color: row.color ?? "purple",
                 height: "30px",
                 width: "30px",
               }}
-            /> : <StoreOutlinedIcon fontSize="large"/>)
+            />
+          ) : (
+            <StoreOutlinedIcon fontSize="large" />
           )}
           <span style={{ marginLeft: "10px" }}>
             {row.firstName || ""} {row.lastName || ""}
@@ -103,36 +109,36 @@ export default function UsersTable() {
       headerName: "Grupos de trabajo",
       type: "string",
       width: 280,
-      renderCell: ({row}: GridRenderCellParams<User>) => (
+      renderCell: ({ row }: GridRenderCellParams<User>) => (
         <div className="permissions">
-          {row?.workgroupKeys?.length > 0 ? (
-            row?.workgroupKeys?.map((key: string) => {
-              const groupName = getWorkgroupNameByKey(
-                key,
-                workgroups as Workgroup[]
-              );
-              if (key && groupName !== "NA") {
-                return (
-                  <Chip
-                    size="small"
-                    key={key}
-                    label={groupName}
-                    sx={{
-                      backgroundColor:
-                        getWorkgroupColorByKey(
-                          key,
-                          workgroups as Workgroup[]
-                        ) || "deepskyblue",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  />
+          {row?.workgroupKeys?.length > 0
+            ? row?.workgroupKeys?.map((key: string) => {
+                const groupName = getWorkgroupNameByKey(
+                  key,
+                  workgroups as Workgroup[]
                 );
-              }
-            })
-          ) : (
-            !row.permissions.includes('PROVIDER') && <Chip label="Sin grupo" color="warning" />
-          )}
+                if (key && groupName !== "NA") {
+                  return (
+                    <Chip
+                      size="small"
+                      key={key}
+                      label={groupName}
+                      sx={{
+                        backgroundColor:
+                          getWorkgroupColorByKey(
+                            key,
+                            workgroups as Workgroup[]
+                          ) || "deepskyblue",
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    />
+                  );
+                }
+              })
+            : !row.permissions.includes("PROVIDER") && (
+                <Chip label="Sin grupo" color="warning" />
+              )}
         </div>
       ),
     },
@@ -141,14 +147,16 @@ export default function UsersTable() {
       headerName: "Permisos",
       type: "string",
       width: 250,
-      renderCell: ({row}: GridRenderCellParams<User>) => (
+      renderCell: ({ row }: GridRenderCellParams<User>) => (
         <div className="permissions">
           {row.permissions.map((acc: Access) => (
             <Chip
               size="small"
               key={acc}
               label={translateAccess(acc)}
-              color={row.permissions.includes('PROVIDER') ? 'secondary' : 'info'}
+              color={
+                row.permissions.includes("PROVIDER") ? "secondary" : "info"
+              }
             />
           ))}
         </div>
@@ -175,11 +183,16 @@ export default function UsersTable() {
     setConfirmation({ open: false, title: "", text: "", actions: null });
   };
 
-  const handleDeleteConfirmation = (userKey: string, userName: string) => {
+  const handleDeleteConfirmation = (
+    userKey: string,
+    userName: string,
+    isProvider: boolean
+  ) => {
     setConfirmation({
       open: true,
       title: "Confirmacion!",
-      text: `Vas a eliminar al usuario "${userName.toUpperCase()}".`,
+      text: `Vas a eliminar al ${ !isProvider ? "usuario" : "proveedor" } "${userName.toUpperCase()}".
+      ${isProvider ? "Recuerda que se perderán sus licitaciones y el ranking se verá afectado." : ''}`,
       actions: (
         <Button onClick={() => handleDeleteUser(userKey)}>Eliminar</Button>
       ),

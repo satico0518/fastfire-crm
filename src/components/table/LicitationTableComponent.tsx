@@ -8,7 +8,7 @@ import * as XLSX from "xlsx";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { compareLicitationVsStock, formatToCOP } from "../../utils/utils";
 import { useStockStore } from "../../stores/stock/stock.store";
-import { LicitationExcel } from "../provider-container/ProviderContainer";
+import { LicitationExcel, LicitationTable } from "../../interfaces/Licitation";
 
 const paginationModel = { page: 0, pageSize: 50 };
 
@@ -73,7 +73,7 @@ export default function LicitationTableComponent({
       setIsLoading(false);
     }
 
-    const promise = new Promise<{ item: string; precio: number }[]>(
+    const promise = new Promise<LicitationTable[]>(
       (resolve, reject) => {
         const fr = new FileReader();
         fr.readAsArrayBuffer(files[0]);
@@ -83,10 +83,7 @@ export default function LicitationTableComponent({
           const wb = XLSX.read(ba, { type: "buffer" });
           const wsName = wb.SheetNames[0];
           const ws = wb.Sheets[wsName];
-          const data = XLSX.utils.sheet_to_json(ws) as {
-            item: string;
-            precio: number;
-          }[];
+          const data = XLSX.utils.sheet_to_json(ws) as LicitationTable[];
 
           if (
             data.some(
@@ -148,26 +145,28 @@ export default function LicitationTableComponent({
     );
 
     promise
-      .then(async (data: { item: string; precio: number }[]) => {
-        const requiredKeys = ["item", "precio"];
+      .then(async (data: LicitationTable[]) => {
+        const requiredKeys = ["id", "item", "precio"];
         if (!requiredKeys.every((key) => Object.keys(data[0]).includes(key))) {
+          const msg = 'La tabla no tiene el formato requerido, debe incluir las columnas "id", "item" y "precio" y no llevar espacios en blanco. Descargue nuevamente la plantilla y solo modifique la columna de precios';
           setSnackbar({
             open: true,
-            message:
-              'La tabla no tiene el formato requerido, debe incluir las columnas "item" y "precio" y no llevar espacios en blanco.',
+            message: msg,
             severity: "error",
             duration: 10000,
           });
-          console.error(
-            'La tabla no tiene el formato requerido, debe incluir las columnas "item" y "precio"'
-          );
+          console.error(msg);
           return;
         }
-        const mappedData = data.map((v, i) => ({
-          id: i,
+
+        console.log({data});
+        
+        const mappedData = data.map((v) => ({
+          id: v.id,
           name: v.item,
           price: v.precio,
         }));
+        console.log({mappedData});
 
         setItems(mappedData);
         setSnackbar({
