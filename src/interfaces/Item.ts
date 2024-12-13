@@ -8,3 +8,11 @@ export interface Item {
     status: 'ACTIVE'|'INACTIVE';
     count: number;
 }
+
+export interface ItemExcel {
+    codigo: string;
+    item: string;
+    valor: number;
+    licitar: string;
+    cantidad: number;
+}

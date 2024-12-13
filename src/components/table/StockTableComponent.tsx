@@ -11,7 +11,6 @@ import {
 import Paper from "@mui/material/Paper";
 import { Project } from "../../interfaces/Project";
 import { Button, Checkbox, Input } from "@mui/material";
-import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import MoneyOutlinedIcon from '@mui/icons-material/MoneyOutlined';
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -84,12 +83,12 @@ export default function StockTableComponent() {
             label={`${row.showInTender ? 'No' : ''} Licitar`}
             showInMenu
           />,
-          <GridActionsCellItem
-            icon={<ArchiveOutlinedIcon color="info"/>}
-            onClick={() => handleConfirmation(row, 'archivar')}
-            label="Archivar"
-            showInMenu
-          />,
+          // <GridActionsCellItem
+          //   icon={<ArchiveOutlinedIcon color="info"/>}
+          //   onClick={() => handleConfirmation(row, 'archivar')}
+          //   label="Archivar"
+          //   showInMenu
+          // />,
           <GridActionsCellItem
             icon={<DeleteOutlineOutlinedIcon color="error" />}
             onClick={() => handleConfirmation(row, 'eliminar')}
@@ -146,7 +145,7 @@ export default function StockTableComponent() {
     },
     {
       field: "price",
-      headerName: "Precio",
+      headerName: "Precio Unitario",
       type: "number",
       width: 200,
       valueGetter: (value) => formatToCOP(value),

@@ -1,0 +1,11 @@
+.provider-container {
+  display: flex;
+  justify-content: space-between;
+
+  &__form {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+  }
+}

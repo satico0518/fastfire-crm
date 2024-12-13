@@ -3,7 +3,8 @@ import { Status } from "../interfaces/Shared";
 import { Priority } from "../interfaces/Task";
 import { Access, User } from "../interfaces/User";
 import { Workgroup } from "../interfaces/Workgroup";
-import EmojiFlagsOutlinedIcon from '@mui/icons-material/EmojiFlagsOutlined';
+import * as XLSX from "xlsx";
+import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 
 export const formatToCOP = (value: number): string => {
   const options: Intl.NumberFormatOptions = {
@@ -41,8 +42,8 @@ export const translateStatus = (status: Status): string => {
       return "Bloqueada";
     case "ARCHIVED":
       return "Archivada";
-      case "DELETED":
-        return "Eliminada";
+    case "DELETED":
+      return "Eliminada";
     case "DONE":
       return "Finalizada";
     default:
@@ -67,13 +68,41 @@ export const translateTimestampToString = (date: number): string => {
 export const translatePriority = (priority: Priority): JSX.Element => {
   switch (priority) {
     case "LOW":
-      return <span><EmojiFlagsOutlinedIcon sx={{color: 'gray', position: 'relative', top: '5px'}}/>{' '}Baja</span>;
+      return (
+        <span>
+          <EmojiFlagsOutlinedIcon
+            sx={{ color: "gray", position: "relative", top: "5px" }}
+          />{" "}
+          Baja
+        </span>
+      );
     case "NORMAL":
-      return <span><EmojiFlagsOutlinedIcon sx={{color: 'blue', position: 'relative', top: '5px'}} />{' '}Normal</span>;
+      return (
+        <span>
+          <EmojiFlagsOutlinedIcon
+            sx={{ color: "blue", position: "relative", top: "5px" }}
+          />{" "}
+          Normal
+        </span>
+      );
     case "HIGH":
-      return <span><EmojiFlagsOutlinedIcon sx={{color: 'orange', position: 'relative', top: '5px'}} />{' '}Alta</span>;
+      return (
+        <span>
+          <EmojiFlagsOutlinedIcon
+            sx={{ color: "orange", position: "relative", top: "5px" }}
+          />{" "}
+          Alta
+        </span>
+      );
     case "URGENT":
-      return <span><EmojiFlagsOutlinedIcon sx={{color: 'red', position: 'relative', top: '5px'}} />{' '}Urgente</span>;
+      return (
+        <span>
+          <EmojiFlagsOutlinedIcon
+            sx={{ color: "red", position: "relative", top: "5px" }}
+          />{" "}
+          Urgente
+        </span>
+      );
     default:
       return <span>NA</span>;
   }
@@ -82,13 +111,16 @@ export const translatePriority = (priority: Priority): JSX.Element => {
 export const getUserNameByKey = (userKey: string, users: User[]): string => {
   if (users.length) {
     const user = users.filter((u) => u.key === userKey)[0];
-    
+
     return `${user?.firstName} ${user?.lastName}`;
   }
   return "NA";
 };
 
-export const getUserKeysByNames = (ownerNames: string[], users: User[]): string[] => {
+export const getUserKeysByNames = (
+  ownerNames: string[],
+  users: User[]
+): string[] => {
   if (users.length) {
     const owners = users?.filter((u) =>
       ownerNames.some(
@@ -97,7 +129,7 @@ export const getUserKeysByNames = (ownerNames: string[], users: User[]): string[
           ownerNames.some((o) => o.includes(u.lastName))
       )
     );
-    return owners?.map((o) => o.key) as string[] || [];
+    return (owners?.map((o) => o.key) as string[]) || [];
   }
   return [];
 };
@@ -137,7 +169,44 @@ export const getWorkgroupColorByKey = (
 
 export const changeDateFromDMA_MDA = (date: string): string => {
   if (date.length) {
-    return `${date.split('/')[1]}/${date.split('/')[0]}/${date.split('/')[2]}`
+    return `${date.split("/")[1]}/${date.split("/")[0]}/${date.split("/")[2]}`;
   }
-  return '';
+  return "";
+};
+
+export const downloadExcelFile = (jsonData: unknown[], fileName: string) => {
+  const libro = XLSX.utils.book_new();
+  const hoja = XLSX.utils.json_to_sheet(jsonData);
+  XLSX.utils.book_append_sheet(libro, hoja);
+  const wbout = XLSX.write(libro, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([new Uint8Array(wbout)], {
+    type: "application/octet-stream",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export const compareLicitationVsStock = (
+  providerLicitation: { item: string }[],
+  stockToTender: { name: string }[]
+): { result: boolean; item: string } => {
+  if (providerLicitation.length !== stockToTender.length) {
+    return { result: false, item: "length" };
+  }
+
+  for (let i = 0; i < stockToTender.length; i++) {
+    if (
+      !providerLicitation.some(
+        (p) => p.item.toLowerCase() === stockToTender[i].name.toLowerCase()
+      )
+    ) {
+      return { result: false, item: stockToTender[i].name.toUpperCase() };
+    }
+  }
+
+  return { result: true, item: "" };
 };

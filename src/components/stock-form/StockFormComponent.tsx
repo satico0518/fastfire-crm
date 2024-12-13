@@ -37,7 +37,7 @@ export const StockFormComponent = ({
         setSnackbar({
           ...snackbar,
           open: true,
-          message: `Usuario ${
+          message: `Item ${
             editingItem ? "editado" : "creado"
           } exitosamente!`,
           severity: "success",

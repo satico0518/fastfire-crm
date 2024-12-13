@@ -1,13 +1,28 @@
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { TabPanelProps } from "../../interfaces/Tabs";
 import { UserFormComponent } from "../user-form/UserFormComponent";
-import { Box, Tabs, Tab, Button } from "@mui/material";
+import { Box, Tabs, Tab, Button, styled } from "@mui/material";
 import { useUiStore } from "../../stores/ui/ui.store";
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import StockTableComponent from "../table/StockTableComponent";
-import HandymanOutlinedIcon from '@mui/icons-material/HandymanOutlined';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import HandymanOutlinedIcon from "@mui/icons-material/HandymanOutlined";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { StockFormComponent } from "../stock-form/StockFormComponent";
+import * as XLSX from 'xlsx';
+import { PurchaseService } from "../../services/purchase.service";
+import { ItemExcel } from "../../interfaces/Item";
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
 
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
@@ -36,10 +51,63 @@ export const ComercialContainer = () => {
   const [tabsValue, setTabsValue] = useState(0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
+  const setSnackbar = useUiStore((state) => state.setSnackbar);
 
   const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);
   };
+
+  const readExcel = (event: ChangeEvent<HTMLInputElement>|null) => {
+    const files = event?.target?.files || null; 
+    if (!files || files.length === 0) return;
+    
+    const promise = new Promise<ItemExcel[]>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.readAsArrayBuffer(files[0]);
+
+      fr.onload = e => {
+        const ba = e.target?.result;
+        const wb = XLSX.read(ba, {type: 'buffer'});
+        const wsName = wb.SheetNames[0];
+        const ws = wb.Sheets[wsName];
+        const data = XLSX.utils.sheet_to_json(ws);
+        resolve(data as ItemExcel[]);
+      }
+
+      fr.onerror = err => reject(err);
+      
+    });
+
+    promise.then(async (data: ItemExcel[]) => {
+      const requiredKeys = ['codigo', 'item', 'licitar', 'valor', 'cantidad'];
+      if (!requiredKeys.every(key => Object.keys(data[0]).includes(key))) {
+        setSnackbar({
+          open: true,
+          message: 'La tabla no tiene el formato requerido, debe incluir las columnas "codigo", "item", "licitar", "valor", "cantidad" y no llevar espacios en blanco.',
+          severity: 'error',
+          duration: 10000
+        });
+        console.error('La tabla no tiene el formato requerido, debe incluir las columnas "codigo", "item", "licitar", "valor", "cantidad"');
+        return;
+      }
+        
+      const response = await PurchaseService.addStockFromExcel(data);
+      if (response.result === 'OK') {
+        setSnackbar({
+          open: true,
+          message: response.message as string,
+          severity: 'success'
+        });
+      }
+    }).catch(error => {
+      setSnackbar({
+        open: true,
+        message: 'Error tratando de cargar el Excel' + JSON.stringify(error),
+        severity: 'error'
+      });
+      console.error({error});
+    })
+  }
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -50,13 +118,13 @@ export const ComercialContainer = () => {
           onChange={handleTabsChange}
           aria-label="basic tabs example"
         >
-          <Tab label="Ordenes de Compra" {...a11yProps(0)} />
+          <Tab label="Órdenes de Compra" {...a11yProps(0)} />
           <Tab label="Licitaciones" {...a11yProps(1)} />
           <Tab label="Inventario" {...a11yProps(2)} />
         </Tabs>
       </Box>
       <CustomTabPanel value={tabsValue} index={0}>
-        <h1>Ordenes de Compra</h1>
+        <h1>Órdenes de Compra</h1>
         <Button
           onClick={() =>
             setModal({
@@ -87,15 +155,23 @@ export const ComercialContainer = () => {
               content: <StockFormComponent />,
             })
           }
-          sx={{ color: "white", top: '10px' }}
+          sx={{ color: "white", top: "10px" }}
         >
           <HandymanOutlinedIcon />
         </Button>
         <Button
-          onClick={() => {}}
-          sx={{ color: "white", top: '10px' }}
+          className="upload-btn"
+          component="label"
+          role={undefined}
+          variant="text"
+          title="Cargar excel"
+          sx={{ color: "white", top: "10px" }}
         >
           <UploadFileIcon />
+          <VisuallyHiddenInput
+            type="file"
+            onChange={e => readExcel(e || null)}
+          />
         </Button>
       </CustomTabPanel>
       {/* <CustomTabPanel value={value} index={2}>

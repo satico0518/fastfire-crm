@@ -18,9 +18,12 @@ export const useStockStore = create<StockState>()(
         const stockRef = ref(db, "stock");
         onValue(stockRef, (snapshot) => {
           const data = Object.values(snapshot.val()) as Item[] || [];
-
+          
           if (data) {
-            set({ stock: data });
+            const values: Item[] = Object.entries<Item>(data).map(
+              ([key, value]) => ({ ...value, key })
+            ) as Item[];
+            set({ stock: values });
           } else set({ stock: [] });
         });
       } catch (error) {
