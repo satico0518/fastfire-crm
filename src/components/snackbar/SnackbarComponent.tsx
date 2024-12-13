@@ -12,6 +12,7 @@ export const SnackbarComponent = () => {
   const open = useUiStore((state) => state.snackbar.open);
   const message = useUiStore((state) => state.snackbar.message);
   const severity = useUiStore((state) => state.snackbar.severity);
+  const duration = useUiStore((state) => state.snackbar.duration);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
 
 //   const handleClose = () => setSnackbar({ open: false, message: "" });
@@ -30,7 +31,7 @@ export const SnackbarComponent = () => {
       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       open={open}
       onClose={handleClose}
-      autoHideDuration={5000}
+      autoHideDuration={duration || 3000}
     >
       <Alert
         onClose={handleClose}

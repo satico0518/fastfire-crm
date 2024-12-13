@@ -55,7 +55,7 @@ export default function ProjectsTable() {
           ];
         return [
           <GridActionsCellItem
-            icon={<ModeEditOutlineOutlinedIcon />}
+            icon={<ModeEditOutlineOutlinedIcon color="info"/>}
             onClick={() =>
               setModal({
                 ...modal,
@@ -69,7 +69,7 @@ export default function ProjectsTable() {
             showInMenu
           />,
           <GridActionsCellItem
-            icon={<BlockOutlinedIcon />}
+            icon={<BlockOutlinedIcon color="warning"/>}
             onClick={() =>
               ProjectService.updateProject({ ...params.row, status: "BLOCKED" })
             }
@@ -77,7 +77,7 @@ export default function ProjectsTable() {
             showInMenu
           />,
           <GridActionsCellItem
-            icon={<TaskAltOutlinedIcon />}
+            icon={<TaskAltOutlinedIcon color="success"/>}
             onClick={() =>
               ProjectService.updateProject({ ...params.row, status: "DONE" })
             }
@@ -192,7 +192,7 @@ export default function ProjectsTable() {
   const handleDeleteProject = async (projectKey: string) => {
     const deleteResult = await ProjectService.deleteProject(projectKey);
 
-    if (deleteResult)
+    if (deleteResult.result === 'OK')
       setSnackbar({
         open: true,
         message: "Proyecto eliminado exitosamente!",
@@ -201,7 +201,7 @@ export default function ProjectsTable() {
     else
       setSnackbar({
         open: true,
-        message: "Error al eliminar Proyecto.",
+        message: deleteResult.errorMessage ?? "Error al eliminar Proyecto.",
         severity: "error",
       });
 
@@ -214,7 +214,7 @@ export default function ProjectsTable() {
   ) => {
     setConfirmation({
       open: true,
-      title: "Confirmacion!",
+      title: "Confirmación!",
       text: `Vas a eliminar el proyecto "${projectName.toUpperCase()}".`,
       actions: (
         <Button onClick={() => handleDeleteProject(projectKey)}>

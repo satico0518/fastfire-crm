@@ -1,4 +1,5 @@
-import * as React from "react";
+import React from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
@@ -10,6 +11,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Logout from "@mui/icons-material/Logout";
 import PasswordOutlinedIcon from "@mui/icons-material/PasswordOutlined";
 import ColorLensOutlinedIcon from "@mui/icons-material/ColorLensOutlined";
+import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
 import { Chip } from "@mui/material";
 import { getUserNameByKey } from "../../utils/utils";
 import { useAuhtStore } from "../../stores";
@@ -29,13 +31,14 @@ export default function ProfileMenu() {
   const setIsAuth = useAuhtStore((state) => state.setIsAuth);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [isColorVisible, setIsColorVisible] = React.useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isColorVisible, setIsColorVisible] = useState<boolean>(false);
   const open = Boolean(anchorEl);
 
-  const [uwConfig] = React.useState({
+  const [uwConfig] = useState({
     cloudName: "fastfire",
-    uploadPreset: "vr0sleie"});
+    uploadPreset: "vr0sleie",
+  });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -106,11 +109,10 @@ export default function ProfileMenu() {
   };
 
   const handleChangeColor = async (color: ColorResult) => {
-    console.log(color.hex);
     if (currentUser) {
       currentUser.color = color.hex;
       UsersService.modifyUser(currentUser);
-      setNewUser({...currentUser, color: color.hex })
+      setNewUser({ ...currentUser, color: color.hex });
       setIsColorVisible(false);
     }
   };
@@ -131,7 +133,16 @@ export default function ProfileMenu() {
                   aria-expanded={open ? "true" : undefined}
                 >
                   {currentUser?.avatarURL ? (
-                    <Avatar src={currentUser.avatarURL} sx={{position: 'relative', right: '10px', border: 'solid #FFF 2px'}}/>
+                    <Avatar
+                      src={currentUser.avatarURL}
+                      sx={{
+                        position: "relative",
+                        right: "10px",
+                        border: "solid #FFF 2px",
+                      }}
+                    />
+                  ) : currentUser?.permissions.includes("PROVIDER") ? (
+                    <StoreOutlinedIcon sx={{ color: "white" }} />
                   ) : (
                     <Avatar
                       sx={{ width: 25, height: 25, color: currentUser?.color }}
@@ -146,7 +157,7 @@ export default function ProfileMenu() {
               users as User[]
             )}
             variant="outlined"
-            sx={{ color: "white", fontSize: '15px', fontWeight: '600' }}
+            sx={{ color: "white", fontSize: "15px", fontWeight: "600" }}
           />
         </>
       </Box>
@@ -187,12 +198,22 @@ export default function ProfileMenu() {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem onClick={() => {}}>
-          <Avatar sx={{ color: currentUser?.color }} src={currentUser?.avatarURL}/>{" "}
+          <Avatar
+            sx={{ color: currentUser?.color }}
+            src={currentUser?.avatarURL}
+          />{" "}
           {currentUser?.avatarURL ? "Editar Foto" : "Agregar foto"}
           <CloudinaryUploadWidget uwConfig={uwConfig} />
         </MenuItem>
-        <MenuItem onClick={() => {setIsColorVisible(true); handleClose();}}>
-          <ColorLensOutlinedIcon sx={{color: currentUser?.color || '#f3f3f3'}}/>{" "}
+        <MenuItem
+          onClick={() => {
+            setIsColorVisible(true);
+            handleClose();
+          }}
+        >
+          <ColorLensOutlinedIcon
+            sx={{ color: currentUser?.color || "#f3f3f3" }}
+          />{" "}
           <span style={{ marginLeft: "10px" }}>
             {currentUser?.color ? "Cambiar mi color" : "Definir mi color"}
           </span>

@@ -1,4 +1,4 @@
-export type Access = 'TYG'|'ADMIN'|'PURCHASE' 
+export type Access = 'TYG'|'ADMIN'|'PURCHASE'|'PROVIDER'
 export interface User {
     id?: string,
     key?: string,

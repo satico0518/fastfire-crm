@@ -17,14 +17,10 @@ export const useUsersStore = create<UsersState>()(
       try {
         const usersRef = ref(db, "users");
         onValue(usersRef, (snapshot) => {
-          const data = snapshot.val();
+          const data = Object.values(snapshot.val()) as User[] || [];
   
           if (data) {
-            const values: User[] = Object.entries<User>(data).map(
-              ([key, value]) => ({ ...value, key })
-            ) as User[];
-  
-            set({users: values});
+            set({users: data});
           } else set({users:[]});
         });
       } catch (error) {

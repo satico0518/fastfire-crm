@@ -2,13 +2,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuhtStore } from "../../stores";
 
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import BuildCircleOutlinedIcon from "@mui/icons-material/BuildCircleOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
+import RequestQuoteOutlinedIcon from "@mui/icons-material/RequestQuoteOutlined";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import SecondaryActions, {
   SecondaryActionsProps,
@@ -43,7 +44,11 @@ export const MenuComponent = () => {
     if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
 
     return workgroups
-      ?.filter((wg) => currentUser?.workgroupKeys.some((key) => wg.key === key) || !wg.isPrivate)
+      ?.filter(
+        (wg) =>
+          currentUser?.workgroupKeys.some((key) => wg.key === key) ||
+          !wg.isPrivate
+      )
       .filter((wg) => wg.isActive) as Workgroup[];
   };
 
@@ -70,7 +75,7 @@ export const MenuComponent = () => {
       const resp = await WorkgroupService.deleteWorkgroup(
         workgroup,
         tasks as Task[],
-        users as User[],
+        users as User[]
       );
       if (resp.result === "OK") {
         setSnackbar({
@@ -78,7 +83,7 @@ export const MenuComponent = () => {
           message: "Grupo y tareas eliminados correctamente!",
           severity: "success",
         });
-        navigate('/home')
+        navigate("/home");
       } else {
         setSnackbar({
           open: true,
@@ -169,7 +174,8 @@ export const MenuComponent = () => {
               </NavLink>
             </li>
           )}
-          {currentUser?.permissions.includes("PURCHASE") && (
+          {(currentUser?.permissions.includes("PURCHASE") ||
+            currentUser?.permissions.includes("PROVIDER")) && (
             <li>
               <NavLink
                 to="/purchasing-manager"
@@ -177,11 +183,17 @@ export const MenuComponent = () => {
                   isPending ? "pending" : isActive ? "active" : ""
                 }
               >
-                <AddShoppingCartOutlinedIcon
-                  titleAccess="Gestor de Compras"
-                  sx={{ position: "relative", top: "6px" }}
-                />{" "}
-                Compras
+                {currentUser?.permissions.includes("PROVIDER") ? (
+                  <RequestQuoteOutlinedIcon titleAccess="Órdenes de Compra" sx={{ position: "relative", top: "6px" }}/>
+                ) : (
+                  <>
+                    <ShoppingCartOutlinedIcon titleAccess="Comercial" sx={{ position: "relative", top: "6px" }}
+                    />{" "}
+                  </>
+                )}
+                {currentUser?.permissions.includes("PROVIDER")
+                  ? "Cotización"
+                  : "Comercial"}
               </NavLink>
             </li>
           )}
@@ -235,7 +247,8 @@ export const MenuComponent = () => {
               </Button>
             </li>
           )}
-          {workgroupsByRole().length > 0 ? (
+          {!currentUser?.permissions.includes("PROVIDER") &&
+          workgroupsByRole().length > 0 ? (
             workgroupsByRole().map((wg) => (
               <li key={wg.id}>
                 <div key={wg.id} className="menu__workgroup-item">

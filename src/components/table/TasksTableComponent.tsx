@@ -340,8 +340,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   };
 
   const handleDeleteTask = async (task: Task) => {
-    task.status = "DELETED";
-    const deleteResult = await TaskService.updateTask(task);
+    const deleteResult = await TaskService.deleteTask(task);
 
     if (deleteResult)
       setSnackbar({
@@ -595,6 +594,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                 if (userAvatar)
                   return (
                     <Avatar
+                      key={k}
+                      style={{cursor: 'zoom-in'}}
+                      title={(users && getUserNameByKey(k, users)) || "NA"}
                       src={userAvatar}
                       sx={{ width: "30px", height: "30px", marginLeft: "-5px" }}
                     />
@@ -818,7 +820,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         title="Responsables"
         open={openOwnersDialog}
         labels={
-          users?.map((u) =>
+          users?.filter(u => u.isActive && !u.permissions.includes('PROVIDER')).map((u) =>
             getUserNameByKey(u.key as string, users)
           ) as unknown as string[]
         }

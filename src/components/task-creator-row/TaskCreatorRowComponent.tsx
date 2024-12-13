@@ -217,7 +217,7 @@ export const TaskCreatorRowComponent = () => {
               title="Responsables"
               open={openOwnersDialog}
               labels={
-                users?.map((u) =>
+                users?.filter(u => u.isActive && !u.permissions.includes('PROVIDER')).map((u) =>
                   getUserNameByKey(u.key as string, users)
                 ) as unknown as string[]
               }
