@@ -36,7 +36,7 @@ export const LoginPage = () => {
     if (signInResponse.result === "OK") {
       setIsAuth(true);
       setToken(await signInResponse.firebaseUser?.getIdToken() || '');
-      setNewUser(signInResponse.user as User)
+      setNewUser(signInResponse.user as User);
       navigate("/home");
     } else {
       setIsError(translateErrorMessage(signInResponse.error as string));

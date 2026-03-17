@@ -18,6 +18,12 @@ export const TasksPage = () => {
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const user = useAuhtStore((state) => state.user);
+  const hasHydrated = useAuhtStore((state) => state.hasHydrated);
+  
+  // No renderizar hasta que el store esté hidratado
+  if (!hasHydrated) {
+    return null;
+  }
 
   useEffect(() => {
     setTabsValue(state?.goTo === "wg" ? 1 : 0);
