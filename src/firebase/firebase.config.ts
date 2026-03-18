@@ -4,14 +4,14 @@ import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD0fmfbK_h059iA1zFcPJ3rUyZz7ucIZFU",
-  authDomain: "fastfirecrm.firebaseapp.com",
-  projectId: "fastfirecrm",
-  databaseURL: "https://fastfirecrm-default-rtdb.firebaseio.com",
-  storageBucket: "fastfirecrm.appspot.com",
-  messagingSenderId: "297602990290",
-  appId: "1:297602990290:web:dc60a9c2786c1754f22d0b",
-  measurementId: "G-XPC750D5LV"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

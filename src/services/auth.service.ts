@@ -60,6 +60,7 @@ export class AuthService {
       const userLoggedIn = await signInWithEmailAndPassword(auth, email, pass);
       const users: User[] =  Object.values((await get(ref(db, 'users'))).val());
       const userDB = users?.filter((u) => u.email === email)[0];
+      
       if (!userDB) {
         const msg = `El usuario "${email}" no está registrado.`;
         console.error(msg);

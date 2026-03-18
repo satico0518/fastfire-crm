@@ -29,6 +29,15 @@ export const MenuComponent = () => {
   const navigate = useNavigate();
   const isAuth = useAuhtStore((state) => state.isAuth);
   const currentUser = useAuhtStore((state) => state.user);
+  const hasHydrated = useAuhtStore((state) => state.hasHydrated);
+  
+  // No renderizar hasta que el store esté hidratado
+  if (!hasHydrated) {
+    return null;
+  }
+  
+  const isAdmin = currentUser?.permissions.includes("ADMIN");
+  
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const setModal = useUiStore((state) => state.setModal);
   const modal = useUiStore((state) => state.modal);
@@ -38,8 +47,6 @@ export const MenuComponent = () => {
   const users = useUsersStore((state) => state.users);
 
   if (!isAuth) return null;
-
-  const isAdmin = currentUser?.permissions.includes("ADMIN");
   const workgroupsByRole = (): Workgroup[] => {
     if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
 
