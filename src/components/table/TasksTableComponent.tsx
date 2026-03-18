@@ -3,6 +3,7 @@ import {
   GridActionsCellItem,
   GridColDef,
   GridColumnResizeParams,
+  GridFilterModel,
   GridRenderCellParams,
   GridRenderEditCellParams,
   GridRowParams,
@@ -88,6 +89,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const currentUser = useAuhtStore((state) => state.user);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showArchivedTasks, setShowArchivedTasks] = useState(false);
+  const [filterModel, setFilterModel] = useState<GridFilterModel>({
+    items: [],
+  });
 
   const [openOwnersDialog, setOpenOwnersDialog] = useState<boolean>(false);
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
@@ -454,6 +458,11 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Estado",
       type: "string",
       width: columWidths?.status ?? 180,
+      filterable: true,
+      valueGetter: (value: any, row: Task) => {
+        // Para el filtro, devolvemos el estado traducido
+        return translateStatus(row.status);
+      },
       renderCell: (params: GridRenderCellParams<Task>) => (
         <>
           {params.row.status === "IN_PROGRESS" && (
@@ -582,9 +591,20 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "ownerKeys",
       headerName: "Responsables",
       sortable: false,
+      filterable: true,
       width: columWidths?.ownerKeys ?? 150,
       align: "center",
       editable: true,
+      valueGetter: (value: any, row: Task) => {
+        // Para el filtro, devolvemos los nombres en lugar de los IDs
+        if (!row.ownerKeys || row.ownerKeys.length === 0) {
+          return "Sin asignar";
+        }
+        return row.ownerKeys
+          .map((ownerKey: string) => getUserNameByKey(ownerKey, users || []))
+          .filter(Boolean)
+          .join(", ");
+      },
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div className={`${!row.ownerKeys && "no-owner"} owners-container`}>
           {row.ownerKeys
@@ -780,6 +800,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         autoPageSize
         rows={getTaskByRole()}
         columns={columns}
+        filterModel={filterModel}
+        onFilterModelChange={(newModel) => setFilterModel(newModel)}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[20]}
         localeText={{
