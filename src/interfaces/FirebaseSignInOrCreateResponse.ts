@@ -1,4 +1,4 @@
-import { User as FirebaseUser } from "@firebase/auth"
+import { User as FirebaseUser } from "firebase/auth"
 import { User } from "./User"
 
 export interface FirebaseSignInOrCreateResponse {
