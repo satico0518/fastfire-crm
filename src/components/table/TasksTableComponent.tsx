@@ -459,7 +459,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       type: "string",
       width: columWidths?.status ?? 180,
       filterable: true,
-      valueGetter: (value: any, row: Task) => {
+      valueGetter: (_value: any, row: Task) => {
         // Para el filtro, devolvemos el estado traducido
         return translateStatus(row.status);
       },
@@ -595,7 +595,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       width: columWidths?.ownerKeys ?? 150,
       align: "center",
       editable: true,
-      valueGetter: (value: any, row: Task) => {
+      valueGetter: (_value: any, row: Task) => {
         // Para el filtro, devolvemos los nombres en lugar de los IDs
         if (!row.ownerKeys || row.ownerKeys.length === 0) {
           return "Sin asignar";
