@@ -597,7 +597,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       editable: true,
       valueGetter: (_value: any, row: Task) => {
         // Para el filtro, devolvemos los nombres en lugar de los IDs
-        if (!row.ownerKeys || row.ownerKeys.length === 0) {
+        if (!Array.isArray(row?.ownerKeys) || row.ownerKeys.length === 0) {
           return "Sin asignar";
         }
         return row.ownerKeys
@@ -607,7 +607,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       },
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div className={`${!row.ownerKeys && "no-owner"} owners-container`}>
-          {row.ownerKeys
+          {Array.isArray(row.ownerKeys) && row.ownerKeys.length > 0
             ? row.ownerKeys.map((k) => {
                 const userAvatar = users?.find((u) => u.key === k)?.avatarURL;
 
@@ -649,9 +649,11 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           onClick={() => {
             setSelectedTask(row);
             setSelectedOwners(
-              (row?.ownerKeys?.map((k) =>
-                getUserNameByKey(k, users as User[])
-              ) as string[]) || []
+              (Array.isArray(row?.ownerKeys) 
+                ? row.ownerKeys.map((k) =>
+                    getUserNameByKey(k, users as User[])
+                  ) 
+                : []) || []
             );
             setOpenOwnersDialog(true);
           }}
