@@ -6,7 +6,7 @@ import {
 import { auth } from "../firebase/firebase.config";
 import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCreateResponse";
 import { db } from "../firebase/firebase.config";
-import { ref, push, set, get } from "firebase/database";
+import { ref, set, get } from "firebase/database";
 import { User } from "../interfaces/User";
 import { ServiceResponse } from "../interfaces/Shared";
 
@@ -24,9 +24,22 @@ export class AuthService {
           id: createUserResponse.user.uid,
           isActive: true,
         };
-        const docRef = push(ref(db, "users"));
-        userToPush.key = docRef.key as string;
-        await set(docRef, userToPush);
+        
+        // Obtener el token del usuario para asegurar el contexto de autenticación
+        const token = await createUserResponse.user.getIdToken();
+        console.log('User token:', token);
+        
+        // Usar el UID del usuario como la clave en la base de datos
+        const userRef = ref(db, `users/${createUserResponse.user.uid}`);
+        userToPush.key = createUserResponse.user.uid;
+        
+        try {
+          await set(userRef, userToPush);
+          console.log('User created successfully in database');
+        } catch (dbError) {
+          console.error('Database write error:', dbError);
+          throw dbError;
+        }
 
         return {
           result: "OK",
