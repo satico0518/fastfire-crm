@@ -772,7 +772,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           row.workgroupKeys?.some((k) => k === (wg.key as string))
         );
         return taskWorkgroups?.map((wg) => (
-          <Chip style={{ marginLeft: "5px" }} size="small" label={wg.name} />
+          <Chip 
+            key={wg.key} 
+            style={{ marginLeft: "5px" }} 
+            size="small" 
+            label={wg.name} 
+          />
         ));
       },
       editable: true,

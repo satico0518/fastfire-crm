@@ -1,13 +1,12 @@
 import { create } from "zustand";
-import { Tag } from "../../interfaces/Tag";
 import { devtools } from "zustand/middleware";
 import { onValue, ref } from "firebase/database";
 import { db } from "../../firebase/firebase.config";
 
 interface TagsState {
-  tags: Tag[];
+  tags: string[];
   loadTags: () => void;
-  setTags: (tags: Tag[]) => void;
+  setTags: (tags: string[]) => void;
 }
 
 export const useTagsStore = create<TagsState>()(
@@ -20,14 +19,18 @@ export const useTagsStore = create<TagsState>()(
           const data = snapshot.val();
 
           if (data) {
-            set({ tags: data });
-          } else set({ tags: [] });
+            // Convertir el objeto de etiquetas a un array
+            const tagsArray = Object.values(data) as string[];
+            set({ tags: tagsArray });
+          } else {
+            set({ tags: [] });
+          }
         });
       } catch (error) {
         console.error("Error cargando etiquetas desde store", { error });
       }
     },
-    setTags: (tags: Tag[]) => set(() => ({ tags })),
+    setTags: (tags: string[]) => set(() => ({ tags })),
   }))
 );
 
