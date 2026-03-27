@@ -13,6 +13,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .body-container {
   display: flex;
 }
@@ -21,7 +27,7 @@
   display: flex;
   width: calc(100% - 300px);
   padding: 20px;
-  height: 90vh;
+  min-height: calc(100vh - 50px);
 }
 
 a {
@@ -39,6 +45,67 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-image: url('../src/assets/contrast-horizon.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 50px 0 0 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1500;
+}
+
+@media (max-width: 767px) {
+  .body-container {
+    flex-direction: column;
+  }
+
+  .page-container {
+    width: 100%;
+    padding: 12px;
+    min-height: calc(100vh - 50px);
+    margin-top: 0;
+    height: auto;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 2100;
+  }
+
+  .menu {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    bottom: 0;
+    width: 80%;
+    max-width: 320px;
+    min-width: 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease-in-out;
+    background-color: rgba(10, 10, 10, 0.94);
+    z-index: 2000;
+    height: calc(100vh - 50px);
+  }
+
+  .menu.menu--open {
+    transform: translateX(0);
+  }
+
+  .mobile-menu-overlay {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-overlay {
+    display: none;
+  }
 }
 
 h1 {
@@ -54,4 +121,21 @@ h1 {
   a:hover {
     color: #747bff;
   }
+}
+
+/* Tabs styling */
+.MuiTabs-root {
+  min-height: 34px !important;
+  height: 34px !important;
+}
+
+.MuiTab-root {
+  font-size: 0.8rem !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 8px !important;
+}
+
+.MuiTabs-indicator {
+  height: 2px !important;
 }

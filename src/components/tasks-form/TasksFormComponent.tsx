@@ -136,7 +136,7 @@ export const TasksFormComponent = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"500px"} direction={"column"}>
+      <Stack spacing={2} width={"100%"} direction={"column"}>
         <TextField
           label="Nombre"
           type="text"

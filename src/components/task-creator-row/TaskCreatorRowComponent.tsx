@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Autocomplete, Button, Chip, TextField } from "@mui/material";
+import { Autocomplete, Button, Chip, TextField, useMediaQuery } from "@mui/material";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -21,20 +21,23 @@ import { Priority, Task } from "../../interfaces/Task";
 import { Dayjs } from "dayjs";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { TaskService } from "../../services/task.service";
+import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { PriorityInput } from "../priority-input/PriorityInput";
 import { TagsService } from "../../services/tags.service";
 import { Tag } from "../../interfaces/Tag";
 
 export const TaskCreatorRowComponent = () => {
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const tags = Object.values(useTagsStore((state) => state.tags));
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
+  const currentUser = useAuhtStore((state) => state.user);
 
   const [isEditing, setIsEditing] = useState(false);
 
-  const [taskName, setTaskName] = useState<string | null>();
+  const [taskName, setTaskName] = useState<string>("");
 
   const [openTagsDialog, setOpenTagsDialog] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -43,10 +46,10 @@ export const TaskCreatorRowComponent = () => {
   const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
 
   const [openDueDateDialog, setOpenDueDateDialog] = useState(false);
-  const [selectedDueDate, setSelectedDueDate] = useState<Dayjs | null>();
+  const [selectedDueDate, setSelectedDueDate] = useState<Dayjs | null>(null);
 
   const [openNotesDialog, setOpenNotesDialog] = useState(false);
-  const [taskNotes, setTaskNotes] = useState<string | null>();
+  const [taskNotes, setTaskNotes] = useState<string>("");
 
   const [openPriorityDialog, setOpenPriorityDialog] = useState(false);
   const [priority, setPriority] = useState<Priority | null>();
@@ -55,11 +58,11 @@ export const TaskCreatorRowComponent = () => {
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
 
   const resetForm = () => {
-    setTaskName(null);
+    setTaskName("");
     setSelectedTags([]);
     setSelectedOwners([]);
     setSelectedDueDate(null);
-    setTaskNotes(null);
+    setTaskNotes("");
     setPriority(null);
     setSelectedGroups([]);
     setIsEditing(false);
@@ -88,7 +91,7 @@ export const TaskCreatorRowComponent = () => {
             .map((wg) => wg.key) as string[]) || [],
       };
 
-      const resp = await TaskService.createTask(newTask as Task);
+      const resp = await TaskService.createTask(newTask as Task, currentUser?.key);
       if (resp.result === "OK") {
         setSnackbar({
           open: true,
@@ -139,7 +142,7 @@ export const TaskCreatorRowComponent = () => {
           startIcon={<AddTaskOutlinedIcon />}
           onClick={() => setIsEditing(true)}
         >
-          Nueva tarea
+          {isMobile ? "" : "Nueva tarea"}
         </Button>
       ) : (
         <div className="task-creator__row">
@@ -261,7 +264,7 @@ export const TaskCreatorRowComponent = () => {
                   id="outlined-basic"
                   variant="standard"
                   value={taskNotes}
-                  onChange={({ target }) => setTaskNotes(target.value)}
+                  onChange={({ target }) => setTaskNotes(target.value || "")}
                   fullWidth
                 />
               }
