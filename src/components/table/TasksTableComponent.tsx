@@ -42,12 +42,14 @@ import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import DateRangeOutlinedIcon from "@mui/icons-material/DateRangeOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Priority, Task } from "../../interfaces/Task";
 
 import { useUiStore } from "../../stores/ui/ui.store";
 import {
   changeDateFromDMA_MDA,
+  downloadExcelFile,
   getUserKeysByNames,
   getUserNameByKey,
   getWorkgroupNameByKey,
@@ -466,6 +468,22 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       text: `Vas a eliminar la tarea "${task.name.toUpperCase()}", no podrás volver a verla ni revisar su historial.`,
       actions: <Button onClick={() => handleDeleteTask(task)}>Eliminar</Button>,
     });
+  };
+
+  const handleExport = () => {
+    const tasksToExport = getTaskByRole();
+    const data = tasksToExport.map(task => ({
+      Estado: translateStatus(task.status),
+      Nombre: task.name,
+      Responsables: task.ownerKeys?.map(k => getUserNameByKey(k, users || [])).join(', ') || 'Sin asignar',
+      'Fecha Límite': task.dueDate ? dayjs(task.dueDate, 'DD/MM/YYYY').format('DD/MM/YYYY') : 'Sin fecha límite',
+      Notas: task.notes || '',
+      Prioridad: task.priority ? ['Baja', 'Normal', 'Alta', 'Urgente'][['LOW','NORMAL','HIGH','URGENT'].indexOf(task.priority)] : '-',
+      'Fecha de Creación': translateTimestampToString(task.createdDate),
+      'Grupos de Trabajo': task.workgroupKeys?.map(k => getWorkgroupNameByKey(k, workgroups || [])).join(', ') || '',
+      'Creado por': getUserNameByKey(task.createdByUserKey, users || []) || 'NA',
+    }));
+    downloadExcelFile(data, `tareas_${dayjs().format('YYYY-MM-DD')}.xlsx`);
   };
 
   const getTaskByRole = (): Task[] => {
@@ -951,21 +969,31 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           sessionStorage.setItem("columWidths", JSON.stringify(widths));
         }}
       />
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <TaskCreatorRowComponent />
-        <FormControlLabel
-          sx={{ color: "white" }}
-          control={
-            <Switch
-              color={showArchivedTasks ? "info" : "default"}
-              title="ver solo archivadas"
-              checked={showArchivedTasks}
-              onChange={() => setShowArchivedTasks(!showArchivedTasks)}
-            />
-          }
-          label="ver solo archivadas"
-          labelPlacement="start"
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <FormControlLabel
+            sx={{ color: "white" }}
+            control={
+              <Switch
+                color={showArchivedTasks ? "info" : "default"}
+                title="ver solo archivadas"
+                checked={showArchivedTasks}
+                onChange={() => setShowArchivedTasks(!showArchivedTasks)}
+              />
+            }
+            label="ver solo archivadas"
+            labelPlacement="start"
+          />
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleExport}
+            startIcon={<DownloadOutlinedIcon />}
+          >
+            EXCEL
+          </Button>
+        </div>
       </div>
       <TagsInput
         openTagsDialog={openTagsDialog}
