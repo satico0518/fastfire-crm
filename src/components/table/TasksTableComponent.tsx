@@ -475,7 +475,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         .filter(
           (t) =>
             t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
+            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
         ) as Task[];
     }
 
@@ -487,14 +487,14 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         .filter(
           (t) =>
             t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
+            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
         ) as Task[];
 
     return tasks !== null
       ? tasks?.filter(
           (t) =>
             t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
+            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
         )
       : [];
   };
@@ -922,7 +922,16 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     },  ];
 
   return (
-    <Paper sx={{ height: "calc(100vh - 220px)", width: "100%" }}>
+    <Paper 
+      sx={{ 
+        height: "calc(100vh - 220px)", 
+        width: "100%",
+        backgroundColor: showArchivedTasks ? "#fffaf5" : "#ffffff",
+        borderLeft: showArchivedTasks ? "20px solid #FF9800" : "none",
+        opacity: showArchivedTasks ? 0.95 : 1,
+        transition: "all 0.3s ease-in-out"
+      }}
+    >
       <DataGrid
         autoPageSize
         rows={getTaskByRole()}
@@ -949,12 +958,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           control={
             <Switch
               color={showArchivedTasks ? "info" : "default"}
-              title="ver archivadas"
+              title="ver solo archivadas"
               checked={showArchivedTasks}
               onChange={() => setShowArchivedTasks(!showArchivedTasks)}
             />
           }
-          label="ver archivadas"
+          label="ver solo archivadas"
           labelPlacement="start"
         />
       </div>
