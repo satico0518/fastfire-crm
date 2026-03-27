@@ -114,10 +114,8 @@ export const TagsInput = ({
       open={openTagsDialog}
       setOpen={setOpenTagsDialog}
       content={
-        <div style={{ height: "100px" }}>
-          <div
-            style={{ maxWidth: "500px", position: "relative", top: "-35px" }}
-          >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ maxWidth: "500px" }}>
             <div className="selected-members">
               {Array.from(new Set(selectedTags)).map((st: string, idx: number) => (
                 <div

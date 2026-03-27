@@ -46,7 +46,7 @@ export const TasksPage = () => {
         aria-labelledby={`simple-tab-${index}`}
         {...other}
       >
-        {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+        {value === index && <Box sx={{ p: { xs: 0.5, md: 3 } }}>{children}</Box>}
       </div>
     );
   };
@@ -66,9 +66,9 @@ export const TasksPage = () => {
             backgroundColor: "white",
             "& .MuiTab-root": {
               fontSize: "0.8rem",
-              minHeight: "48px",
+              minHeight: "34px",
               padding: "6px 8px",
-              height: "48px",
+              height: "34px",
             },
             "& .MuiTabs-indicator": {
               height: "2px",

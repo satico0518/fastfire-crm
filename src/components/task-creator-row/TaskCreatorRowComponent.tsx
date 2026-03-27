@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Autocomplete, Button, Chip, TextField } from "@mui/material";
+import { Autocomplete, Button, Chip, TextField, useMediaQuery } from "@mui/material";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -28,6 +28,7 @@ import { TagsService } from "../../services/tags.service";
 import { Tag } from "../../interfaces/Tag";
 
 export const TaskCreatorRowComponent = () => {
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const tags = Object.values(useTagsStore((state) => state.tags));
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
@@ -141,7 +142,7 @@ export const TaskCreatorRowComponent = () => {
           startIcon={<AddTaskOutlinedIcon />}
           onClick={() => setIsEditing(true)}
         >
-          Nueva tarea
+          {isMobile ? "" : "Nueva tarea"}
         </Button>
       ) : (
         <div className="task-creator__row">

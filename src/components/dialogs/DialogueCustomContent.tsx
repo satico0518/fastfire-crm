@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogTitle } from "@mui/material";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 
 interface DialogueCustomContentProps {
   width?: string;
@@ -13,21 +13,24 @@ interface DialogueCustomContentProps {
 export const DialogueCustomContent = ({width = '300px', title, open, setOpen, content, okText = 'Ok', okAction}: DialogueCustomContentProps) => {
   return (
     <Dialog
-      sx={{top: '35%', left: '50%'}}
       onClose={() => setOpen(false)}
       open={open}
+      fullWidth
+      maxWidth="xs"
     >
       <DialogTitle>{title}</DialogTitle>
-      <div style={{ width, padding: 20 }}>
-        {content}
-        <div style={{ display:'flex', justifyContent: 'end', marginTop: 20 }}>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={() => {
-            setOpen(false);
-            if (okAction) okAction();
-          }}>{okText}</Button>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '10px !important' }}>
+        <div style={{ maxWidth: width, width: "100%" }}>
+          {content}
         </div>
-      </div>
+      </DialogContent>
+      <DialogActions sx={{ padding: '16px 24px' }}>
+        <Button onClick={() => setOpen(false)}>Cancelar</Button>
+        <Button variant="contained" disableElevation onClick={() => {
+          setOpen(false);
+          if (okAction) okAction();
+        }}>{okText}</Button>
+      </DialogActions>
     </Dialog>
   );
 };

@@ -26,6 +26,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
@@ -91,6 +92,7 @@ interface ColumnWidhts {
 }
 
 export default function TasksTable({ workgroup }: TasksTableProps) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
@@ -940,16 +942,17 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     },  ];
 
   return (
-    <Paper 
-      sx={{ 
-        height: "calc(100vh - 220px)", 
-        width: "100%",
-        backgroundColor: showArchivedTasks ? "#fffaf5" : "#ffffff",
-        borderLeft: showArchivedTasks ? "20px solid #FF9800" : "none",
-        opacity: showArchivedTasks ? 0.95 : 1,
-        transition: "all 0.3s ease-in-out"
-      }}
-    >
+    <>
+      <Paper 
+        sx={{ 
+          height: isMobile ? "calc(100vh - 185px)" : "calc(100vh - 245px)", 
+          width: "100%",
+          backgroundColor: showArchivedTasks ? "#fffaf5" : "#ffffff",
+          borderLeft: showArchivedTasks ? "20px solid #FF9800" : "none",
+          opacity: showArchivedTasks ? 0.95 : 1,
+          transition: "all 0.3s ease-in-out"
+        }}
+      >
       <DataGrid
         autoPageSize
         rows={getTaskByRole()}
@@ -1030,7 +1033,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           sessionStorage.setItem("columWidths", JSON.stringify(widths));
         }}
       />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      </Paper>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "24px" }}>
         <TaskCreatorRowComponent />
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <FormControlLabel
@@ -1038,12 +1042,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             control={
               <Switch
                 color={showArchivedTasks ? "info" : "default"}
-                title="ver solo archivadas"
+                title="Archivadas"
                 checked={showArchivedTasks}
                 onChange={() => setShowArchivedTasks(!showArchivedTasks)}
               />
             }
-            label="ver solo archivadas"
+            label="Archivadas"
             labelPlacement="start"
           />
           <Button
@@ -1103,10 +1107,14 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         content={
           <TextField
             id="outlined-basic"
-            variant="standard"
+            variant="outlined"
             value={taskNotes}
             onChange={({ target }) => setTaskNotes(target.value)}
             fullWidth
+            multiline
+            minRows={3}
+            maxRows={8}
+            placeholder="Escribe aquí las notas..."
           />
         }
         okText="Guardar"
@@ -1186,6 +1194,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           <Button onClick={() => setOpenHistoryDialog(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </>
   );
 }

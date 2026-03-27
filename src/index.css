@@ -13,6 +13,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .body-container {
   display: flex;
 }
@@ -21,7 +27,7 @@
   display: flex;
   width: calc(100% - 300px);
   padding: 20px;
-  height: 90vh;
+  min-height: calc(100vh - 50px);
 }
 
 a {
@@ -39,18 +45,12 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-image: url('../src/assets/contrast-horizon.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
-.body-container {
-  display: flex;
-}
-
-.page-container {
-  display: flex;
-  width: calc(100% - 300px);
-  padding: 20px;
-  height: 90vh;
-}
 
 .mobile-menu-overlay {
   position: fixed;
@@ -123,11 +123,17 @@ h1 {
   }
 }
 
-/* Tabs font size reduction */
+/* Tabs styling */
+.MuiTabs-root {
+  min-height: 34px !important;
+  height: 34px !important;
+}
+
 .MuiTab-root {
   font-size: 0.8rem !important;
-  min-height: 28px;
-  padding: 6px 8px;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 8px !important;
 }
 
 .MuiTabs-indicator {
