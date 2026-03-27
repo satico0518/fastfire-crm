@@ -11,11 +11,11 @@ const mockUpdate = jest.fn();
 const mockGet = jest.fn();
 
 jest.mock('firebase/database', () => ({
-  ref: (...args: unknown[]) => mockRef(...args),
-  push: (...args: unknown[]) => mockPush(...args),
-  set: (...args: unknown[]) => mockSet(...args),
-  update: (...args: unknown[]) => mockUpdate(...args),
-  get: (...args: unknown[]) => mockGet(...args)
+  ref: (...args: unknown[]) => mockRef.apply(null, args as unknown[]),
+  push: (...args: unknown[]) => mockPush.apply(null, args as unknown[]),
+  set: (...args: unknown[]) => mockSet.apply(null, args as unknown[]),
+  update: (...args: unknown[]) => mockUpdate.apply(null, args as unknown[]),
+  get: (...args: unknown[]) => mockGet.apply(null, args as unknown[])
 }));
 
 jest.mock('../../firebase/firebase.config', () => ({

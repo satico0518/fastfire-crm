@@ -1,8 +1,6 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TasksTableComponent from '../TasksTableComponent';
-import { Task, Priority } from '../../../interfaces/Task';
 
 // Mock de los stores con datos estáticos
 jest.mock('../../../stores/tasks/tasks.store', () => ({
@@ -144,7 +142,7 @@ describe('TasksTableComponent', () => {
 
   test('muestra todas las tareas para usuarios ADMIN', () => {
     const { useAuhtStore } = require('../../../stores');
-    useAuhtStore.mockImplementation((selector) => {
+    useAuhtStore.mockImplementation((selector: ((state: unknown) => unknown) | undefined) => {
       const state = {
         user: {
           key: 'admin',

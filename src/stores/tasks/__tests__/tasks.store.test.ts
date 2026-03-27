@@ -4,7 +4,7 @@ import { Task } from '../../../interfaces/Task';
 // Mock de Firebase
 jest.mock('firebase/database', () => ({
   ref: jest.fn(),
-  onValue: jest.fn((ref, callback) => {
+  onValue: jest.fn((_ref, callback) => {
     callback({
       val: () => ({
         'task-1': {

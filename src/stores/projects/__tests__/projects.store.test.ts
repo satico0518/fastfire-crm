@@ -8,11 +8,13 @@ jest.mock('firebase/database', () => ({
     callback({
       val: () => ({
         'project-1': {
+          id: 'proj1',
           key: 'proj1',
           name: 'Proyecto Test',
-          isActive: true,
-          companyKey: 'comp1',
-          color: '#4CAF50'
+          createdDate: Date.now(),
+          createdByUserId: 'user1',
+          status: 'TODO',
+          location: 'Bogotá'
         }
       })
     });
@@ -34,11 +36,13 @@ describe('Projects Store', () => {
   test('debe establecer projects correctamente', () => {
     const mockProjects: Project[] = [
       {
+        id: 'proj1',
         key: 'proj1',
         name: 'Proyecto Test',
-        isActive: true,
-        companyKey: 'comp1',
-        color: '#4CAF50'
+        createdDate: Date.now(),
+        createdByUserId: 'user1',
+        status: 'TODO',
+        location: 'Bogotá',
       }
     ];
     useProjectsStore.getState().setProjects(mockProjects);

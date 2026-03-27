@@ -5,8 +5,8 @@ import { CityAutocomplete } from '../../../services/cities.service';
 jest.mock('../../../services/cities.service', () => ({
   CitiesService: {
     getCities: jest.fn().mockResolvedValue([
-      { name: 'Bogotá', code: 'BOG' },
-      { name: 'Medellín', code: 'MDE' }
+      { key: 'BOG', label: 'Bogotá' },
+      { key: 'MDE', label: 'Medellín' }
     ])
   },
   CityAutocomplete: jest.fn()
@@ -25,8 +25,8 @@ describe('Cities Store', () => {
 
   test('debe establecer cities correctamente', () => {
     const mockCities: CityAutocomplete[] = [
-      { name: 'Bogotá', code: 'BOG' },
-      { name: 'Medellín', code: 'MDE' }
+      { key: 'BOG', label: 'Bogotá' },
+      { key: 'MDE', label: 'Medellín' }
     ];
     useCitiesStore.getState().setCities(mockCities);
     expect(useCitiesStore.getState().cities).toEqual(mockCities);
