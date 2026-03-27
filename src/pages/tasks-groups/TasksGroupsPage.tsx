@@ -46,7 +46,7 @@ export const TasksPage = () => {
         aria-labelledby={`simple-tab-${index}`}
         {...other}
       >
-        {value === index && <Box sx={{ p: { xs: 0.5, md: 3 } }}>{children}</Box>}
+        {value === index && <Box sx={{ p: { xs: 0.5, md: 1 } }}>{children}</Box>}
       </div>
     );
   };

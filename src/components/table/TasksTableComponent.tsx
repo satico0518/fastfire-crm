@@ -7,6 +7,7 @@ import {
   GridRenderCellParams,
   GridRenderEditCellParams,
   GridRowParams,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import {
@@ -100,6 +101,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
+  const apiRef = useGridApiRef();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [historyTask, setHistoryTask] = useState<Task | null>(null);
   const [openHistoryDialog, setOpenHistoryDialog] = useState(false);
@@ -954,6 +956,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         }}
       >
       <DataGrid
+        apiRef={apiRef}
+        onCellClick={(params) => {
+          if (isMobile && params.isEditable) {
+            apiRef.current.startCellEditMode({ id: params.id, field: params.field });
+          }
+        }}
         autoPageSize
         rows={getTaskByRole()}
         columns={columns}
@@ -963,6 +971,22 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         pageSizeOptions={[20]}
         localeText={{
           MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
+        }}
+        slotProps={{
+          filterPanel: {
+            sx: {
+              maxWidth: '95vw',
+              '& .MuiDataGrid-filterForm': {
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: '10px',
+                padding: '8px',
+              },
+              '& .MuiDataGrid-filterFormColumnInput': { width: '100%', m: 0 },
+              '& .MuiDataGrid-filterFormOperatorInput': { width: '100%', m: 0 },
+              '& .MuiDataGrid-filterFormValueInput': { width: '100%', m: 0 },
+            },
+          },
         }}
         sx={{
           border: 0,
