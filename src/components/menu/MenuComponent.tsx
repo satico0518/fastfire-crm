@@ -25,7 +25,15 @@ import { Task } from "../../interfaces/Task";
 import { useUsersStore } from "../../stores/users/users.store";
 import { User } from "../../interfaces/User";
 
-export const MenuComponent = () => {
+type MenuComponentProps = {
+  isMobileMenuOpen: boolean;
+  onCloseMobileMenu: () => void;
+};
+
+export const MenuComponent = ({
+  isMobileMenuOpen,
+  onCloseMobileMenu,
+}: MenuComponentProps) => {
   const navigate = useNavigate();
   const isAuth = useAuhtStore((state) => state.isAuth);
   const currentUser = useAuhtStore((state) => state.user);
@@ -47,6 +55,10 @@ export const MenuComponent = () => {
   const users = useUsersStore((state) => state.users);
 
   if (!isAuth) return null;
+  const closeOnMobile = () => {
+    if (isMobileMenuOpen) onCloseMobileMenu();
+  };
+
   const workgroupsByRole = (): Workgroup[] => {
     if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
 
@@ -162,13 +174,14 @@ export const MenuComponent = () => {
   });
 
   return (
-    <div className="menu">
+    <div className={`menu ${isMobileMenuOpen ? "menu--open" : ""}`}>
       <div className="menu__menu-items">
         <ul>
           {currentUser?.permissions.includes("ADMIN") && (
             <li>
               <NavLink
                 to="/tasks"
+                onClick={closeOnMobile}
                 className={({ isActive, isPending }) =>
                   isPending ? "pending" : isActive ? "active" : ""
                 }
@@ -186,6 +199,7 @@ export const MenuComponent = () => {
             <li>
               <NavLink
                 to="/purchasing-manager"
+                onClick={closeOnMobile}
                 className={({ isActive, isPending }) =>
                   isPending ? "pending" : isActive ? "active" : ""
                 }
@@ -208,6 +222,7 @@ export const MenuComponent = () => {
             <li>
               <NavLink
                 to="/admin"
+                onClick={closeOnMobile}
                 className={({ isActive, isPending }) =>
                   isPending ? "pending" : isActive ? "active" : ""
                 }
@@ -248,7 +263,10 @@ export const MenuComponent = () => {
                 sx={{ color: "white" }}
                 title="Crear grupo"
                 startIcon={<FormatListBulletedOutlinedIcon />}
-                onClick={() => navigate("/tasks")}
+                onClick={() => {
+                  navigate("/tasks");
+                  closeOnMobile();
+                }}
               >
                 Ver todas las tareas
               </Button>
@@ -268,9 +286,10 @@ export const MenuComponent = () => {
                   <div className="menu__workgroups-title">
                     <span
                       className="menu__workgroups-title-text"
-                      onClick={() =>
-                        navigate("/tasksbygroup", { state: { wg } })
-                      }
+                      onClick={() => {
+                        navigate("/tasksbygroup", { state: { wg } });
+                        closeOnMobile();
+                      }}
                     >
                       {wg.name.charAt(0).toUpperCase() +
                         wg.name.substring(1).toLowerCase()}
@@ -303,7 +322,10 @@ export const MenuComponent = () => {
                   sx={{ color: "white" }}
                   title="Crear grupo"
                   startIcon={<FormatListBulletedOutlinedIcon />}
-                  onClick={() => navigate("/tasks", { state: { goTo: "wg" } })}
+                  onClick={() => {
+                    navigate("/tasks", { state: { goTo: "wg" } });
+                    closeOnMobile();
+                  }}
                 >
                   Ver Grupos
                 </Button>

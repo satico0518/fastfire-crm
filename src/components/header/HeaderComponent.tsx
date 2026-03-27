@@ -2,7 +2,12 @@ import logo from "../../assets/img/Logo.jpg";
 import { useAuhtStore } from "../../stores";
 import ProfileMenu from "../profile-menu/ProfileMenuComponent";
 
-export const Header = () => {
+type HeaderProps = {
+  isMobileMenuOpen: boolean;
+  onToggleMobileMenu: () => void;
+};
+
+export const Header = ({ isMobileMenuOpen, onToggleMobileMenu }: HeaderProps) => {
   const isAuth = useAuhtStore((state) => state.isAuth);
 
   if (!isAuth) return null;
@@ -10,6 +15,13 @@ export const Header = () => {
   return (
     <div className="header">
       <div className="header__company">
+        <button
+          className="header__hamburger"
+          aria-label="Toggle navigation menu"
+          onClick={onToggleMobileMenu}
+        >
+          {isMobileMenuOpen ? "✕" : "☰"}
+        </button>
         <img
           className="header__logo"
           src={logo}

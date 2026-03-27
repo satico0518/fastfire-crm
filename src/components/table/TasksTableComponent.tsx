@@ -961,8 +961,69 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         localeText={{
           MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
         }}
-        sx={{ border: 0 }}
-        rowHeight={35}
+        sx={{
+          border: 0,
+          fontSize: "0.75rem",
+          "& .MuiDataGrid-cell": {
+            paddingTop: "4px",
+            paddingBottom: "4px",
+            lineHeight: 1.2,
+          },
+          "& .MuiDataGrid-columnHeader": {
+            fontSize: "0.75rem",
+            minHeight: "30px",
+            lineHeight: 1.2,
+          },
+          "& .MuiDataGrid-row": {
+            maxHeight: "28px",
+            minHeight: "28px",
+          },
+          "& .MuiDataGrid-virtualScrollerContent": {
+            "& .MuiDataGrid-row": {
+              minHeight: "28px !important",
+              maxHeight: "28px !important",
+            },
+          },
+          "& .MuiChip-root": {
+            fontSize: "0.65rem",
+            height: "22px",
+            lineHeight: 1,
+            minHeight: "22px",
+            padding: "0 6px",
+          },
+          "& .MuiSvgIcon-root": {
+            fontSize: "1rem",
+          },
+          "@media (max-width: 767px)": {
+            fontSize: "0.68rem",
+            "& .MuiChip-root": {
+              fontSize: "0.6rem",
+              height: "20px",
+              minHeight: "20px",
+              padding: "0 5px",
+            },
+            "& .MuiSvgIcon-root": {
+              fontSize: "0.9rem",
+            },
+            "& .MuiDataGrid-cell": {
+              paddingTop: "2px",
+              paddingBottom: "2px",
+            },
+            "& .MuiDataGrid-columnHeader": {
+              fontSize: "0.68rem",
+              minHeight: "28px",
+            },
+            "& .MuiDataGrid-row": {
+              minHeight: "24px",
+              maxHeight: "24px",
+            },
+            "& .MuiDataGrid-virtualScrollerContent .MuiDataGrid-row": {
+              minHeight: "24px !important",
+              maxHeight: "24px !important",
+            },
+          },
+        }}
+        rowHeight={28}
         onColumnWidthChange={({ colDef, width }: GridColumnResizeParams) => {
           const widths = { ...columWidths, [colDef.field]: width };
           setColumWidths(widths as ColumnWidhts);

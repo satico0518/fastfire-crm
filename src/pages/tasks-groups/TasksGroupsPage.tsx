@@ -62,7 +62,18 @@ export const TasksPage = () => {
     <Box sx={{ width: "100%" }}>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          sx={{ backgroundColor: "white" }}
+          sx={{
+            backgroundColor: "white",
+            "& .MuiTab-root": {
+              fontSize: "0.8rem",
+              minHeight: "48px",
+              padding: "6px 8px",
+              height: "48px",
+            },
+            "& .MuiTabs-indicator": {
+              height: "2px",
+            },
+          }}
           value={tabsValue}
           onChange={handleTabsChange}
           aria-label="basic tabs example"

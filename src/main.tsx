@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
@@ -19,16 +19,39 @@ declare global {
   }
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+const Main = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  return (
     <BrowserRouter>
-      <Header />
+      <Header
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen((s) => !s)}
+      />
+
       <div className="body-container">
-        <MenuComponent />
+        <MenuComponent
+          isMobileMenuOpen={isMobileMenuOpen}
+          onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+        />
+
         <div className="page-container">
           <App />
         </div>
+
+        {isMobileMenuOpen && (
+          <div
+            className="mobile-menu-overlay"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
       </div>
     </BrowserRouter>
+  );
+};
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <Main />
   </StrictMode>
 );

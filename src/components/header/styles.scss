@@ -12,6 +12,16 @@
         align-items: center;
     }
 
+    &__hamburger {
+        border: none;
+        background: transparent;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        margin-right: 12px;
+        display: none;
+    }
+
     &__text{
         font-size: 2rem;
         font-weight: bold;
@@ -21,6 +31,31 @@
         width: 150px;
         padding-right: 20px;
         border-radius: 5px;
+    }
+
+    &__user {
+        display: flex;
+        align-items: center;
+        position: relative;
+        right: 20px;
+    }
+
+    @media (max-width: 767px) {
+      &__hamburger {
+        display: inline-flex;
+      }
+
+      &__logo {
+        width: 100px;
+      }
+
+      &__text {
+        font-size: 1rem; /* -50% de 2rem */
+      }
+
+      &__user {
+        right: 8px;
+      }
     }
 
     &__user {
