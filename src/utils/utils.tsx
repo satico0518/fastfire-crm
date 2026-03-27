@@ -112,11 +112,20 @@ export const translatePriority = (priority: Priority): JSX.Element => {
   }
 };
 
-export const getUserNameByKey = (userKey: string, users: User[]): string => {
+export const getUserNameByKey = (userKey: string | undefined, users: User[]): string => {
+  if (!userKey) return "NA";
   if (users.length) {
-    const user = users.filter((u) => u.key === userKey)[0];
+    const user = users.find((u) => u.key === userKey);
+    if (!user) return `(${userKey})`;
 
-    return `${user?.firstName} ${user?.lastName}`;
+    const firstName = user.firstName?.trim() || "";
+    const lastName = user.lastName?.trim() || "";
+
+    if (!firstName && !lastName) return `(${userKey})`;
+    if (!firstName) return lastName;
+    if (!lastName) return firstName;
+
+    return `${firstName} ${lastName}`;
   }
   return "NA";
 };

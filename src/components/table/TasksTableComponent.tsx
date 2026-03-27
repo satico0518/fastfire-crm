@@ -13,11 +13,19 @@ import {
   Avatar,
   Button,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   FormControlLabel,
   Input,
+  List,
+  ListItem,
+  ListItemText,
   Switch,
   TextField,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
@@ -33,6 +41,7 @@ import NoteAltOutlinedIcon from "@mui/icons-material/NoteAltOutlined";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import DateRangeOutlinedIcon from "@mui/icons-material/DateRangeOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Priority, Task } from "../../interfaces/Task";
 
@@ -88,6 +97,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [historyTask, setHistoryTask] = useState<Task | null>(null);
+  const [openHistoryDialog, setOpenHistoryDialog] = useState(false);
   const [showArchivedTasks, setShowArchivedTasks] = useState(false);
   const [filterModel, setFilterModel] = useState<GridFilterModel>({
     items: [],
@@ -115,6 +126,92 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     JSON.parse(sessionStorage.getItem("columWidths") || "{}")
   );
 
+  const translateHistoryAction = (action: string) => {
+    switch (action) {
+      case 'CREATED':
+        return 'CREADA';
+      case 'UPDATED':
+        return 'ACTUALIZADA';
+      case 'NOTE_ADDED':
+        return 'NOTA AÑADIDA';
+      case 'DELETED':
+        return 'ELIMINADA';
+      default:
+        return action;
+    }
+  };
+
+  const translateHistoryField = (field: string) => {
+    switch (field) {
+      case 'ownerKeys':
+        return 'Responsables';
+      case 'notes':
+        return 'Notas';
+      case 'dueDate':
+        return 'Fecha límite';
+      case 'priority':
+        return 'Prioridad';
+      case 'status':
+        return 'Estado';
+      case 'workgroupKeys':
+        return 'Grupos';
+      case 'tags':
+        return 'Etiquetas';
+      case 'name':
+        return 'Nombre';
+      default:
+        return field;
+    }
+  };
+
+  const translateHistoryValue = (field: string, value: unknown) => {
+    if (value === undefined || value === null) return 'N/A';
+
+    if (field === 'priority' && typeof value === 'string') {
+      switch (value) {
+        case 'LOW':
+          return 'Baja';
+        case 'NORMAL':
+          return 'Normal';
+        case 'HIGH':
+          return 'Alta';
+        case 'URGENT':
+          return 'Urgente';
+        default:
+          return value;
+      }
+    }
+
+    if (field === 'status' && typeof value === 'string') {
+      return translateStatus(value as any);
+    }
+
+    if (field === 'dueDate' && typeof value === 'string') {
+      const parsed = dayjs(value, ['DD/MM/YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']);
+      return parsed.isValid() ? parsed.format('DD/MM/YYYY') : value;
+    }
+
+    if (field === 'ownerKeys' && Array.isArray(value)) {
+      return value
+        .map((key) => getUserNameByKey(String(key), users || []))
+        .join(', ');
+    }
+
+    if (field === 'workgroupKeys' && Array.isArray(value)) {
+      return value
+        .map((key) => getWorkgroupNameByKey(String(key), workgroups || []))
+        .join(', ');
+    }
+
+    if (field === 'tags' && Array.isArray(value)) {
+      return value.join(', ');
+    }
+
+    return String(value);
+  };
+
+  const updateTaskByUser = async (task: Task) => TaskService.updateTask(task, currentUser?.key);
+
   const handleEditTask = async (
     field: string,
     inputRef: RefObject<HTMLInputElement>,
@@ -124,7 +221,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       if (!!inputRef.current && !!inputRef.current.value) {
         task[field] = inputRef.current?.value ?? task[field];
 
-        const resp = await TaskService.updateTask(task);
+        const resp = await updateTaskByUser(task);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -152,7 +249,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const handleDeleteTag = async (task: Task, tag: string) => {
     try {
       task.tags = task.tags.filter((t) => t !== tag);
-      TaskService.updateTask(task);
+      updateTaskByUser(task);
       setSelectedTags(selectedTags.filter((t) => t !== tag));
     } catch (error) {
       console.error("Error eliminando etiqueta", { task }, { error });
@@ -169,7 +266,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       if (selectedTask) {
         selectedTask.ownerKeys =
           getUserKeysByNames(selectedOwners, users as User[]) ?? [];
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -203,7 +300,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     try {
       if (selectedTask) {
         selectedTask.priority = priority as Priority;
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -239,7 +336,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           ? (selectedDueDate?.format("DD/MM/YYYY") as string)
           : "";
 
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -276,7 +373,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             ? `${selectedTask.notes}, `
             : ""
         }[${dayjs(Date.now()).format("DDMMMYY hh:mm")}] ${taskNotes}`;
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -314,7 +411,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             ?.filter((wg) => selectedGroups.some((sg) => sg === wg.name))
             .map((wg) => wg.key) as string[]) || [];
 
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -412,9 +509,18 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
+          icon={<HistoryOutlinedIcon color="inherit" />}
+          onClick={() => {
+            setHistoryTask(params.row);
+            setOpenHistoryDialog(true);
+          }}
+          label="Historial"
+          showInMenu
+        />,
+        <GridActionsCellItem
           icon={<RestoreOutlinedIcon color="info" />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "TODO" })
+            updateTaskByUser({ ...params.row, status: "TODO" })
           }
           label="Volver a Iniciar"
           showInMenu
@@ -422,7 +528,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <GridActionsCellItem
           icon={<BlockOutlinedIcon color="warning" />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "BLOCKED" })
+            updateTaskByUser({ ...params.row, status: "BLOCKED" })
           }
           label="Bloquear"
           showInMenu
@@ -431,7 +537,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           hidden={params.row.status === "DONE"}
           icon={<TaskAltOutlinedIcon color="success" />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "DONE" })
+            updateTaskByUser({ ...params.row, status: "DONE" })
           }
           label="Finalizar"
           showInMenu
@@ -439,7 +545,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <GridActionsCellItem
           icon={<ArchiveOutlinedIcon />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "ARCHIVED" })
+            updateTaskByUser({ ...params.row, status: "ARCHIVED" })
           }
           label="Archivar"
           showInMenu
@@ -477,7 +583,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               <Button
                 title="Reiniciar"
                 onClick={() =>
-                  TaskService.updateTask({
+                  updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
@@ -499,7 +605,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               <Button
                 title="Reiniciar"
                 onClick={() =>
-                  TaskService.updateTask({
+                  updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
@@ -515,7 +621,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               <Button
                 title="Iniciar"
                 onClick={() =>
-                  TaskService.updateTask({
+                  updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
@@ -546,10 +652,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           </span>
           <div className="tags">
             {row.tags?.length &&
-              row.tags.map((tag: string) => (
+              Array.from(new Set(row.tags)).map((tag: string, idx: number) => (
                 <Chip
                   size="small"
-                  key={tag}
+                  key={`${tag}-${idx}`}
                   label={tag}
                   color="primary"
                   onDelete={() => handleDeleteTag(row, tag)}
@@ -562,7 +668,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               sx={{ fontSize: "12px", width: "30px" }}
               onClick={() => {
                 setSelectedTask(row);
-                setSelectedTags(row.tags || []);
+                setSelectedTags(Array.from(new Set(row.tags || [])));
                 setOpenTagsDialog(true);
               }}
               title="Etiquetas"
@@ -798,8 +904,22 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           </Button>
         </>
       ),
-    },
-  ];
+    },    // creado por
+    {
+      field: "createdByUserKey",
+      headerName: "Creado por",
+      type: "string",
+      width: 180,
+      renderCell: ({ row }: GridRenderCellParams<Task>) => (
+        <Tooltip title={`Usuario: ${(users && getUserNameByKey(row.createdByUserKey, users)) || "NA"}`}>
+          <span>{(users && getUserNameByKey(row.createdByUserKey, users)) || "NA"}</span>
+        </Tooltip>
+      ),
+      sortable: false,
+      filterable: true,
+      valueGetter: (_value: any, row: Task) =>
+        (users && getUserNameByKey(row.createdByUserKey, users)) || "NA",
+    },  ];
 
   return (
     <Paper sx={{ height: "calc(100vh - 220px)", width: "100%" }}>
@@ -916,6 +1036,58 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         okButtonText="Guardar"
         okButtonAction={() => handleEditGroups()}
       />
+      <Dialog
+        open={openHistoryDialog}
+        onClose={() => setOpenHistoryDialog(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Historial de Tarea</DialogTitle>
+        <DialogContent>
+          {historyTask?.history && historyTask.history.length > 0 ? (
+            <List sx={{ fontSize: '0.8rem', lineHeight: 1.3 }}>
+              {historyTask.history.map((event, idx) => (
+                <ListItem key={`${event.modifiedDate}-${idx}`} alignItems="flex-start" sx={{ paddingY: 0.5 }}>
+                  <ListItemText
+                    primary={
+                      `${dayjs(event.modifiedDate).format('DD/MM/YYYY HH:mm')} - ${
+                        translateHistoryAction(event.action)
+                      } por ${
+                        (users && getUserNameByKey(event.modifierUserId, users)) ||
+                        event.modifierUserId ||
+                        'Desconocido'
+                      }`
+                    }
+                    primaryTypographyProps={{ sx: { fontSize: '0.85rem' } }}
+                    secondaryTypographyProps={{ component: 'div', sx: { marginTop: '4px' } }}
+                    secondary={
+                      <>
+                        <Typography component="div" variant="body2" color="textPrimary" sx={{ fontSize: '0.75rem' }}>
+                          {event.note ? `Nota: ${event.note}` : ''}
+                        </Typography>
+                        {event.changes?.length ? (
+                          <ul style={{ margin: '4px 0 0 0', paddingLeft: '18px', fontSize: '0.72rem' }}>
+                            {event.changes.map((change, i) => (
+                              <li key={`${event.modifiedDate}-chg-${i}`}>
+                                {translateHistoryField(change.field)}: {translateHistoryValue(change.field, change.oldValue)} → {translateHistoryValue(change.field, change.newValue)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography>No hay historial disponible para esta tarea.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenHistoryDialog(false)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

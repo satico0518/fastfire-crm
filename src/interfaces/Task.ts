@@ -9,16 +9,11 @@ export interface Note {
 export type Priority = 'LOW'|'NORMAL'|'HIGH'|'URGENT';
 
 export interface TaskEvent {
-    originalStatus: Status;
-    newStatus?: Status;
-    originalName: string; 
-    newName: string;
-    originalOwnerKey: string; 
-    newOwnerKey?: string;
-    originalDueDate: Date;
-    newDueDate?: Date;
-    modifiedDate: number;
+    action: 'CREATED' | 'UPDATED' | 'NOTE_ADDED';
     modifierUserId: string;
+    modifiedDate: number;
+    changes?: Array<{ field: string; oldValue: unknown; newValue: unknown }>;
+    note?: string;
 }
 
 export interface Task {
