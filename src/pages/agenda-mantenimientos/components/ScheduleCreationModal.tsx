@@ -9,8 +9,6 @@ import {
   Box, 
   IconButton, 
   Typography,
-  Switch, 
-  FormControlLabel, 
   ToggleButton, 
   ToggleButtonGroup 
 } from '@mui/material';
@@ -100,7 +98,8 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1c1c1e', color: 'white' } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" disableRestoreFocus PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1c1c1e', color: 'white' } }}>
+
       <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: 800 }}>Nuevo Agendamiento</Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>

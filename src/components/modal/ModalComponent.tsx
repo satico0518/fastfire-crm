@@ -43,6 +43,7 @@ export default function ModalComponent() {
             p: 1
           }
         }}
+        disableRestoreFocus
       >
         <DialogTitle sx={{ fontWeight: 800, fontSize: '1.2rem', pb: 1 }}>
           {modal.title}

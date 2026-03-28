@@ -17,6 +17,7 @@ export const DialogueCustomContent = ({width = '300px', title, open, setOpen, co
       open={open}
       fullWidth
       maxWidth="xs"
+      disableRestoreFocus
     >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '10px !important' }}>

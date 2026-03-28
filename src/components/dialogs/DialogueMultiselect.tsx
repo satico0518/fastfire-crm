@@ -28,6 +28,7 @@ export const DialogueMultiselect = ({
     open={open}
     fullWidth
     maxWidth="xs"
+    disableRestoreFocus
   >
     <DialogTitle>{title}</DialogTitle>
     <DialogContent sx={{ paddingTop: '10px !important' }}>
