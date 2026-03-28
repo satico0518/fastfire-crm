@@ -104,9 +104,23 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
           borderBottom: '1px solid rgba(255,255,255,0.1)',
           flexShrink: 0
         }}>
-          {daysOfWeek.map(day => (
-            <Box key={day} sx={{ p: 2, textAlign: 'center' }}>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, letterSpacing: '1px' }}>
+          {daysOfWeek.map((day, dIdx) => (
+            <Box 
+              key={day} 
+              sx={{ 
+                p: 2, 
+                textAlign: 'center',
+                bgcolor: dIdx === 6 ? 'rgba(255, 69, 58, 0.1)' : 'transparent', // Highlight Sunday header
+              }}
+            >
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: dIdx === 6 ? '#ff453a' : 'rgba(255,255,255,0.6)', 
+                  fontWeight: 800, 
+                  letterSpacing: '1px' 
+                }}
+              >
                 {day}
               </Typography>
             </Box>
@@ -124,6 +138,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
           {calendarMatrix.map((dayNum, idx) => {
             const isToday = dayNum === dayjs().date() && currentMonth.isSame(dayjs(), 'month');
             const daySchedules = dayNum ? (schedulesByDay[dayNum] || []) : [];
+            const isSunday = (idx + 1) % 7 === 0;
 
             return (
               <Box 
@@ -139,12 +154,17 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
                 }}
                 sx={{ 
                 p: 1.5,
-                borderRight: (idx + 1) % 7 === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                borderRight: isSunday ? 'none' : '1px solid rgba(255,255,255,0.05)',
                 borderBottom: idx < calendarMatrix.length - 7 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                bgcolor: dayNum ? 'transparent' : 'rgba(0,0,0,0.15)',
+                bgcolor: dayNum 
+                  ? (isSunday ? 'rgba(255, 69, 58, 0.22)' : 'transparent') 
+                  : 'rgba(0,0,0,0.15)',
                 transition: 'background-color 0.2s',
                 cursor: (isAdmin && dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) ? 'pointer' : 'default',
-                '&:hover': { bgcolor: (dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) ? 'rgba(255,255,255,0.03)' : 'transparent' },
+                '&:hover': { bgcolor: (dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) 
+                  ? (isSunday ? 'rgba(255, 69, 58, 0.35)' : 'rgba(255,255,255,0.03)') 
+                  : 'transparent' 
+                },
                 overflow: 'hidden' // hide overflow internally unless we want to scroll events within the cell
               }}>
                 {dayNum && (
@@ -156,8 +176,8 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         borderRadius: '50%',
                         bgcolor: isToday ? '#0a84ff' : 'transparent',
-                        color: isToday ? 'white' : 'rgba(255,255,255,0.8)',
-                        fontWeight: isToday ? 800 : 500,
+                        color: isToday ? 'white' : (isSunday ? '#ff453a' : 'rgba(255,255,255,0.8)'),
+                        fontWeight: (isToday || isSunday) ? 800 : 500,
                         fontSize: '0.85rem'
                       }}>
                         {dayNum}

@@ -148,11 +148,20 @@ export const TaskCreatorRowComponent = () => {
         <div className="task-creator__row">
           <TextField
             id="outlined-basic"
-            label="Nombre de la tarea"
+            placeholder="Nombre de la tarea..."
             variant="standard"
             value={taskName}
             onChange={({ target }) => setTaskName(target.value)}
             fullWidth
+            sx={{
+              '& .MuiInput-root': {
+                color: 'white',
+                '&:before': { borderColor: 'rgba(255,255,255,0.3)' },
+                '&:hover:not(.Mui-disabled):before': { borderColor: 'rgba(255,255,255,0.5)' },
+                fontSize: '0.85rem'
+              },
+              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }
+            }}
           />
           <div className="task-creator__row-actions">
             <DialogueCustomContent
@@ -212,9 +221,10 @@ export const TaskCreatorRowComponent = () => {
               }
             />
             <Button
+              size="small"
               onClick={() => setOpenTagsDialog(!openTagsDialog)}
               startIcon={<LocalOfferOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
             <DialogueMultiselect
               title="Responsables"
@@ -229,9 +239,10 @@ export const TaskCreatorRowComponent = () => {
               setValue={setSelectedOwners}
             />
             <Button
+              size="small"
               onClick={() => setOpenOwnersDialog(!openOwnersDialog)}
               startIcon={<GroupAddOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
             <DialogueCustomContent
               title="Fecha Límite"
@@ -251,9 +262,10 @@ export const TaskCreatorRowComponent = () => {
               }
             />
             <Button
+              size="small"
               onClick={() => setOpenDueDateDialog(!openDueDateDialog)}
               startIcon={<DateRangeOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
             <DialogueCustomContent
               title="Notas"
@@ -270,9 +282,10 @@ export const TaskCreatorRowComponent = () => {
               }
             />
             <Button
+              size="small"
               onClick={() => setOpenNotesDialog(!openNotesDialog)}
               startIcon={<NoteAltOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
             <PriorityInput
               open={openPriorityDialog}
@@ -281,9 +294,10 @@ export const TaskCreatorRowComponent = () => {
               setPriority={setPriority}
             />
             <Button
+              size="small"
               onClick={() => setOpenPriorityDialog(!openPriorityDialog)}
               startIcon={<EmojiFlagsOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
             <DialogueMultiselect
               title="Grupos"
@@ -298,17 +312,30 @@ export const TaskCreatorRowComponent = () => {
               setValue={setSelectedGroups}
             />
             <Button
+              size="small"
               onClick={() => setOpenGroupsDialog(!openGroupsDialog)}
               startIcon={<GroupsOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
-            <Button sx={{ color: "black" }} onClick={() => resetForm()}>
+            <div style={{ width: '8px' }} /> {/* Spacer */}
+            <Button 
+              size="small"
+              sx={{ color: "rgba(255,255,255,0.6)", textTransform: 'none' }} 
+              onClick={() => resetForm()}
+            >
               Cancelar
             </Button>
             <Button
+              size="small"
               onClick={handleCreateTask}
+              variant="contained"
               endIcon={<SaveOutlinedIcon />}
-              sx={{ color: "black" }}
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                color: 'white',
+                textTransform: 'none',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }
+              }}
             >
               Guardar
             </Button>
