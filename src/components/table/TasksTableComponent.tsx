@@ -770,16 +770,19 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                       title={(users && getUserNameByKey(k, users)) || "NA"}
                       src={userAvatar}
                       sx={{ 
-                        width: "32px", 
-                        height: "32px", 
-                        marginLeft: "-8px",
+                        width: "36px", 
+                        height: "36px", 
+                        marginLeft: "-10px",
+                        p: "1px",
                         border: "1.5px solid rgba(255,255,255,0.2)",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
                         bgcolor: "white",
                         cursor: 'zoom-in',
-                        transition: "transform 0.1s ease",
-                        "&:hover": { transform: "scale(1.2)", zIndex: 10 }
+                        transform: "translateZ(0)",
+                        transition: "transform 0.15s ease",
+                        "&:hover": { transform: "scale(1.2) translateZ(0)", zIndex: 10 }
                       }}
+                      imgProps={{ style: { objectFit: 'contain' } }}
                     />
                   );
 
