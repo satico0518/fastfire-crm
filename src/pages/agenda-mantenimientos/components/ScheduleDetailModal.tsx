@@ -1,0 +1,169 @@
+import React from 'react';
+import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Avatar, Stack, Chip } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
+import dayjs from 'dayjs';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  schedule: MaintenanceSchedule;
+}
+
+const getStatusColor = (status: string) => {
+  switch(status) {
+    case 'IN_PROGRESS': return '#ff9f0a'; 
+    case 'COMPLETED': return '#30d158'; 
+    case 'CANCELLED': return '#ff453a'; 
+    case 'SCHEDULED':
+    default: return '#0a84ff'; 
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch(status) {
+    case 'IN_PROGRESS': return 'En progreso';
+    case 'COMPLETED': return 'Completado';
+    case 'CANCELLED': return 'Cancelado';
+    case 'SCHEDULED':
+    default: return 'Programado';
+  }
+};
+
+export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }) => {
+  const dateObj = dayjs(schedule.dateStr);
+  const statusColor = getStatusColor(schedule.status);
+  
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      fullWidth 
+      maxWidth="sm" 
+      PaperProps={{ 
+        sx: { 
+          borderRadius: 4, 
+          bgcolor: '#1c1c1e', 
+          color: 'white',
+          backgroundImage: 'none'
+        } 
+      }}
+    >
+      <DialogTitle sx={{ pb: 1, pt: 3, px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+           <Chip 
+              label={getStatusText(schedule.status)} 
+              size="small"
+              sx={{ 
+                mb: 1.5,
+                bgcolor: 'rgba(255,255,255,0.08)', 
+                color: statusColor,
+                fontWeight: 700 
+              }} 
+           />
+           {schedule.priority === 'URGENT' && (
+             <Chip label="URGENTE" size="small" sx={{ mb: 1.5, ml: 1, fontWeight: 800, bgcolor: 'rgba(255,69,58,0.2)', color: '#ff453a' }} />
+           )}
+           <Typography variant="h5" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.2, color: 'white' }}>
+             {schedule.title}
+           </Typography>
+        </Box>
+        <IconButton onClick={onClose} size="small" sx={{ ml: 2, bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      
+      <DialogContent sx={{ px: 3, pb: 4, pt: 1 }}>
+        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+            <Box sx={{ p: 1, bgcolor: 'rgba(10,132,255,0.15)', borderRadius: 2, color: '#0a84ff', display: 'flex' }}>
+              <CalendarTodayOutlinedIcon />
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>Fecha Programada</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'white' }}>
+                {dateObj.format('dddd, D [de] MMMM [de] YYYY')} - {dateObj.format('HH:mm')} hrs
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+            <Box sx={{ p: 1, bgcolor: 'rgba(10,132,255,0.15)', borderRadius: 2, color: '#0a84ff', display: 'flex' }}>
+              <LocationOnOutlinedIcon />
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>Dirección / Establecimiento</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'white' }}>
+                {schedule.address}
+              </Typography>
+            </Box>
+          </Stack>
+
+        </Box>
+
+        <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.1)' }} />
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
+              Contacto en Sitio
+            </Typography>
+            
+            <Stack spacing={1.5} sx={{ color: 'rgba(255,255,255,0.8)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <PersonOutlineOutlinedIcon fontSize="small" />
+                <Typography variant="body2">{schedule.contactName || 'Sin contacto definido'}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <PhoneOutlinedIcon fontSize="small" />
+                <Typography variant="body2">{schedule.contactPhone || 'No hay teléfono'}</Typography>
+              </Box>
+            </Stack>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
+              Operarios Asignados
+            </Typography>
+            <Stack spacing={1}>
+              {schedule.operatorNames.length === 0 && (
+                <Typography variant="body2" color="rgba(255,255,255,0.5)">Ninguno</Typography>
+              )}
+              {schedule.operatorNames.map((name, i) => (
+                <Stack key={i} direction="row" spacing={1.5} alignItems="center" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <Avatar sx={{ width: 28, height: 28, fontSize: '0.8rem', bgcolor: '#0a84ff', color: 'white' }}>
+                    {name.charAt(0)}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{name}</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </Grid>
+        </Grid>
+
+        {schedule.description && (
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, color: 'rgba(255,255,255,0.5)' }}>Detalle del mantenimiento</Typography>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'rgba(255,255,255,0.8)' }}>
+              {schedule.description}
+            </Typography>
+          </Box>
+        )}
+
+        <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between' }}>
+           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+             Creado por: {schedule.createdBy || 'Sistema'}
+           </Typography>
+           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+             {schedule.createdAt ? dayjs(schedule.createdAt).format('DD/MMM/YYYY HH:mm') : ''}
+           </Typography>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+};

@@ -11,6 +11,7 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import RequestQuoteOutlinedIcon from "@mui/icons-material/RequestQuoteOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import SecondaryActions, {
   SecondaryActionsProps,
@@ -250,6 +251,24 @@ export const MenuComponent = ({
                   sx={{ position: "relative", top: "6px" }}
                 />{" "}
                 Formatos
+              </NavLink>
+            </li>
+          )}
+          {/* Menu item for Agenda Mantenimientos */}
+          {(currentUser?.permissions.includes("ADMIN") || currentUser?.permissions.includes("PLANNER")) && (
+            <li>
+              <NavLink
+                to="/agenda-mantenimientos"
+                onClick={closeOnMobile}
+                className={({ isActive, isPending }) =>
+                  isPending ? "pending" : isActive ? "active" : ""
+                }
+              >
+                <CalendarMonthOutlinedIcon
+                  titleAccess="Agenda Mantenimientos"
+                  sx={{ position: "relative", top: "6px" }}
+                />{" "}
+                Agenda Mantenimientos
               </NavLink>
             </li>
           )}

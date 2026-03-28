@@ -13,6 +13,7 @@ import { SnackbarComponent } from "../components/snackbar/SnackbarComponent";
 import { ConfirmationComponent } from "../components/confirmation/ConfirmationComponent";
 import { TasksbyGroupPage } from "../pages/tasks-by-group/TasksbyGroupPage";
 import { FormatsPage } from "../pages/formats/FormatsPage";
+import { AgendaMantenimientosPage } from "../pages/agenda-mantenimientos/AgendaMantenimientosPage";
 
 export const AppRouter = () => {
   const isLoading = useUiStore(state => state.isLoading);
@@ -41,6 +42,9 @@ export const AppRouter = () => {
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/formats" element={<FormatsPage />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/agenda-mantenimientos" element={<AgendaMantenimientosPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="*" element={<LoginPage />} />

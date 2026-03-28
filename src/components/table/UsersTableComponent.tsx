@@ -79,7 +79,23 @@ export default function UsersTable() {
           {row.avatarURL ? (
             <Avatar
               src={row.avatarURL}
-              sx={{ width: "30px", height: "30px" }}
+              sx={{ 
+                width: "40px", 
+                height: "40px",
+                p: "2px", // Safe space for logos
+                border: "1.5px solid rgba(255,255,255,0.15)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                bgcolor: "white", 
+                transform: "translateZ(0)", // Hardware acceleration
+                transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                "&:hover": { transform: "scale(1.1) translateZ(0)", zIndex: 10 }
+              }}
+              imgProps={{ 
+                style: { 
+                  objectFit: "contain", // Contain for logos to be safe
+                  borderRadius: "50%" 
+                } 
+              }}
             />
           ) : !row.permissions.includes("PROVIDER") ? (
             <Avatar
@@ -124,20 +140,36 @@ export default function UsersTable() {
                       key={key}
                       label={groupName}
                       sx={{
-                        backgroundColor:
-                          getWorkgroupColorByKey(
+                        backgroundColor: (getWorkgroupColorByKey(
                             key,
                             workgroups as Workgroup[]
-                          ) || "deepskyblue",
+                          ) || "deepskyblue"),
+                        opacity: 0.8,
                         color: "white",
-                        fontWeight: "bold",
+                        fontSize: "0.55rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.01em",
+                        height: "18px",
+                        "& .MuiChip-label": { padding: "0 5px" },
                       }}
                     />
                   );
                 }
               })
             : !row.permissions.includes("PROVIDER") && (
-                <Chip label="Sin grupo" color="warning" />
+                <Chip 
+                  label="SIN GRUPO" 
+                  color="warning" 
+                  size="small"
+                  sx={{
+                    fontSize: "0.55rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.01em",
+                    opacity: 0.8,
+                    height: "18px",
+                    "& .MuiChip-label": { padding: "0 5px" },
+                  }}
+                />
               )}
         </div>
       ),
@@ -146,17 +178,30 @@ export default function UsersTable() {
       field: "permissions",
       headerName: "Permisos",
       type: "string",
-      width: 250,
+      width: 320,
       renderCell: ({ row }: GridRenderCellParams<User>) => (
-        <div className="permissions">
+        <div className="permissions" style={{ display: 'flex', flexWrap: 'nowrap', gap: '3px', overflowX: 'auto' }}>
           {row.permissions.map((acc: Access) => (
             <Chip
               size="small"
               key={acc}
               label={translateAccess(acc)}
-              color={
-                row.permissions.includes("PROVIDER") ? "secondary" : "info"
-              }
+              sx={{
+                fontSize: "0.55rem",
+                fontWeight: 700,
+                letterSpacing: "0.01em",
+                background: row.permissions.includes("PROVIDER")
+                  ? "linear-gradient(135deg, rgba(236,72,153,0.85) 0%, rgba(244,63,94,0.85) 100%)"
+                  : "linear-gradient(135deg, rgba(99,102,241,0.85) 0%, rgba(168,85,247,0.85) 100%)",
+                backdropFilter: "blur(8px)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.25)",
+                boxShadow: row.permissions.includes("PROVIDER")
+                  ? "0 2px 8px rgba(244,63,94,0.45)" 
+                  : "0 2px 8px rgba(99,102,241,0.45)",
+                height: "18px",
+                "& .MuiChip-label": { padding: "0 5px" },
+              }}
             />
           ))}
         </div>

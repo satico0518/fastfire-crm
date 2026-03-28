@@ -35,6 +35,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
     ADMIN: false,
     PURCHASE: false,
     PROVIDER: false,
+    FORMATER: false,
+    PLANNER: false,
   });
 
   const {
@@ -50,6 +52,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         ADMIN: false,
         TYG: false,
         PURCHASE: false,
+        FORMATER: false,
+        PLANNER: false,
         PROVIDER: event.target.checked,
       });
     } else {
@@ -70,6 +74,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         TYG: editingUser.permissions.includes("TYG"),
         PURCHASE: editingUser.permissions.includes("PURCHASE"),
         PROVIDER: editingUser.permissions.includes("PROVIDER"),
+        FORMATER: editingUser.permissions.includes("FORMATER"),
+        PLANNER: editingUser.permissions.includes("PLANNER"),
       });
       setLabelWg(
         workgroups
@@ -195,10 +201,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
             autoCapitalize="none"
           />
         )}
-        {!editingUser &&
-          !(editingUser as unknown as User)?.permissions.includes(
-            "PROVIDER"
-          ) && (
+        {!(editingUser?.permissions.includes("PROVIDER")) && (
             <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
               <FormLabel component="legend">Permisos</FormLabel>
               <FormGroup>
@@ -225,6 +228,30 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                     />
                   }
                   label="Compras"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.FORMATER}
+                      onChange={handleAccessChange}
+                      name="FORMATER"
+                      disabled={accessState.PROVIDER}
+                    />
+                  }
+                  label="Formatos"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.PLANNER}
+                      onChange={handleAccessChange}
+                      name="PLANNER"
+                      disabled={accessState.PROVIDER}
+                    />
+                  }
+                  label="Agenda Planner"
                 />
                 <FormControlLabel
                   control={
