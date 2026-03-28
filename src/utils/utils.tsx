@@ -26,7 +26,9 @@ export const translateAccess = (access: Access) => {
     case "TYG":
       return "T&G";
     case "PROVIDER":
-      return "Provedor";
+      return "Proveedor";
+    case "FORMATER":
+      return "Formatos";
     default:
       return "NA";
   }

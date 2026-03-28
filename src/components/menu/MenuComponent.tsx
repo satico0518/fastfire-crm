@@ -10,6 +10,7 @@ import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutl
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import RequestQuoteOutlinedIcon from "@mui/icons-material/RequestQuoteOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import SecondaryActions, {
   SecondaryActionsProps,
@@ -232,6 +233,23 @@ export const MenuComponent = ({
                   sx={{ position: "relative", top: "6px" }}
                 />{" "}
                 Admin
+              </NavLink>
+            </li>
+          )}
+          {!currentUser?.permissions.includes("PROVIDER") && (
+            <li>
+              <NavLink
+                to="/formats"
+                onClick={closeOnMobile}
+                className={({ isActive, isPending }) =>
+                  isPending ? "pending" : isActive ? "active" : ""
+                }
+              >
+                <ArticleOutlinedIcon
+                  titleAccess="Formatos"
+                  sx={{ position: "relative", top: "6px" }}
+                />{" "}
+                Formatos
               </NavLink>
             </li>
           )}

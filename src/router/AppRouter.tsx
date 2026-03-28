@@ -12,6 +12,7 @@ import ModalComponent from "../components/modal/ModalComponent";
 import { SnackbarComponent } from "../components/snackbar/SnackbarComponent";
 import { ConfirmationComponent } from "../components/confirmation/ConfirmationComponent";
 import { TasksbyGroupPage } from "../pages/tasks-by-group/TasksbyGroupPage";
+import { FormatsPage } from "../pages/formats/FormatsPage";
 
 export const AppRouter = () => {
   const isLoading = useUiStore(state => state.isLoading);
@@ -37,6 +38,9 @@ export const AppRouter = () => {
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/admin" element={<AdministratorPage />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/formats" element={<FormatsPage />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="*" element={<LoginPage />} />
