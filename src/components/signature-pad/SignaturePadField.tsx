@@ -46,7 +46,7 @@ export const SignaturePadField = ({
           fontWeight: 600,
           display: "block",
           mb: 0.75,
-          color: "text.secondary",
+          color: "rgba(255,255,255,0.7)",
         }}
       >
         {label}
@@ -65,7 +65,7 @@ export const SignaturePadField = ({
             borderColor: "success.light",
             borderRadius: 2,
             p: 1,
-            bgcolor: "#f9fff9",
+            bgcolor: "rgba(255,255,255,0.05)",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -102,7 +102,7 @@ export const SignaturePadField = ({
             borderColor: isDrawing ? "primary.main" : "divider",
             borderRadius: 2,
             overflow: "hidden",
-            bgcolor: "#fafafa",
+            bgcolor: "rgba(255,255,255,0.03)",
             transition: "border-color 0.2s",
             position: "relative",
           }}
@@ -123,13 +123,13 @@ export const SignaturePadField = ({
               }}
             >
               <BrushIcon sx={{ fontSize: 28 }} />
-              <Typography variant="caption">Firma aquí con el dedo</Typography>
+              <Typography variant="caption" sx={{ color: 'white' }}>Firma aquí con el dedo</Typography>
             </Box>
           )}
 
           <SignatureCanvas
             ref={sigRef}
-            penColor="#1a1a2e"
+            penColor="white"
             minWidth={1.5}
             maxWidth={3}
             velocityFilterWeight={0.7}
@@ -154,16 +154,21 @@ export const SignaturePadField = ({
               pb: 1,
               pt: 0.5,
               borderTop: "1px solid",
-              borderColor: "divider",
-              bgcolor: "white",
+              borderColor: "rgba(255,255,255,0.1)",
+              bgcolor: "transparent",
             }}
           >
             <Button
               size="small"
-              color="inherit"
-              startIcon={<ClearIcon />}
               onClick={handleClear}
               disabled={!isDrawing}
+              sx={{
+                color: 'rgba(255,255,255,0.5)',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { background: 'rgba(255,255,255,0.05)', color: 'white' }
+              }}
+              startIcon={<ClearIcon />}
             >
               Borrar
             </Button>
@@ -174,6 +179,26 @@ export const SignaturePadField = ({
               startIcon={<CheckIcon />}
               onClick={handleConfirm}
               disabled={!isDrawing}
+              sx={{
+                color: 'white',
+                textTransform: 'none',
+                fontWeight: 700,
+                borderRadius: '8px',
+                padding: '4px 12px',
+                border: '1px solid rgba(10,132,255,0.5)',
+                background: 'rgba(10,132,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                '&:hover': {
+                  background: 'rgba(10,132,255,0.4)',
+                  border: '1px solid rgba(10,132,255,0.8)',
+                  boxShadow: '0 0 10px rgba(10,132,255,0.3)',
+                },
+                '&.Mui-disabled': {
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.05)'
+                }
+              }}
             >
               Confirmar firma
             </Button>

@@ -41,6 +41,30 @@ interface TasksFormComponentProps {
   workgroupKey?: string;
 }
 
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiOutlinedInput-root': {
+    color: 'white',
+    borderRadius: '12px',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+    '&.Mui-focused fieldset': { borderColor: 'white' },
+    '& .MuiInputBase-input': { color: 'white' },
+  },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+};
+
+const darkSelectSx = {
+  color: 'white',
+  borderRadius: '12px',
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+};
+
 export const TasksFormComponent = ({
   workgroupKey,
 }: TasksFormComponentProps) => {
@@ -49,7 +73,7 @@ export const TasksFormComponent = ({
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [selectedOwnerKeys, setSelectedOwnerKeys] = useState<string[]>([]);
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([
-    workgroups?.filter((wg) => wg.key === workgroupKey)[0].name as string,
+    workgroups?.filter((wg) => wg.key === workgroupKey)[0]?.name as string || '',
   ]);
   const [priority, setPriority] = useState<Priority>("LOW");
   const currentUser = useAuhtStore((state) => state.user);
@@ -147,25 +171,32 @@ export const TasksFormComponent = ({
           error={!!errors.name}
           helperText={errors.name?.message as string}
           required
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+          sx={darkInputFieldSx}
         />
         
-        <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>
+        <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
             Etiquetas
           </Typography>
-          <Box className="selected-members" sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {selectedTags.map((st: Tag | string) => (
+          <Box className="selected-members" sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {selectedTags.length > 0 ? selectedTags.map((st: Tag | string) => (
               <Chip
                 key={typeof st === 'string' ? st : (st as any).key || JSON.stringify(st)}
                 size="small"
-                color="primary"
-                variant="outlined"
                 label={typeof st === 'string' ? st : Object.values(st)[0]}
                 onDelete={() => handleDeleteTag(st as Tag)}
-                sx={{ borderRadius: 1.5, fontWeight: 600 }}
+                sx={{ 
+                  borderRadius: '8px', 
+                  fontWeight: 600, 
+                  background: 'rgba(255,255,255,0.1)', 
+                  color: 'white', 
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }
+                }}
               />
-            ))}
+            )) : (
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin etiquetas seleccionadas</Typography>
+            )}
           </Box>
           <Autocomplete
             disablePortal
@@ -182,15 +213,26 @@ export const TasksFormComponent = ({
                   variant="outlined"
                   size="small"
                   fullWidth
+                  sx={darkInputFieldSx}
                 />
                 <Button
                   onClick={() => handleAddTag(params.inputProps.value as string)}
                   variant="contained"
-                  sx={{ minWidth: 40, p: 0, borderRadius: 2 }}
+                  sx={{ 
+                    minWidth: 40, 
+                    p: 0, 
+                    borderRadius: '10px',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    '&:hover': { background: 'rgba(255,255,255,0.2)' }
+                  }}
                 >
                   <AddCircleOutlinedIcon />
                 </Button>
               </Box>
+            )}
+            PaperComponent={({ children }) => (
+              <Paper sx={{ bgcolor: '#1c1c1e', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}>{children}</Paper>
             )}
           />
         </Box>
@@ -212,35 +254,55 @@ export const TasksFormComponent = ({
               disablePast
               format={"DD/MM/YYYY"}
               label="Fecha Límite"
-              slotProps={{ textField: { variant: 'outlined', fullWidth: true, size: 'medium' } }}
+              slotProps={{ 
+                textField: { 
+                  variant: 'outlined', 
+                  fullWidth: true, 
+                  size: 'medium',
+                  sx: darkInputFieldSx
+                },
+                popper: {
+                  sx: {
+                    '& .MuiPaper-root': { bgcolor: '#1c1c1e', color: 'white', border: '1px solid rgba(255,255,255,0.1)' },
+                    '& .MuiPickersDay-root': { color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } },
+                    '& .MuiTypography-root': { color: 'rgba(255,255,255,0.7)' },
+                    '& .MuiDayCalendar-weekDayLabel': { color: 'rgba(255,255,255,0.5)' },
+                    '& .MuiPickersCalendarHeader-label': { color: 'white' },
+                    '& .MuiIconButton-root': { color: 'white' }
+                  }
+                }
+              }}
               onChange={(val) => setValue("dueDate", val?.format("DD/MM/YYYY"))}
             />
           </LocalizationProvider>
 
           <FormControl fullWidth variant="outlined">
-            <InputLabel>Prioridad</InputLabel>
+            <InputLabel sx={{ color: 'rgba(255,255,255,0.7)', '&.Mui-focused': { color: 'white' } }}>Prioridad</InputLabel>
             <Select
               value={priority}
               label="Prioridad"
               onChange={({ target }) => setPriority(target.value as Priority)}
-              sx={{ borderRadius: 2 }}
+              sx={darkSelectSx}
+              MenuProps={{
+                PaperProps: { sx: { bgcolor: '#1c1c1e', color: 'white', border: '1px solid rgba(255,255,255,0.1)' } }
+              }}
             >
-              <MenuItem value="LOW">
+              <MenuItem value="LOW" sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
                 </Box>
               </MenuItem>
-              <MenuItem value="NORMAL">
+              <MenuItem value="NORMAL" sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EmojiFlagsOutlinedIcon sx={{ color: "#0a84ff" }} /> Normal
                 </Box>
               </MenuItem>
-              <MenuItem value="HIGH">
+              <MenuItem value="HIGH" sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EmojiFlagsOutlinedIcon sx={{ color: "#ff9f0a" }} /> Alta
                 </Box>
               </MenuItem>
-              <MenuItem value="URGENT">
+              <MenuItem value="URGENT" sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EmojiFlagsOutlinedIcon sx={{ color: "#ff453a" }} /> Urgente
                 </Box>
@@ -267,25 +329,33 @@ export const TasksFormComponent = ({
           {...register("notes")}
           variant="outlined"
           fullWidth
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+          sx={darkInputFieldSx}
         />
 
-        <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          size="large"
-          sx={{ 
-            py: 1.5, 
-            borderRadius: 3, 
-            fontWeight: 700, 
-            background: 'linear-gradient(135deg, #30d158 0%, #28cd41 100%)',
-            boxShadow: '0 4px 15px rgba(48, 209, 88, 0.3)',
-            '&:hover': { background: 'linear-gradient(135deg, #28cd41 0%, #30d158 100%)' }
-          }}
-        >
-          Crear Tarea
-        </Button>
+        <Box sx={{ pt: 1 }}>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{ 
+              py: 1.5, 
+              borderRadius: '12px', 
+              fontWeight: 700, 
+              textTransform: 'none',
+              background: 'rgba(48,209,88,0.2)',
+              border: '1px solid rgba(48,209,88,0.5)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              '&:hover': { 
+                background: 'rgba(48,209,88,0.3)',
+                border: '1px solid rgba(48,209,88,0.8)'
+              }
+            }}
+          >
+            Crear Tarea
+          </Button>
+        </Box>
       </Stack>
     </Box>
   );

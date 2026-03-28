@@ -27,7 +27,7 @@ function CustomTabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: { xs: 0.5, sm: 1 } }}>{children}</Box>}
+      {value === index && <Box sx={{ p: 0 }}>{children}</Box>}
     </div>
   );
 }
@@ -59,6 +59,7 @@ export const AdministratorPage = () => {
           value={tabsValue}
           onChange={handleTabsChange}
           aria-label="basic tabs example"
+          variant={window.innerWidth < 768 ? "fullWidth" : "standard"}
         >
           <Tab label="Listado de Usuarios" {...a11yProps(0)} />
           <Tab label="Proyectos" {...a11yProps(1)} />
@@ -77,13 +78,33 @@ export const AdministratorPage = () => {
               content: <UserFormComponent />,
             })
           }
-          sx={{ color: "white", top: '10px' }}
+          variant="contained"
+          startIcon={<PersonAddAltOutlinedIcon />}
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            borderRadius: '10px',
+            padding: '8px 16px',
+            border: '1px solid rgba(10,132,255,0.5)',
+            background: 'rgba(10,132,255,0.15)',
+            backdropFilter: 'blur(10px)',
+            mt: 2,
+            '&:hover': {
+              background: 'rgba(10,132,255,0.25)',
+              border: '1px solid rgba(10,132,255,0.8)',
+              boxShadow: '0 0 15px rgba(10,132,255,0.3)',
+            },
+            transition: 'all 0.2s ease',
+          }}
         >
-          <PersonAddAltOutlinedIcon />
+          Nuevo Usuario
         </Button>
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={1}>
-      <ProjectsTable />
+        <ProjectsTable />
         <Button
           onClick={() =>
             setModal({
@@ -94,9 +115,29 @@ export const AdministratorPage = () => {
               content: <ProjectsFormComponent />,
             })
           }
-          sx={{ color: "white", top: '10px' }}
+          variant="contained"
+          startIcon={<DomainAddOutlinedIcon />}
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            borderRadius: '10px',
+            padding: '8px 16px',
+            border: '1px solid rgba(255,159,10,0.5)',
+            background: 'rgba(255,159,10,0.15)',
+            backdropFilter: 'blur(10px)',
+            mt: 2,
+            '&:hover': {
+              background: 'rgba(255,159,10,0.25)',
+              border: '1px solid rgba(255,159,10,0.8)',
+              boxShadow: '0 0 15px rgba(255,159,10,0.3)',
+            },
+            transition: 'all 0.2s ease',
+          }}
         >
-          <DomainAddOutlinedIcon />
+          Nuevo Proyecto
         </Button>
       </CustomTabPanel>
       {/* <CustomTabPanel value={value} index={2}>

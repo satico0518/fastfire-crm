@@ -6,6 +6,9 @@ import {
   Stack,
   Switch,
   TextField,
+  Box,
+  Typography,
+  Paper,
 } from "@mui/material";
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -18,11 +21,25 @@ import { User } from "../../interfaces/User";
 import { AutocompleteField } from "../../interfaces/Shared";
 import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
 import { ColorResult } from "react-color";
-import { Box, Typography } from "@mui/material";
 
 interface WorkgroupsFormComponentProps {
   editingGroup?: Workgroup;
 }
+
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiOutlinedInput-root': {
+    color: 'white',
+    borderRadius: '12px',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+    '&.Mui-focused fieldset': { borderColor: 'white' },
+    '& .MuiInputBase-input': { color: 'white' },
+  },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+};
 
 export const WorkgroupsFormComponent = ({
   editingGroup,
@@ -158,7 +175,7 @@ export const WorkgroupsFormComponent = ({
     setShowColorPicker(false);
   };
 
-   return (
+  return (
     <Box component="form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} sx={{ mt: 1 }}>
       <Stack spacing={3} width={"100%"}>
         <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
@@ -172,7 +189,7 @@ export const WorkgroupsFormComponent = ({
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: `0 8px 24px ${bgColor}44`,
-              border: '2px solid rgba(255,255,255,0.2)',
+              border: '2px solid rgba(255,255,255,0.4)',
               cursor: 'pointer',
               transition: 'transform 0.2s ease',
               '&:hover': { transform: 'scale(1.05)' },
@@ -196,7 +213,7 @@ export const WorkgroupsFormComponent = ({
             helperText={errors.name?.message as string}
             required
             placeholder="P. ej. marketing, ingeniería, RRHH"
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+            sx={darkInputFieldSx}
           />
         </Box>
 
@@ -207,48 +224,55 @@ export const WorkgroupsFormComponent = ({
           {...register("description")}
           variant="outlined"
           fullWidth
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+          sx={darkInputFieldSx}
         />
 
         <Box sx={{ 
           p: 2, 
           borderRadius: 3, 
-          bgcolor: 'rgba(255,255,255,0.03)', 
+          bgcolor: 'rgba(255,255,255,0.05)', 
           border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Hacer Privado</Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'white' }}>Hacer Privado</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
               Solo tú y los colaboradores invitados tendrán acceso
             </Typography>
           </Box>
           <Switch
             checked={isPrivate}
             onChange={() => setIsPrivate(!isPrivate)}
-            color="primary"
+            color="info"
           />
         </Box>
 
         {isPrivate && (
-          <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>
+          <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
               Colaboradores Invitados
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-              {selectedMembers.map(({ key, label }) => (
+              {selectedMembers.length > 0 ? selectedMembers.map(({ key, label }) => (
                 <Chip
                   key={key as string}
                   size="small"
-                  color="info"
-                  variant="outlined"
                   label={label}
                   onDelete={() => handleDeleteMember(key as string)}
-                  sx={{ borderRadius: 1.5, fontWeight: 600 }}
+                  sx={{ 
+                    borderRadius: '8px', 
+                    fontWeight: 600, 
+                    background: 'rgba(255,255,255,0.1)', 
+                    color: 'white', 
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }
+                  }}
                 />
-              ))}
+              )) : (
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin colaboradores asignados</Typography>
+              )}
             </Box>
             <Autocomplete
               options={availableMembers}
@@ -266,29 +290,40 @@ export const WorkgroupsFormComponent = ({
                   variant="outlined"
                   size="small"
                   fullWidth
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  sx={darkInputFieldSx}
                 />
+              )}
+              PaperComponent={({ children }) => (
+                <Paper sx={{ bgcolor: '#1c1c1e', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}>{children}</Paper>
               )}
             />
           </Box>
         )}
 
-        <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          size="large"
-          sx={{ 
-            py: 1.5, 
-            borderRadius: 3, 
-            fontWeight: 700, 
-            background: 'linear-gradient(135deg, #0a84ff 0%, #007aff 100%)',
-            boxShadow: '0 4px 15px rgba(10, 132, 255, 0.3)',
-            '&:hover': { background: 'linear-gradient(135deg, #007aff 0%, #0a84ff 100%)' }
-          }}
-        >
-          {editingGroup ? "Guardar Cambios" : "Crear Grupo"}
-        </Button>
+        <Box sx={{ pt: 1 }}>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{ 
+              py: 1.5, 
+              borderRadius: '12px', 
+              fontWeight: 700, 
+              textTransform: 'none',
+              background: 'rgba(10,132,255,0.2)',
+              border: '1px solid rgba(10,132,255,0.5)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              '&:hover': { 
+                background: 'rgba(10,132,255,0.3)',
+                border: '1px solid rgba(10,132,255,0.8)'
+              }
+            }}
+          >
+            {editingGroup ? "Guardar Cambios" : "Crear Grupo"}
+          </Button>
+        </Box>
       </Stack>
     </Box>
   );

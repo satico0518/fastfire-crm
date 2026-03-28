@@ -7,7 +7,6 @@ import {
   GridRenderCellParams,
   GridRenderEditCellParams,
   GridRowParams,
-  useGridApiRef,
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import {
@@ -106,7 +105,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
-  const apiRef = useGridApiRef();
   const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
   const [tagAnchorEl, setTagAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -992,12 +990,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         }}
       >
       <DataGrid
-        apiRef={apiRef}
-        onCellClick={(params) => {
-          if (isMobile && params.isEditable) {
-            apiRef.current.startCellEditMode({ id: params.id, field: params.field });
-          }
-        }}
         autoPageSize
         rows={getTaskByRole()}
         columns={columns}
@@ -1098,27 +1090,62 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
         <TaskCreatorRowComponent />
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
+          {/* Archivadas toggle */}
           <FormControlLabel
-            sx={{ color: "white", margin: 0 }}
+            sx={{
+              color: 'rgba(255,255,255,0.75)',
+              margin: 0,
+              background: showArchivedTasks
+                ? 'rgba(10,132,255,0.15)'
+                : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${showArchivedTasks ? 'rgba(10,132,255,0.5)' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius: '10px',
+              padding: '2px 10px 2px 4px',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s ease',
+              fontSize: '0.8rem',
+            }}
             control={
               <Switch
-                color={showArchivedTasks ? "info" : "default"}
+                size="small"
+                color="info"
                 title="Archivadas"
                 checked={showArchivedTasks}
                 onChange={() => setShowArchivedTasks(!showArchivedTasks)}
               />
             }
-            label="Archivadas"
-            labelPlacement="start"
+            label={
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Archivadas</span>
+            }
+            labelPlacement="end"
           />
+
+          {/* Excel button */}
           <Button
-            variant="contained"
-            color="success"
             onClick={handleExport}
             startIcon={<DownloadOutlinedIcon />}
             size="small"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              padding: '6px 14px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.12)',
+              backdropFilter: 'blur(10px)',
+              letterSpacing: '0.3px',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.25)',
+                border: '1px solid rgba(48,209,88,0.8)',
+                boxShadow: '0 0 12px rgba(48,209,88,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
           >
-            EXCEL
+            Excel
           </Button>
         </div>
       </div>

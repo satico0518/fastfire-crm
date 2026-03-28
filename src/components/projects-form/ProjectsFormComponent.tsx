@@ -1,5 +1,5 @@
 import { SubmitHandler, FieldValues, useForm } from "react-hook-form";
-import { Stack, TextField, Button, Autocomplete } from "@mui/material";
+import { Stack, TextField, Button, Autocomplete, Box } from "@mui/material";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { Project } from "../../interfaces/Project";
 import { ProjectService } from "../../services/project.service";
@@ -8,6 +8,15 @@ import { useCitiesStore } from "../../stores/cities/cities.store";
 interface ProjectsFormComponentProps {
   editingProject?: Project;
 }
+
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)' },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3)' },
+  '& .MuiInput-underline:after': { borderBottomColor: 'white' },
+  '& .MuiInput-input': { color: 'white' },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+};
 
 export const ProjectsFormComponent = ({
   editingProject,
@@ -44,7 +53,7 @@ export const ProjectsFormComponent = ({
         });
       else response = await ProjectService.createProject(data);
 
-      setIsLoading(false);
+      setIsLoading(true);
 
       if (response.result === "OK") {
         setSnackbar({
@@ -63,6 +72,7 @@ export const ProjectsFormComponent = ({
           severity: "error",
         });
       }
+      setIsLoading(false);
     } catch (error) {
       console.error(
         `Error ${editingProject ? "modificando" : "creando"} proyecto.`,
@@ -77,12 +87,13 @@ export const ProjectsFormComponent = ({
         } proyecto.`,
         severity: "error",
       });
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"} direction={"column"}>
+      <Stack spacing={3} width={"100%"} direction={"column"} sx={{ pt: 1 }}>
         <TextField
           label="Nombre"
           type="text"
@@ -93,17 +104,22 @@ export const ProjectsFormComponent = ({
           helperText={errors.name?.message as string}
           autoCapitalize="words"
           required
+          sx={darkInputFieldSx}
         />
         <Autocomplete
           disablePortal
           options={cities}
           includeInputInList
-          sx={{ width: 300 }}
+          sx={{ 
+            width: '100%',
+            '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+            '& .MuiAutocomplete-endAdornment': { color: 'white' }
+          }}
           value={
-            editingProject && {
-              key: cities.filter((c) => c.label === editingProject?.location)[0].key,
-              label: editingProject?.location,
-            }
+            editingProject ? {
+              key: cities.find((c) => c.label === editingProject?.location)?.key || 'NA',
+              label: editingProject?.location || '',
+            } : null
           }
           renderInput={(params) => (
             <TextField
@@ -117,6 +133,7 @@ export const ProjectsFormComponent = ({
               helperText={errors.location?.message as string}
               autoCapitalize="words"
               required
+              sx={darkInputFieldSx}
             />
           )}
         />
@@ -128,16 +145,32 @@ export const ProjectsFormComponent = ({
           fullWidth
           error={!!errors.budget}
           helperText={errors.budget?.message as string}
+          sx={darkInputFieldSx}
         />
-        <Button
-          fullWidth
-          type="submit"
-          variant="outlined"
-          size="large"
-          color="success"
-        >
-          {editingProject ? "Modificar Proyecto" : "Crear Proyecto"}
-        </Button>
+        <Box sx={{ pt: 2 }}>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: '12px',
+              padding: '12px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.2)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.3)',
+                border: '1px solid rgba(48,209,88,0.8)',
+              },
+            }}
+          >
+            {editingProject ? "Modificar Proyecto" : "Crear Proyecto"}
+          </Button>
+        </Box>
       </Stack>
     </form>
   );

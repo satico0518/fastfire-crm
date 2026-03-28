@@ -15,8 +15,18 @@ const MenuProps = {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
       width: 300,
+      backgroundColor: '#1c1c1e',
+      color: 'white',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
     },
   },
+};
+
+const darkSelectSx = {
+  color: 'white',
+  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3)' },
+  '& .MuiInput-underline:after': { borderBottomColor: 'white' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
 };
 
 function getStyles(name: string, personName: readonly string[], theme: Theme) {
@@ -24,6 +34,8 @@ function getStyles(name: string, personName: readonly string[], theme: Theme) {
     fontWeight: personName?.includes(name)
       ? theme.typography.fontWeightMedium
       : theme.typography.fontWeightRegular,
+    color: personName?.includes(name) ? 'white' : 'rgba(255,255,255,0.7)',
+    backgroundColor: personName?.includes(name) ? 'rgba(255,255,255,0.1)' : 'transparent',
   };
 }
 
@@ -50,9 +62,14 @@ export const MultiselectComponent = ({
   };
 
   return (
-    <div>
-      <FormControl fullWidth>
-        <InputLabel id="demo-multiple-chip-label">{title}</InputLabel>
+    <Box sx={{ width: '100%', mt: 1 }}>
+      <FormControl fullWidth variant="standard">
+        <InputLabel 
+          id="demo-multiple-chip-label"
+          sx={{ color: 'rgba(255,255,255,0.7)', '&.Mui-focused': { color: 'white' } }}
+        >
+          {title}
+        </InputLabel>
         <Select
           labelId="demo-multiple-chip-label"
           multiple
@@ -60,23 +77,43 @@ export const MultiselectComponent = ({
           onChange={handleChange}
           input={<OutlinedInput id="select-multiple-chip" label={title} />}
           renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {selected.map((value) => (
-                <Chip key={value} label={value} />
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, py: 0.5 }}>
+              {selected.map((val) => (
+                <Chip 
+                  key={val} 
+                  label={val} 
+                  size="small"
+                  sx={{ 
+                    bgcolor: 'rgba(255,255,255,0.1)', 
+                    color: 'white', 
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    borderRadius: '6px'
+                  }} 
+                />
               ))}
             </Box>
           )}
           fullWidth
           variant="standard"
+          sx={darkSelectSx}
           MenuProps={MenuProps}
         >
           {labels.length > 0 && labels?.map((lb) => (
-            <MenuItem key={lb} value={lb} style={getStyles(lb, value, theme)}>
+            <MenuItem 
+              key={lb} 
+              value={lb} 
+              sx={{
+                ...getStyles(lb, value, theme),
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' }
+              }}
+            >
               {lb}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
-    </div>
+    </Box>
   );
 };

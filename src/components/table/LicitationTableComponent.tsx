@@ -214,10 +214,28 @@ export default function LicitationTableComponent({
             className="upload-btn"
             component="label"
             role={undefined}
-            variant="text"
+            variant="contained"
             title="Cargar excel"
-            sx={{ color: "white", top: "10px" }}
             startIcon={<UploadFileIcon />}
+            size="small"
+            sx={{ 
+              color: "white",
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              padding: '6px 14px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.15)',
+              backdropFilter: 'blur(10px)',
+              mt: 1,
+              '&:hover': {
+                background: 'rgba(48,209,88,0.25)',
+                border: '1px solid rgba(48,209,88,0.8)',
+                boxShadow: '0 0 15px rgba(48,209,88,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
           >
             Subir plantilla
             <VisuallyHiddenInput

@@ -171,6 +171,15 @@ export const FormatSelector = () => {
             onChange={(e) => setValue(field.name, e.target.value)}
             fullWidth
             size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+              },
+              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
+            }}
           />
         );
       case "textarea":
@@ -187,6 +196,15 @@ export const FormatSelector = () => {
             multiline
             minRows={3}
             maxRows={6}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+              },
+              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
+            }}
           />
         );
       case "number":
@@ -204,6 +222,15 @@ export const FormatSelector = () => {
             fullWidth
             size="small"
             type="number"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+              },
+              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
+            }}
           />
         );
       case "date": {
@@ -225,7 +252,19 @@ export const FormatSelector = () => {
               format="DD/MM/YYYY"
               minDate={minDate}
               slotProps={{
-                textField: { size: "small", fullWidth: true, required: field.required },
+                textField: { 
+                  size: "small", 
+                  fullWidth: true, 
+                  required: field.required,
+                  sx: {
+                    '& .MuiOutlinedInput-root': {
+                      color: 'white',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                    },
+                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
+                  }
+                },
               }}
             />
           </LocalizationProvider>
@@ -250,7 +289,19 @@ export const FormatSelector = () => {
               format="DD/MM/YYYY HH:mm"
               minDateTime={minDateTime}
               slotProps={{
-                textField: { size: "small", fullWidth: true, required: field.required },
+                textField: { 
+                  size: "small", 
+                  fullWidth: true, 
+                  required: field.required,
+                  sx: {
+                    '& .MuiOutlinedInput-root': {
+                      color: 'white',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                    },
+                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
+                  }
+                },
               }}
             />
           </LocalizationProvider>
@@ -265,8 +316,8 @@ export const FormatSelector = () => {
           setValue(field.name, updated);
         };
         return (
-          <Box key={field.name} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-            <FormLabel component="legend" sx={{ fontSize: "0.78rem", mb: 0.5, fontWeight: 700 }}>
+          <Box key={field.name} sx={{ border: "1px solid", borderColor: "rgba(255,255,255,0.1)", borderRadius: 3, p: 2, mb: 1, bgcolor: "rgba(255,255,255,0.02)" }}>
+            <FormLabel component="legend" sx={{ fontSize: "0.78rem", mb: 0.5, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
               {field.label}
             </FormLabel>
             <FormGroup>
@@ -280,7 +331,7 @@ export const FormatSelector = () => {
                       onChange={() => toggle(option)}
                     />
                   }
-                  label={<Typography variant="body2">{option}</Typography>}
+                  label={<Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>{option}</Typography>}
                 />
               ))}
             </FormGroup>
@@ -304,7 +355,7 @@ export const FormatSelector = () => {
               transition: "all 0.3s ease"
             }}
           >
-            <FormLabel sx={{ fontSize: "0.78rem", display: "block", mb: 1.5, fontWeight: 700 }}>{field.label}</FormLabel>
+            <FormLabel sx={{ fontSize: "0.78rem", display: "block", mb: 1.5, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>{field.label}</FormLabel>
             
             {isUploading ? (
               <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
@@ -336,10 +387,10 @@ export const FormatSelector = () => {
                 component="label"
                 sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, cursor: "pointer", py: 2 }}
               >
-                <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '50%', color: 'text.secondary' }}>
+                <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%', color: 'white' }}>
                   <PhotoCameraIcon sx={{ fontSize: 32 }} />
                 </Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>Tomar o subir foto</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>Tomar o subir foto</Typography>
                 <input
                   type="file"
                   accept="image/*"
@@ -455,16 +506,16 @@ export const FormatSelector = () => {
         };
         return (
           <Box key={field.name} sx={{ p: 2, borderRadius: 3, mb: 1, bgcolor: "rgba(0,0,0,0.02)", border: '1px solid rgba(0,0,0,0.05)' }}>
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 800, color: "text.primary", textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 800, color: "white", textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.9 }}>
               {field.label}
             </Typography>
             {items.map((item, index) => (
-              <Box key={index} sx={{ border: "1px solid", borderColor: "divider", p: 2, borderRadius: 3, mb: 2, bgcolor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
+              <Box key={index} sx={{ border: "1px solid", borderColor: "rgba(255,255,255,0.1)", p: 2, borderRadius: 3, mb: 2, bgcolor: "rgba(255,255,255,0.03)", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, pb: 1, borderBottom: '1px dashed', borderColor: 'divider' }}>
                   <Chip 
                     label={`Ítem ${index + 1}`} 
                     size="small" 
-                    sx={{ fontWeight: 800, bgcolor: 'primary.50', color: "primary.main", borderRadius: 1.5 }} 
+                    sx={{ fontWeight: 800, bgcolor: 'rgba(10,132,255,0.2)', color: "#0a84ff", borderRadius: 1.5 }} 
                   />
                   <IconButton onClick={() => removeItem(index)} size="small" sx={{ color: '#ff453a', bgcolor: 'rgba(255,69,58,0.05)', '&:hover': { bgcolor: 'rgba(255,69,58,0.1)' } }}>
                     <DeleteOutlineIcon fontSize="small"/>
@@ -576,7 +627,7 @@ export const FormatSelector = () => {
                   const FormatIcon = FORMAT_ICONS[format.id];
                   return <FormatIcon sx={{ fontSize: 52, mb: 1, opacity: 0.95, filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.2))" }} />;
                 })()}
-                <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: "0.9rem", md: "1.1rem" } }}>
+                <Typography variant="h6" fontWeight={800} sx={{ fontSize: { xs: "0.95rem", md: "1.1rem" }, letterSpacing: '0.5px' }}>
                   {format.name}
                 </Typography>
                 <Typography
@@ -611,7 +662,13 @@ export const FormatSelector = () => {
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: "16px",
+            borderRadius: 5,
+            bgcolor: 'rgba(28, 28, 30, 0.9)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            backgroundImage: 'none',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
             maxHeight: "90vh",
           },
         }}
@@ -621,12 +678,13 @@ export const FormatSelector = () => {
             <DialogTitle
               sx={{
                 background: cardGradients[FORMAT_CATALOG.findIndex((f) => f.id === selectedFormat.id) % cardGradients.length],
-                color: "white",
-                fontWeight: 700,
+                color: "#1c1c1e",
+                fontWeight: 800,
+                letterSpacing: '0.2px'
               }}
             >
               {selectedFormat.name}
-              <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+              <Typography variant="body2" sx={{ opacity: 0.7, mt: 0.5, color: '#1c1c1e', fontWeight: 600 }}>
                 {selectedFormat.description}
               </Typography>
             </DialogTitle>
@@ -638,8 +696,12 @@ export const FormatSelector = () => {
             <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
               <Button
                 onClick={() => setSelectedFormat(null)}
-                color="inherit"
-                size="small"
+                sx={{
+                  color: 'rgba(255,255,255,0.5)',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': { background: 'rgba(255,255,255,0.05)', color: 'white' }
+                }}
               >
                 Cancelar
               </Button>

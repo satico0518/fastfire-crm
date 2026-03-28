@@ -138,11 +138,29 @@ export const TaskCreatorRowComponent = () => {
     <div className="task-creator">
       {!isEditing ? (
         <Button
-          sx={{ color: "white" }}
           startIcon={<AddTaskOutlinedIcon />}
           onClick={() => setIsEditing(true)}
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            borderRadius: '10px',
+            padding: '6px 14px',
+            border: '1px solid rgba(10,132,255,0.5)',
+            background: 'rgba(10,132,255,0.12)',
+            backdropFilter: 'blur(10px)',
+            letterSpacing: '0.3px',
+            '&:hover': {
+              background: 'rgba(10,132,255,0.25)',
+              border: '1px solid rgba(10,132,255,0.8)',
+              boxShadow: '0 0 12px rgba(10,132,255,0.3)',
+            },
+            transition: 'all 0.2s ease',
+          }}
         >
-          {isMobile ? "" : "Nueva tarea"}
+          {isMobile ? '' : 'Nueva tarea'}
         </Button>
       ) : (
         <div className="task-creator__row">

@@ -21,7 +21,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`formats-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: { xs: 0.5, md: 1 }, pt: 2 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: { xs: 0, md: 1 }, pt: { xs: 3, md: 2 } }}>{children}</Box>}
     </div>
   );
 }
@@ -54,6 +54,7 @@ export const FormatsPage = () => {
           }}
           value={tabValue}
           onChange={(_e, newValue) => setTabValue(newValue)}
+          variant={window.innerWidth < 768 ? "fullWidth" : "standard"}
         >
           <Tab label="Formatos" id="formats-tab-0" aria-controls="formats-tabpanel-0" />
           {isAdmin && (

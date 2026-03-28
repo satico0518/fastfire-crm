@@ -7,7 +7,7 @@ import {
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import { useUiStore } from "../../stores/ui/ui.store";
-import { Avatar, Button, Chip } from "@mui/material";
+import { Avatar, Button, Chip, Box } from "@mui/material";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
@@ -32,182 +32,6 @@ export default function UsersTable() {
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
-
-  const columns: GridColDef[] = [
-    {
-      field: "actions",
-      type: "actions",
-      maxWidth: 50,
-      resizable: false,
-      align: "right",
-      getActions: (params: GridRowParams<User>) => [
-        <GridActionsCellItem
-          icon={<ModeEditOutlineOutlinedIcon color="info" />}
-          onClick={() =>
-            setModal({
-              ...modal,
-              open: true,
-              title: "Editar Usuario",
-              text: "Ingrese las modificaciones del usuario.",
-              content: <UserFormComponent editingUser={params.row} />,
-            })
-          }
-          label="Modificar"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          icon={<DeleteOutlineOutlinedIcon color="error" />}
-          onClick={() =>
-            handleDeleteConfirmation(
-              params?.row?.key as string,
-              `${params.row.firstName || ""} ${params.row.lastName || ""}`,
-              params.row.permissions.includes("PROVIDER")
-            )
-          }
-          label="Eliminar"
-          showInMenu
-        />,
-      ],
-    },
-    {
-      field: "fullName",
-      headerName: "Nombre",
-      sortable: false,
-      width: 220,
-      renderCell: ({ row }: GridRenderCellParams<User>) => (
-        <div className="user-name">
-          {row.avatarURL ? (
-            <Avatar
-              src={row.avatarURL}
-              sx={{ 
-                width: "40px", 
-                height: "40px",
-                p: "2px", // Safe space for logos
-                border: "1.5px solid rgba(255,255,255,0.15)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-                bgcolor: "white", 
-                transform: "translateZ(0)", // Hardware acceleration
-                transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                "&:hover": { transform: "scale(1.1) translateZ(0)", zIndex: 10 }
-              }}
-              imgProps={{ 
-                style: { 
-                  objectFit: "contain", // Contain for logos to be safe
-                  borderRadius: "50%" 
-                } 
-              }}
-            />
-          ) : !row.permissions.includes("PROVIDER") ? (
-            <Avatar
-              sx={{
-                color: row.color ?? "purple",
-                height: "30px",
-                width: "30px",
-              }}
-            />
-          ) : (
-            <StoreOutlinedIcon fontSize="large" />
-          )}
-          <span style={{ marginLeft: "10px" }}>
-            {row.firstName || ""} {row.lastName || ""}
-          </span>
-        </div>
-      ),
-    },
-    {
-      field: "email",
-      headerName: "Correo",
-      type: "string",
-      width: 320,
-    },
-    {
-      field: "workgroupKeys",
-      headerName: "Grupos de trabajo",
-      type: "string",
-      width: 280,
-      renderCell: ({ row }: GridRenderCellParams<User>) => (
-        <div className="permissions">
-          {row?.workgroupKeys?.length > 0
-            ? row?.workgroupKeys?.map((key: string) => {
-                const groupName = getWorkgroupNameByKey(
-                  key,
-                  workgroups as Workgroup[]
-                );
-                if (key && groupName !== "NA") {
-                  return (
-                    <Chip
-                      size="small"
-                      key={key}
-                      label={groupName}
-                      sx={{
-                        backgroundColor: (getWorkgroupColorByKey(
-                            key,
-                            workgroups as Workgroup[]
-                          ) || "deepskyblue"),
-                        opacity: 0.8,
-                        color: "white",
-                        fontSize: "0.55rem",
-                        fontWeight: 700,
-                        letterSpacing: "0.01em",
-                        height: "18px",
-                        "& .MuiChip-label": { padding: "0 5px" },
-                      }}
-                    />
-                  );
-                }
-              })
-            : !row.permissions.includes("PROVIDER") && (
-                <Chip 
-                  label="SIN GRUPO" 
-                  color="warning" 
-                  size="small"
-                  sx={{
-                    fontSize: "0.55rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.01em",
-                    opacity: 0.8,
-                    height: "18px",
-                    "& .MuiChip-label": { padding: "0 5px" },
-                  }}
-                />
-              )}
-        </div>
-      ),
-    },
-    {
-      field: "permissions",
-      headerName: "Permisos",
-      type: "string",
-      width: 320,
-      renderCell: ({ row }: GridRenderCellParams<User>) => (
-        <div className="permissions" style={{ display: 'flex', flexWrap: 'nowrap', gap: '3px', overflowX: 'auto' }}>
-          {row.permissions.map((acc: Access) => (
-            <Chip
-              size="small"
-              key={acc}
-              label={translateAccess(acc)}
-              sx={{
-                fontSize: "0.55rem",
-                fontWeight: 700,
-                letterSpacing: "0.01em",
-                background: row.permissions.includes("PROVIDER")
-                  ? "linear-gradient(135deg, rgba(236,72,153,0.85) 0%, rgba(244,63,94,0.85) 100%)"
-                  : "linear-gradient(135deg, rgba(99,102,241,0.85) 0%, rgba(168,85,247,0.85) 100%)",
-                backdropFilter: "blur(8px)",
-                color: "white",
-                border: "1px solid rgba(255,255,255,0.25)",
-                boxShadow: row.permissions.includes("PROVIDER")
-                  ? "0 2px 8px rgba(244,63,94,0.45)" 
-                  : "0 2px 8px rgba(99,102,241,0.45)",
-                height: "18px",
-                "& .MuiChip-label": { padding: "0 5px" },
-              }}
-            />
-          ))}
-        </div>
-      ),
-    },
-  ];
 
   const handleDeleteUser = async (userKey: string) => {
     const deleteResult = await UsersService.deleteUser(userKey);
@@ -239,23 +63,259 @@ export default function UsersTable() {
       text: `Vas a eliminar al ${ !isProvider ? "usuario" : "proveedor" } "${userName.toUpperCase()}".
       ${isProvider ? "Recuerda que se perderán sus licitaciones y el ranking se verá afectado." : ''}`,
       actions: (
-        <Button onClick={() => handleDeleteUser(userKey)}>Eliminar</Button>
+        <Button 
+          onClick={() => handleDeleteUser(userKey)}
+          variant="contained"
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            borderRadius: '10px',
+            padding: '6px 16px',
+            border: '1px solid rgba(255,69,58,0.5)',
+            background: 'rgba(255,69,58,0.15)',
+            backdropFilter: 'blur(10px)',
+            '&:hover': {
+              background: 'rgba(255,69,58,0.25)',
+              border: '1px solid rgba(255,69,58,0.8)',
+              boxShadow: '0 0 15px rgba(255,69,58,0.3)',
+            },
+          }}
+        >
+          Eliminar
+        </Button>
       ),
     });
   };
 
+  const columns: GridColDef[] = [
+    {
+      field: "actions",
+      type: "actions",
+      width: 100,
+      resizable: false,
+      align: "right",
+      getActions: (params: GridRowParams<User>) => [
+        <GridActionsCellItem
+          key="edit"
+          icon={<ModeEditOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+          onClick={() =>
+            setModal({
+              ...modal,
+              open: true,
+              title: "Editar Usuario",
+              text: "Ingrese las modificaciones del usuario.",
+              content: <UserFormComponent editingUser={params.row} />,
+            })
+          }
+          label="Modificar"
+          sx={{
+            color: '#0a84ff',
+            background: 'rgba(10,132,255,0.1)',
+            border: '1px solid rgba(10,132,255,0.2)',
+            borderRadius: '8px',
+            padding: '4px',
+            mx: 0.1,
+            '&:hover': {
+              background: 'rgba(10,132,255,0.2)',
+              boxShadow: '0 0 10px rgba(10,132,255,0.2)',
+            }
+          }}
+        />,
+        <GridActionsCellItem
+          key="delete"
+          icon={<DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+          onClick={() =>
+            handleDeleteConfirmation(
+              params?.row?.key as string,
+              `${params.row.firstName || ""} ${params.row.lastName || ""}`,
+              params.row.permissions.includes("PROVIDER")
+            )
+          }
+          label="Eliminar"
+          sx={{
+            color: '#ff453a',
+            background: 'rgba(255,69,58,0.1)',
+            border: '1px solid rgba(255,69,58,0.2)',
+            borderRadius: '8px',
+            padding: '4px',
+            mx: 0.1,
+            '&:hover': {
+              background: 'rgba(255,69,58,0.2)',
+              boxShadow: '0 0 10px rgba(255,69,58,0.2)',
+            }
+          }}
+        />,
+      ],
+    },
+    {
+      field: "fullName",
+      headerName: "Nombre",
+      sortable: false,
+      width: 220,
+      renderCell: ({ row }: GridRenderCellParams<User>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', color: '#1a1a1a' }}>
+          {row.avatarURL ? (
+            <Avatar
+              src={row.avatarURL}
+              sx={{ 
+                width: "40px", 
+                height: "40px",
+                p: "2px",
+                border: "1.5px solid rgba(0,0,0,0.1)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                bgcolor: "white", 
+                transition: "all 0.2s ease",
+                "&:hover": { transform: "scale(1.1)" }
+              }}
+              imgProps={{ style: { objectFit: "contain", borderRadius: "50%" } }}
+            />
+          ) : !row.permissions.includes("PROVIDER") ? (
+            <Avatar
+              sx={{
+                color: 'white',
+                height: "30px",
+                width: "30px",
+                bgcolor: row.color ?? "purple",
+                border: '1px solid rgba(0,0,0,0.1)',
+                fontSize: '0.8rem',
+                fontWeight: 700
+              }}
+            >
+              {(row.firstName?.[0] || '') + (row.lastName?.[0] || '')}
+            </Avatar>
+          ) : (
+            <StoreOutlinedIcon fontSize="large" sx={{ color: '#444' }} />
+          )}
+          <span style={{ fontWeight: 600 }}>
+            {row.firstName || ""} {row.lastName || ""}
+          </span>
+        </Box>
+      ),
+    },
+    {
+      field: "email",
+      headerName: "Correo",
+      type: "string",
+      width: 220,
+      renderCell: ({ value }: GridRenderCellParams<User>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#666', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {value}
+        </Box>
+      )
+    },
+    {
+      field: "workgroupKeys",
+      headerName: "Grupos de trabajo",
+      type: "string",
+      width: 200,
+      renderCell: ({ row }: GridRenderCellParams<User>) => (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center', py: 0.5, height: '100%', overflow: 'hidden' }}>
+          {row?.workgroupKeys?.length > 0
+            ? row?.workgroupKeys?.map((key: string) => {
+                const groupName = getWorkgroupNameByKey(
+                  key,
+                  workgroups as Workgroup[]
+                );
+                if (key && groupName !== "NA") {
+                  return (
+                    <Chip
+                      size="small"
+                      key={key}
+                      label={groupName}
+                      sx={{
+                        backgroundColor: (getWorkgroupColorByKey(
+                            key,
+                            workgroups as Workgroup[]
+                          ) || "deepskyblue"),
+                        color: "white",
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        height: "22px",
+                        border: '1px solid rgba(0,0,0,0.05)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      }}
+                    />
+                  );
+                }
+                return null;
+              })
+            : !row.permissions.includes("PROVIDER") && (
+                <Chip 
+                  label="SIN GRUPO" 
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    color: '#ff9f0a',
+                    borderColor: 'rgba(255,159,10,0.4)',
+                    height: "22px",
+                  }}
+                />
+              )}
+        </Box>
+      ),
+    },
+    {
+      field: "permissions",
+      headerName: "Permisos",
+      type: "string",
+      width: 250,
+      renderCell: ({ row }: GridRenderCellParams<User>) => (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center', py: 0.5, height: '100%', overflow: 'hidden' }}>
+          {row.permissions.map((acc: Access) => (
+            <Chip
+              size="small"
+              key={acc}
+              label={translateAccess(acc)}
+              sx={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                background: row.permissions.includes("PROVIDER")
+                  ? "linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)"
+                  : "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+                color: "white",
+                border: "1px solid rgba(0,0,0,0.05)",
+                height: "22px",
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            />
+          ))}
+        </Box>
+      ),
+    },
+  ];
+
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%", bgcolor: 'white' }}>
       <DataGrid
         rows={users?.filter((u) => u.isActive) as User[]}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
-        rowHeight={35}
+        rowHeight={60}
         localeText={{
           MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
         }}
-        sx={{ border: 0 }}
+        sx={{ 
+          border: 0,
+          '& .MuiDataGrid-cell': {
+            display: 'flex',
+            alignItems: 'center',
+            borderBottom: '1px solid rgba(0,0,0,0.05)'
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: '#f8f9fa',
+            borderRadius: 0,
+            color: '#1a1a1a',
+            fontWeight: 800
+          },
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: 'rgba(0,122,255,0.02)',
+          }
+        }}
       />
     </Paper>
   );

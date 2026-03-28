@@ -30,6 +30,22 @@ interface Props {
   onSave: (schedule: MaintenanceSchedule) => void;
 }
 
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiOutlinedInput-root': {
+    color: 'white',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+    '&.Mui-focused fieldset': { borderColor: '#0a84ff' },
+    '& .MuiInputBase-input': { color: 'white' },
+  },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+};
+
 export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selectedDateStr, onSave }) => {
   const user = useAuhtStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
@@ -98,20 +114,37 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" disableRestoreFocus PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1c1c1e', color: 'white' } }}>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      fullWidth 
+      maxWidth="xs" 
+      disableRestoreFocus 
+      PaperProps={{ 
+        sx: { 
+          borderRadius: 5, 
+          bgcolor: 'rgba(28, 28, 30, 0.9)', 
+          backdropFilter: 'blur(20px) saturate(180%)',
+          color: 'white',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+          backgroundImage: 'none'
+        } 
+      }}
+    >
 
-      <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle sx={{ p: 3, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: 800 }}>Nuevo Agendamiento</Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       
-      <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+      <DialogContent sx={{ px: 3, pt: 1 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
           
           <Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
               <EventAvailableOutlinedIcon fontSize="small" /> Fecha de Mantenimiento *
             </Typography>
             <TextField 
@@ -126,12 +159,12 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
               inputProps={{ 
                 min: dayjs().format('YYYY-MM-DDTHH:mm') 
               }}
-              sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, '&.Mui-focused fieldset': { borderColor: '#0a84ff' } } }}
+              sx={darkInputFieldSx}
             />
           </Box>
 
           <Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
               <LocationOnOutlinedIcon fontSize="small" /> Ubicación *
             </Typography>
             <TextField 
@@ -142,12 +175,12 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
               required
               value={ubication}
               onChange={(e) => setUbication(e.target.value)}
-              sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, '&.Mui-focused fieldset': { borderColor: '#0a84ff' } } }}
+              sx={darkInputFieldSx}
             />
           </Box>
 
           <Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
               <EditNoteOutlinedIcon fontSize="small" /> Actividad *
             </Typography>
             <TextField 
@@ -158,12 +191,12 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
               required
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
-              sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, '&.Mui-focused fieldset': { borderColor: '#0a84ff' } } }}
+              sx={darkInputFieldSx}
             />
           </Box>
 
            <Box>
-             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
                <RequestQuoteOutlinedIcon fontSize="small" /> ¿Ya tiene Cotización?
              </Typography>
              <ToggleButtonGroup
@@ -175,14 +208,16 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                sx={{ 
                  mb: hasQuotation === 'SI' ? 1.5 : 0,
                  bgcolor: 'rgba(255,255,255,0.05)',
+                 borderRadius: '12px',
+                 overflow: 'hidden',
+                 border: '1px solid rgba(255,255,255,0.1)',
                  '& .MuiToggleButton-root': { 
                    color: 'rgba(255,255,255,0.5)', 
-                   borderColor: 'rgba(255,255,255,0.1)',
-                   py: 0.5,
+                   border: 'none',
+                   py: 0.8,
                    '&.Mui-selected': { 
                      color: 'white', 
                      bgcolor: 'rgba(48,209,88,0.2)',
-                     borderColor: '#30d158',
                      fontWeight: 800,
                      '&:hover': { bgcolor: 'rgba(48,209,88,0.3)' }
                    } 
@@ -205,19 +240,18 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                  onChange={(e) => setQuotationNumber(e.target.value)}
                  sx={{ 
                    mt: 1,
-                   input: { color: 'white', fontSize: '0.85rem' }, 
-                   '& .MuiOutlinedInput-root': { 
-                     '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, 
-                     '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, 
-                     '&.Mui-focused fieldset': { borderColor: '#30d158' } 
-                   } 
+                   ...darkInputFieldSx,
+                   '& .MuiOutlinedInput-root': {
+                     ...darkInputFieldSx['& .MuiOutlinedInput-root'],
+                     '&.Mui-focused fieldset': { borderColor: '#30d158' }
+                   }
                  }}
                />
              )}
            </Box>
 
            <Box>
-             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
                <DescriptionOutlinedIcon fontSize="small" /> ¿Ya tiene Informe?
              </Typography>
              <ToggleButtonGroup
@@ -228,14 +262,16 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                fullWidth
                sx={{ 
                  bgcolor: 'rgba(255,255,255,0.05)',
+                 borderRadius: '12px',
+                 overflow: 'hidden',
+                 border: '1px solid rgba(255,255,255,0.1)',
                  '& .MuiToggleButton-root': { 
                    color: 'rgba(255,255,255,0.5)', 
-                   borderColor: 'rgba(255,255,255,0.1)',
-                   py: 0.5,
+                   border: 'none',
+                   py: 0.8,
                    '&.Mui-selected': { 
                      color: 'white', 
                      bgcolor: 'rgba(10,132,255,0.2)',
-                     borderColor: '#0a84ff',
                      fontWeight: 800,
                      '&:hover': { bgcolor: 'rgba(10,132,255,0.3)' }
                    } 
@@ -248,32 +284,61 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
              </ToggleButtonGroup>
            </Box>
 
-          <Box>
-            <Typography variant="caption" component="div" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block' }}>
-              Observaciones (Opcional)
-            </Typography>
-            <TextField 
-              fullWidth
-              multiline
-              rows={3}
-              placeholder="Detalles adicionales, contactos, etc..."
-              variant="outlined"
-              size="small"
-              value={obs}
-              onChange={(e) => setObs(e.target.value)}
-              sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, '&.Mui-focused fieldset': { borderColor: '#0a84ff' } } }}
-            />
-          </Box>
+           <Box>
+             <Typography variant="caption" component="div" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block', fontWeight: 700 }}>
+               Observaciones (Opcional)
+             </Typography>
+             <TextField 
+               fullWidth
+               multiline
+               rows={3}
+               placeholder="Detalles adicionales, contactos, etc..."
+               variant="outlined"
+               size="small"
+               value={obs}
+               onChange={(e) => setObs(e.target.value)}
+               sx={darkInputFieldSx}
+             />
+           </Box>
 
         </Box>
       </DialogContent>
-      <DialogActions sx={{ p: 2, pt: 1.5, borderColor: 'rgba(255,255,255,0.1)' }}>
-        <Button onClick={onClose} sx={{ color: 'rgba(255,255,255,0.6)' }}>Cancelar</Button>
-          <Button 
+      <DialogActions sx={{ p: 3, pt: 1 }}>
+        <Button 
+          onClick={onClose} 
+          sx={{ 
+            color: 'rgba(255,255,255,0.5)', 
+            textTransform: 'none', 
+            fontWeight: 600,
+            mr: 1
+          }}
+        >
+          Cancelar
+        </Button>
+        <Button 
           variant="contained" 
           onClick={handleSave} 
           disabled={!activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim())}
-          sx={{ bgcolor: '#0a84ff', fontWeight: 700, borderRadius: 2, textTransform: 'none', px: 3 }}
+          sx={{ 
+            bgcolor: 'rgba(10,132,255,0.2)', 
+            border: '1px solid rgba(10,132,255,0.5)',
+            backdropFilter: 'blur(10px)',
+            color: 'white',
+            fontWeight: 700, 
+            borderRadius: '12px', 
+            textTransform: 'none', 
+            px: 3,
+            py: 1,
+            '&:hover': { 
+              bgcolor: 'rgba(10,132,255,0.3)',
+              border: '1px solid rgba(10,132,255,0.8)'
+            },
+            '&.Mui-disabled': {
+              bgcolor: 'rgba(255,255,255,0.05)',
+              color: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }
+          }}
         >
           Agendar Mantenimiento
         </Button>

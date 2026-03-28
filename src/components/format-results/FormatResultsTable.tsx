@@ -17,7 +17,6 @@ import {
 import {
   DataGrid,
   GridRenderCellParams,
-  useGridApiRef,
 } from "@mui/x-data-grid";
 import { useFormatsStore } from "../../stores/formats/formats.store";
 import { useUsersStore } from "../../stores/users/users.store";
@@ -68,7 +67,6 @@ export const FormatResultsTable = () => {
   const users = useUsersStore((state) => state.users);
   const currentUser = useAuhtStore((state) => state.user);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const apiRef = useGridApiRef();
 
   const [selectedTypeId, setSelectedTypeId] = useState<FormatTypeId | null>(null);
   const [viewSubmission, setViewSubmission] = useState<FormatSubmission | null>(null);
@@ -139,7 +137,7 @@ export const FormatResultsTable = () => {
             style={{ maxHeight: 180, maxWidth: "100%", borderRadius: 8, border: "1px solid #e0e0e0" }}
           />
           {isCloudinary && (
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)", display: "block", mt: 0.5 }}>
               📎 Imagen alojada en Cloudinary
             </Typography>
           )}
@@ -151,13 +149,13 @@ export const FormatResultsTable = () => {
         return (
           <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
             {(value as Record<string, unknown>[]).map((item, idx) => (
-              <Box key={idx} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 1.5, bgcolor: "#fafafa" }}>
+          <Box key={idx} sx={{ border: "1px solid", borderColor: "rgba(255,255,255,0.1)", borderRadius: 2, p: 1.5, bgcolor: "rgba(255,255,255,0.03)" }}>
                 <Typography variant="caption" sx={{ fontWeight: 700, mb: 1, display: "block", color: "primary.main" }}>
                   Ítem {idx + 1}
                 </Typography>
                 {Object.entries(item).map(([k, v]) => (
                   <Box key={k} sx={{ mb: 1 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", display: "block", fontSize: "0.65rem" }}>
+                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)", textTransform: "uppercase", display: "block", fontSize: "0.65rem" }}>
                       {k.replace(/_/g, " ")}
                     </Typography>
                     {renderFieldValue(k, v)}
@@ -174,7 +172,7 @@ export const FormatResultsTable = () => {
         </Box>
       ) : <Typography variant="body2" color="text.secondary">—</Typography>;
     }
-    return <Typography variant="body2">{String(value || "—")}</Typography>;
+    return <Typography variant="body2" sx={{ color: 'white' }}>{String(value || "—")}</Typography>;
   };
 
   const renderDetailDialog = () => {
@@ -191,13 +189,25 @@ export const FormatResultsTable = () => {
         onClose={() => { setViewSubmission(null); setReviewNotes(""); }}
         fullWidth
         maxWidth="sm"
-        PaperProps={{ sx: { borderRadius: "16px", maxHeight: "90vh" } }}
+        PaperProps={{
+          sx: {
+            borderRadius: 5,
+            bgcolor: 'rgba(28, 28, 30, 0.9)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            backgroundImage: 'none',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+            maxHeight: "90vh"
+          }
+        }}
       >
         <DialogTitle
           sx={{
             background: selectedTypeId ? cardGradients[selectedTypeId] : "#667eea",
-            color: "white",
-            fontWeight: 700,
+            color: "#1c1c1e",
+            fontWeight: 800,
+            letterSpacing: '0.2px'
           }}
         >
           {viewSubmission.formatTypeName}
@@ -213,15 +223,13 @@ export const FormatResultsTable = () => {
             </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent sx={{ p: 2 }}>
           <Box sx={{ mt: 1 }}>
             {fields.map(({ name, label }) => (
               <Box key={name} sx={{ mb: 2 }}>
                 <Typography
                   variant="caption"
-                  color="text.secondary"
-                  fontWeight={700}
-                  sx={{ textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}
+                  sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}
                 >
                   {label}
                 </Typography>
@@ -242,20 +250,86 @@ export const FormatResultsTable = () => {
               label="Notas de revisión (opcional)"
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
-              fullWidth size="small" multiline minRows={2} sx={{ mt: 2 }}
+              fullWidth size="small" multiline minRows={2} 
+              sx={{ 
+                mt: 2,
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                },
+                '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' }
+              }}
             />
           )}
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-          <Button onClick={() => { setViewSubmission(null); setReviewNotes(""); }} color="inherit" size="small">
+        <DialogActions sx={{ px: 3, pb: 2, gap: 1.5 }}>
+          <Button 
+            onClick={() => { setViewSubmission(null); setReviewNotes(""); }} 
+            size="small"
+            sx={{
+              color: 'rgba(255,255,255,0.7)',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              borderRadius: '10px',
+              padding: '6px 14px',
+              '&:hover': {
+                background: 'rgba(255,255,255,0.1)',
+                color: 'white'
+              }
+            }}
+          >
             Cerrar
           </Button>
           {viewSubmission.status === "SUBMITTED" && (
             <>
-              <Button onClick={() => handleReview("REJECTED")} variant="outlined" color="error" startIcon={<CancelIcon />} size="small">
+              <Button 
+                onClick={() => handleReview("REJECTED")} 
+                variant="contained" 
+                startIcon={<CancelIcon />} 
+                size="small"
+                sx={{
+                  color: 'white',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  borderRadius: '10px',
+                  padding: '6px 16px',
+                  border: '1px solid rgba(255,69,58,0.5)',
+                  background: 'rgba(255,69,58,0.15)',
+                  backdropFilter: 'blur(10px)',
+                  '&:hover': {
+                    background: 'rgba(255,69,58,0.25)',
+                    border: '1px solid rgba(255,69,58,0.8)',
+                    boxShadow: '0 0 15px rgba(255,69,58,0.3)',
+                  },
+                }}
+              >
                 Rechazar
               </Button>
-              <Button onClick={() => handleReview("REVIEWED")} variant="contained" color="success" startIcon={<CheckCircleIcon />} size="small">
+              <Button 
+                onClick={() => handleReview("REVIEWED")} 
+                variant="contained" 
+                startIcon={<CheckCircleIcon />} 
+                size="small"
+                sx={{
+                  color: 'white',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  borderRadius: '10px',
+                  padding: '6px 16px',
+                  border: '1px solid rgba(48,209,88,0.5)',
+                  background: 'rgba(48,209,88,0.15)',
+                  backdropFilter: 'blur(10px)',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.25)',
+                    border: '1px solid rgba(48,209,88,0.8)',
+                    boxShadow: '0 0 15px rgba(48,209,88,0.3)',
+                  },
+                }}
+              >
                 Aprobar
               </Button>
             </>
@@ -379,7 +453,6 @@ export const FormatResultsTable = () => {
       {/* DataGrid */}
       <Paper sx={{ width: "100%", height: "calc(100vh - 280px)" }}>
         <DataGrid
-          apiRef={apiRef}
           rows={filteredSubmissions}
           columns={columns}
           getRowId={(row) => row.key || row.createdDate}
