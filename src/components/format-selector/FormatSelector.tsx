@@ -17,6 +17,9 @@ import {
   FormControlLabel,
   FormLabel,
   IconButton,
+  Chip,
+  CircularProgress,
+  Paper,
 } from "@mui/material";
 import { SignaturePadField } from "../signature-pad/SignaturePadField";
 import { FORMAT_CATALOG } from "../../config/formatCatalog";
@@ -50,12 +53,14 @@ const FORMAT_ICONS: Record<FormatTypeId, ElementType<SvgIconProps>> = {
 export const FormatSelector = () => {
   const [selectedFormat, setSelectedFormat] = useState<FormatType | null>(null);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
   const currentUser = useAuhtStore((state) => state.user);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
 
   const handleOpenForm = (format: FormatType) => {
     setSelectedFormat(format);
+    setUploadingFields(new Set());
     
     // Pre-initialize specific fields to improve UX
     const initialData: Record<string, unknown> = {};
@@ -146,8 +151,8 @@ export const FormatSelector = () => {
     }
   };
 
-  const renderField = (field: FormatField, groupData?: Record<string, unknown>, onGroupFieldChange?: (name: string, val: unknown) => void) => {
-    // Utility to get/set values resolving local vs group state
+  const renderField = (field: FormatField, groupData?: Record<string, unknown>, onGroupFieldChange?: (name: string, val: unknown) => void, groupIndex?: number) => {
+    const fieldKey = groupData && groupIndex !== undefined ? `${field.name}_${groupIndex}` : field.name;
     const getValue = (name: string): unknown => groupData ? groupData[name] : formData[name];
     const setValue = (name: string, val: unknown) => {
       if (groupData && onGroupFieldChange) onGroupFieldChange(name, val);
@@ -192,7 +197,10 @@ export const FormatSelector = () => {
             required={field.required}
             placeholder={field.placeholder}
             value={(getValue(field.name) as string) || ""}
-            onChange={(e) => setValue(field.name, e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setValue(field.name, val);
+            }}
             fullWidth
             size="small"
             type="number"
@@ -258,7 +266,7 @@ export const FormatSelector = () => {
         };
         return (
           <Box key={field.name} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-            <FormLabel component="legend" sx={{ fontSize: "0.78rem", mb: 0.5 }}>
+            <FormLabel component="legend" sx={{ fontSize: "0.78rem", mb: 0.5, fontWeight: 700 }}>
               {field.label}
             </FormLabel>
             <FormGroup>
@@ -279,42 +287,59 @@ export const FormatSelector = () => {
           </Box>
         );
       }
-      case "image":
+      case "image": {
+        const isUploading = uploadingFields.has(fieldKey);
+        const currentVal = getValue(field.name) as string;
+
         return (
           <Box
             key={field.name}
             sx={{
               border: "1px dashed",
-              borderColor: "divider",
-              borderRadius: 1,
-              p: 1.5,
+              borderColor: isUploading ? "primary.main" : "divider",
+              borderRadius: 3,
+              p: 2,
               textAlign: "center",
+              bgcolor: isUploading ? "rgba(10,132,255,0.05)" : "transparent",
+              transition: "all 0.3s ease"
             }}
           >
-            <FormLabel sx={{ fontSize: "0.78rem", display: "block", mb: 1 }}>{field.label}</FormLabel>
-            {getValue(field.name) ? (
-              <Box>
+            <FormLabel sx={{ fontSize: "0.78rem", display: "block", mb: 1.5, fontWeight: 700 }}>{field.label}</FormLabel>
+            
+            {isUploading ? (
+              <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <CircularProgress size={30} thickness={5} sx={{ color: '#0a84ff' }} />
+                <Typography variant="caption" sx={{ fontWeight: 600, color: '#0a84ff' }}>Comprimiendo imagen...</Typography>
+              </Box>
+            ) : currentVal ? (
+              <Box sx={{ position: 'relative', width: 'fit-content', mx: 'auto' }}>
                 <img
-                  src={getValue(field.name) as string}
+                  src={currentVal}
                   alt={field.label}
-                  style={{ maxHeight: 120, maxWidth: "100%", borderRadius: 8 }}
+                  style={{ maxHeight: 180, maxWidth: "100%", borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
-                <Button
-                  size="small"
-                  color="error"
-                  sx={{ mt: 0.5, display: "block", mx: "auto" }}
+                <IconButton 
+                  size="small" 
                   onClick={() => setValue(field.name, "")}
+                  sx={{ 
+                    position: 'absolute', top: -10, right: -10, 
+                    bgcolor: '#ff453a', color: 'white', 
+                    '&:hover': { bgcolor: '#ff3b30' },
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  }}
                 >
-                  Quitar foto
-                </Button>
+                  <DeleteOutlineIcon fontSize="small" />
+                </IconButton>
               </Box>
             ) : (
               <Box
                 component="label"
-                sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5, cursor: "pointer" }}
+                sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, cursor: "pointer", py: 2 }}
               >
-                <PhotoCameraIcon sx={{ fontSize: 32, color: "text.secondary" }} />
-                <Typography variant="caption" color="text.secondary">Toca para subir foto</Typography>
+                <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '50%', color: 'text.secondary' }}>
+                  <PhotoCameraIcon sx={{ fontSize: 32 }} />
+                </Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>Tomar o subir foto</Typography>
                 <input
                   type="file"
                   accept="image/*"
@@ -324,8 +349,13 @@ export const FormatSelector = () => {
                     const originalFile = e.target.files?.[0];
                     if (!originalFile) return;
 
+                    setUploadingFields((prev: Set<string>) => {
+                      const next = new Set(prev);
+                      next.add(fieldKey);
+                      return next;
+                    });
+                    
                     try {
-                      // Compress image to a max of 0.5MB and 1200px width/height
                       const options = {
                         maxSizeMB: 0.5,
                         maxWidthOrHeight: 1200,
@@ -335,46 +365,62 @@ export const FormatSelector = () => {
                       
                       let fileToUse = originalFile;
                       if (originalFile.type.startsWith("image/")) {
-                        fileToUse = await imageCompression(originalFile, options);
+                        try {
+                          fileToUse = await imageCompression(originalFile, options);
+                        } catch (err) {
+                          console.warn("Compression failed, using original", err);
+                        }
                       }
                       
                       const MAX_BASE64_BYTES = 9 * 1024 * 1024;
-
                       if (fileToUse.size > MAX_BASE64_BYTES) {
-                        const uwScript = document.getElementById("uw-format");
-                        const loadAndUpload = () => {
-                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                          // @ts-ignore window.cloudinary injected by CDN
-                          const widget = window.cloudinary?.createUploadWidget(
-                            { cloudName: "fastfire", uploadPreset: "vr0sleie" },
-                            (_err: unknown, result: { event: string; info: { secure_url: string } }) => {
-                              if (!_err && result?.event === "success") {
-                                setValue(field.name, result.info.secure_url);
-                              }
-                            }
-                          );
-                          widget?.open();
-                        };
-
-                        if (!uwScript) {
-                          const script = document.createElement("script");
-                          script.id = "uw-format";
-                          script.src = "https://upload-widget.cloudinary.com/global/all.js";
-                          script.async = true;
-                          script.onload = loadAndUpload;
-                          document.head.appendChild(script);
-                        } else {
-                          loadAndUpload();
-                        }
+                         const uwScript = document.getElementById("uw-format");
+                         const loadAndUpload = () => {
+                           // @ts-ignore
+                           const widget = window.cloudinary?.createUploadWidget(
+                             { cloudName: "fastfire", uploadPreset: "vr0sleie" },
+                             (_err: any, result: any) => {
+                               if (!_err && result?.event === "success") {
+                                 setValue(field.name, result.info.secure_url);
+                                 setUploadingFields((prev: Set<string>) => {
+                                   const next = new Set(prev);
+                                   next.delete(fieldKey);
+                                   return next;
+                                 });
+                               }
+                             }
+                           );
+                           widget?.open();
+                         };
+                         if (!uwScript) {
+                           const script = document.createElement("script");
+                           script.id = "uw-format";
+                           script.src = "https://upload-widget.cloudinary.com/global/all.js";
+                           script.async = true;
+                           script.onload = loadAndUpload;
+                           document.head.appendChild(script);
+                         } else {
+                           loadAndUpload();
+                         }
                       } else {
                         const reader = new FileReader();
                         reader.onloadend = () => {
                           setValue(field.name, reader.result as string);
+                          setUploadingFields((prev: Set<string>) => {
+                            const next = new Set(prev);
+                            next.delete(fieldKey);
+                            return next;
+                          });
                         };
                         reader.readAsDataURL(fileToUse);
                       }
                     } catch (error) {
-                      console.error("Error compressing image:", error);
+                      console.error("Error processing image:", error);
+                      setUploadingFields((prev: Set<string>) => {
+                        const next = new Set(prev);
+                        next.delete(fieldKey);
+                        return next;
+                      });
                     }
                   }}
                 />
@@ -382,6 +428,7 @@ export const FormatSelector = () => {
             )}
           </Box>
         );
+      }
       case "signature":
         return (
           <SignaturePadField
@@ -407,24 +454,34 @@ export const FormatSelector = () => {
           setValue(field.name, [...items, {}]);
         };
         return (
-          <Box key={field.name} sx={{ border: "1px dashed", borderColor: "divider", p: 1.5, borderRadius: 2, mb: 1, bgcolor: "#fafafa" }}>
-            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: "text.primary" }}>{field.label}</Typography>
+          <Box key={field.name} sx={{ p: 2, borderRadius: 3, mb: 1, bgcolor: "rgba(0,0,0,0.02)", border: '1px solid rgba(0,0,0,0.05)' }}>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 800, color: "text.primary", textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {field.label}
+            </Typography>
             {items.map((item, index) => (
-              <Box key={index} sx={{ border: "1px solid", borderColor: "divider", p: 2, borderRadius: 2, mb: 2, bgcolor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <Box key={index} sx={{ border: "1px solid", borderColor: "divider", p: 2, borderRadius: 3, mb: 2, bgcolor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, pb: 1, borderBottom: '1px dashed', borderColor: 'divider' }}>
-                  <Typography variant="caption" sx={{ fontWeight: 800, px: 1.5, py: 0.5, bgcolor: 'primary.50', color: "primary.main", borderRadius: 1 }}>
-                    Item {index + 1}
-                  </Typography>
-                  <IconButton onClick={() => removeItem(index)} size="small" color="error" sx={{ bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}>
+                  <Chip 
+                    label={`Ítem ${index + 1}`} 
+                    size="small" 
+                    sx={{ fontWeight: 800, bgcolor: 'primary.50', color: "primary.main", borderRadius: 1.5 }} 
+                  />
+                  <IconButton onClick={() => removeItem(index)} size="small" sx={{ color: '#ff453a', bgcolor: 'rgba(255,69,58,0.05)', '&:hover': { bgcolor: 'rgba(255,69,58,0.1)' } }}>
                     <DeleteOutlineIcon fontSize="small"/>
                   </IconButton>
                 </Box>
-                <Stack spacing={2}>
-                  {(field.subFields || []).map((subField) => renderField(subField, item, (n, v) => updateItem(index, n, v)) )}
+                <Stack spacing={2.5}>
+                  {(field.subFields || []).map((subField) => renderField(subField, item, (n, v) => updateItem(index, n, v), index) )}
                 </Stack>
               </Box>
             ))}
-            <Button variant="outlined" size="small" onClick={addItem} sx={{ width: "100%", borderStyle: "dashed" }}>
+            <Button 
+              variant="outlined" 
+              size="medium" 
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={addItem} 
+              sx={{ width: "100%", borderStyle: "dashed", borderRadius: 3, py: 1.2, fontWeight: 700, textTransform: 'none' }}
+            >
               {field.addLabel || "+ Añadir ítem"}
             </Button>
           </Box>
@@ -445,14 +502,28 @@ export const FormatSelector = () => {
           }
         }
         return (
-          <Box key={field.name} sx={{ p: 2, bgcolor: "success.light", borderRadius: 2, color: "success.contrastText" }}>
-            <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.9, display: "block", mb: 0.5 }}>
+          <Paper 
+            key={field.name} 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              mt: 2,
+              borderRadius: 4, 
+              background: 'linear-gradient(135deg, rgba(48,209,88,0.15) 0%, rgba(52,199,89,0.05) 100%)',
+              border: '1px solid rgba(48,209,88,0.2)',
+              color: '#30d158',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          >
+            <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.8, mb: 0.5 }}>
               {field.label}
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              $ {total.toLocaleString()} 
+            <Typography variant="h4" sx={{ fontWeight: 900, textShadow: '0 2px 4px rgba(48,209,88,0.2)' }}>
+              $ {total.toLocaleString('es-CO')} 
             </Typography>
-          </Box>
+          </Paper>
         );
       }
       default:
@@ -460,7 +531,6 @@ export const FormatSelector = () => {
     }
   };
 
-  // Gradient palette for cards
   const cardGradients = [
     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",

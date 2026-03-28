@@ -1,5 +1,5 @@
 import { db } from "../firebase/firebase.config";
-import { push, ref, set, onValue, off, update, remove } from "firebase/database";
+import { push, ref, set, onValue, update, remove } from "firebase/database";
 import { ServiceResponse } from "../interfaces/Shared";
 import { MaintenanceSchedule } from "../interfaces/Maintenance";
 
@@ -44,7 +44,8 @@ export class MaintenanceService {
   static subscribeToSchedules(callback: (schedules: MaintenanceSchedule[]) => void) {
     const schedulesRef = ref(db, this.TABLE_NAME);
     
-    const listener = onValue(schedulesRef, (snapshot) => {
+    // onValue returns an unsubscribe function directly in v9+
+    const unsubscribe = onValue(schedulesRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) {
         callback([]);
@@ -53,13 +54,17 @@ export class MaintenanceService {
 
       const list: MaintenanceSchedule[] = Object.keys(data).map((key) => ({
         ...data[key],
-        id: key, // Aseguramos que el id coincida con la llave de Firebase
+        id: key, 
+        operatorNames: data[key].operatorNames || [],
       }));
 
       callback(list);
+    }, (error) => {
+      console.error("Firebase Subscription Error:", error);
+      callback([]); // Clear loading state even on error
     });
 
-    return () => off(schedulesRef, "value", listener);
+    return unsubscribe;
   }
 
   /**

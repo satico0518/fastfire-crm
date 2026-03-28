@@ -13,7 +13,7 @@ export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules }) => {
     <Box sx={{ mb: 1 }}>
       {/* Date Header Tag */}
       <Box sx={{
-        mb: 1.5,
+        mb: 1,
         ml: 1 // slight inset for the header text like in the mock
       }}>
         <Typography variant="caption" sx={{ 
@@ -28,7 +28,7 @@ export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules }) => {
       </Box>
 
       {/* Cards List */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {schedules.map(schedule => (
           <ScheduleCard key={schedule.id} schedule={schedule} />
         ))}

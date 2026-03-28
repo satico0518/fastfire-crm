@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, IconButton, Typography } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, IconButton, Typography, Autocomplete, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { useAuhtStore } from '../../../stores';
+import { useUiStore } from '../../../stores/ui/ui.store';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import { useUsersStore } from '../../../stores/users/users.store';
+import dayjs from 'dayjs';
 
 interface Props {
   open: boolean;
@@ -16,11 +19,14 @@ interface Props {
 
 export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selectedDateStr, onSave }) => {
   const user = useAuhtStore(state => state.user);
+  const users = useUsersStore((state) => state.users);
+  const setSnackbar = useUiStore(state => state.setSnackbar);
   
   const [ubication, setUbication] = useState('');
   const [activity, setActivity] = useState('');
   const [obs, setObs] = useState('');
   const [dateVal, setDateVal] = useState(selectedDateStr || '');
+  const [selectedOperators, setSelectedOperators] = useState<string[]>([]);
 
   React.useEffect(() => {
     if (open && selectedDateStr) {
@@ -31,33 +37,43 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   const handleSave = () => {
     if (!ubication || !activity || !dateVal) return; // Simple validation handled natively
 
-    const newSched: MaintenanceSchedule = {
-      id: `sched-${new Date().getTime()}`,
+    // Restriction: No past dates
+    if (dayjs(dateVal).isBefore(dayjs().startOf('day'))) {
+      setSnackbar({
+        open: true,
+        message: 'No puedes programar mantenimientos en fechas pasadas',
+        severity: 'warning'
+      });
+      return;
+    }
+
+    const newSched: Omit<MaintenanceSchedule, 'id'> = {
       title: activity,
       dateStr: new Date(dateVal).toISOString(),
       address: ubication,
       description: activity,
       observations: obs,
-      operatorNames: [], // Admins create, later assigned maybe
+      operatorNames: selectedOperators,
       status: 'SCHEDULED',
       priority: 'NORMAL',
       createdAt: new Date().toISOString(),
-      createdBy: user?.email || 'Administrador',
+      createdBy: user ? `${user.firstName} ${user.lastName}` : 'Administrador',
     };
 
-    onSave(newSched);
+    onSave(newSched as MaintenanceSchedule);
     
     // reset
     setUbication('');
     setActivity('');
     setObs('');
+    setSelectedOperators([]);
     onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3, bgcolor: '#1c1c1e', color: 'white' } }}>
       <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>Nuevo Agendamiento</Typography>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 800 }}>Nuevo Agendamiento</Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
           <CloseIcon />
         </IconButton>
@@ -79,6 +95,9 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
               value={dateVal}
               onChange={(e) => setDateVal(e.target.value)}
               InputLabelProps={{ shrink: true }}
+              inputProps={{ 
+                min: dayjs().format('YYYY-MM-DDTHH:mm') 
+              }}
               sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, '&.Mui-focused fieldset': { borderColor: '#0a84ff' } } }}
             />
           </Box>
@@ -115,8 +134,48 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
             />
           </Box>
 
+           <Box>
+            <Typography variant="caption" component="div" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block' }}>
+              Operarios Asignados (Opcional)
+            </Typography>
+            <Autocomplete
+              multiple
+              freeSolo
+              options={(users?.filter(u => u.isActive && u.permissions.includes('PROVIDER')) || []).map(u => `${u.firstName} ${u.lastName}`)}
+              value={selectedOperators}
+              onChange={(_, newValue) => setSelectedOperators(newValue as string[])}
+              renderTags={(value: string[], getTagProps) =>
+                value.map((option: string, index: number) => (
+                  <Chip
+                    variant="outlined"
+                    label={option}
+                    size="small"
+                    {...getTagProps({ index })}
+                    sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)', bgcolor: 'rgba(10,132,255,0.1)' }}
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Seleccionar o escribir nombre..."
+                  variant="outlined"
+                  size="small"
+                  sx={{ 
+                    input: { color: 'white' }, 
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' }, 
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' }, 
+                      '&.Mui-focused fieldset': { borderColor: '#0a84ff' } 
+                    } 
+                  }}
+                />
+              )}
+            />
+          </Box>
+
           <Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block' }}>
+            <Typography variant="caption" component="div" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block' }}>
               Observaciones (Opcional)
             </Typography>
             <TextField 

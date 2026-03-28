@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import AddIcon from '@mui/icons-material/Add';
-import { mockSchedules } from '../../stores/maintenance/maintenance.mock';
 import { MaintenanceSchedule } from '../../interfaces/Maintenance';
+import { MaintenanceService } from '../../services/maintenance.service';
 import { UnauthorizedPage } from '../unauthorized/UnauthorizedPage';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
@@ -15,6 +15,7 @@ import { CalendarGridView } from './components/CalendarGridView';
 import { ScheduleCreationModal } from './components/ScheduleCreationModal';
 import { useNavigate } from 'react-router-dom';
 import { useAuhtStore } from '../../stores';
+import { useUiStore } from '../../stores/ui/ui.store';
 
 dayjs.extend(isToday);
 dayjs.extend(isTomorrow);
@@ -24,19 +25,49 @@ dayjs.locale('es');
 export const AgendaMantenimientosPage = () => {
   const navigate = useNavigate();
   const user = useAuhtStore(state => state.user);
-  const [schedulesData, setSchedulesData] = useState(mockSchedules);
+  const setSnackbar = useUiStore(state => state.setSnackbar);
+  
+  const [schedulesData, setSchedulesData] = useState<MaintenanceSchedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreationOpen, setIsCreationOpen] = useState(false);
   const [creationDate, setCreationDate] = useState<string | null>(null);
   
   const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
   const isPlanner = user?.permissions?.includes("PLANNER");
 
-  if (!isAllowedToView) {
-    return <UnauthorizedPage />;
-  }
+  // Real-time subscription
+  useEffect(() => {
+    if (!isAllowedToView) {
+      return;
+    }
+    
+    const unsubscribe = MaintenanceService.subscribeToSchedules((data) => {
+      setSchedulesData(data);
+      setIsLoading(false);
+    });
 
-  const handleCreateSchedule = (newSchedule: MaintenanceSchedule) => {
-    setSchedulesData(prev => [...prev, newSchedule]);
+    return () => {
+      unsubscribe();
+    };
+  }, [isAllowedToView, user?.id]);
+
+  const handleCreateSchedule = async (newSchedule: MaintenanceSchedule) => {
+    const { id, ...dataToSave } = newSchedule;
+    const resp = await MaintenanceService.createSchedule(dataToSave);
+    
+    if (resp.result === "OK") {
+      setSnackbar({
+        open: true,
+        message: "¡Mantenimiento agendado correctamente!",
+        severity: "success"
+      });
+    } else {
+      setSnackbar({
+        open: true,
+        message: resp.errorMessage || "Error al agendar mantenimiento",
+        severity: "error"
+      });
+    }
   };
 
   const handleOpenCreation = (dateStr?: string) => {
@@ -78,21 +109,40 @@ export const AgendaMantenimientosPage = () => {
     });
     
     return groups;
-  }, []);
+  }, [schedulesData]);
+
+  if (!isAllowedToView) {
+    return <UnauthorizedPage />;
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: { xs: '100vh', md: 'calc(100vh - 90px)' }, 
+        width: '100%' 
+      }}>
+        <CircularProgress size={40} sx={{ color: '#2b90ff' }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ 
-      p: 2, 
-      pb: 10,
+      p: { xs: 2, md: 1 }, // Reduced padding on desktop
+      pb: { xs: 10, md: 2 }, // Only large padding on mobile
       width: '100%',
       maxWidth: { xs: '600px', md: '100%' }, 
       margin: '0 auto',
-      minHeight: '100vh',
-      height: { md: '100vh' },
+      minHeight: { xs: '100vh', md: 'calc(100vh - 90px)' },
+      height: { md: 'calc(100vh - 90px)' },
       display: 'flex',
       flexDirection: 'column',
-      bgcolor: { xs: '#000000', md: 'transparent' }, // Solid black on mobile, transparent on desktop
+      bgcolor: { xs: '#000000', md: 'transparent' }, 
       color: 'white',
+      overflow: 'hidden', // Prevent page-level scroll on desktop
     }}>
       {/* Header */}
       <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', mb: 3, pt: 2 }}>
@@ -110,7 +160,7 @@ export const AgendaMantenimientosPage = () => {
       </Box>
 
       {/* MOBILE LIST VIEW */}
-      <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 3 }}>
+      <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
          {Object.entries(groupedSchedules).map(([dateLabel, schedules]) => (
            <ScheduleDayBlock key={dateLabel} dateLabel={dateLabel} schedules={schedules} />
          ))}

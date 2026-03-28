@@ -17,6 +17,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Box,
 } from "@mui/material";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
@@ -134,150 +135,158 @@ export const TasksFormComponent = ({
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"} direction={"column"}>
+   return (
+    <Box component="form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} sx={{ mt: 1 }}>
+      <Stack spacing={3} width={"100%"} direction={"column"}>
         <TextField
-          label="Nombre"
+          label="Nombre de la Tarea"
           type="text"
-          {...register("name", { required: true })}
-          variant="standard"
+          {...register("name", { required: "El nombre es obligatorio" })}
+          variant="outlined"
           fullWidth
           error={!!errors.name}
           helperText={errors.name?.message as string}
-          autoCapitalize="words"
           required
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
         />
-        <div style={{ maxWidth: "500px" }}>
-          <Typography component="span" fontSize={"15px"}>
-            Etiquetas:
+        
+        <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>
+            Etiquetas
           </Typography>
-          <br />
-          <div className="selected-members">
+          <Box className="selected-members" sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {selectedTags.map((st: Tag | string) => (
-              <div
-                key={Object.values(st)[0] as string}
-                className="selected-chip"
-              >
-                <Chip
-                  className="selected-chip"
-                  size="small"
-                  color="success"
-                  label={Object.values(st)}
-                  onDelete={() => handleDeleteTag(st as Tag)}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        <Autocomplete
-          disablePortal
-          options={Object.values(tags)}
-          includeInputInList
-          fullWidth
-          onChange={(_, tag) => tag && handleAddTag(tag)}
-          renderInput={(params) => (
-            <div className="tags-selector">
-              <TextField
-                {...params}
-                name="tags"
-                label="Etiquetas creadas"
-                type="text"
-                variant="standard"
-                error={!!errors.tags}
-                helperText={errors.tags?.message as string}
-                autoCapitalize="words"
+              <Chip
+                key={typeof st === 'string' ? st : (st as any).key || JSON.stringify(st)}
+                size="small"
+                color="primary"
+                variant="outlined"
+                label={typeof st === 'string' ? st : Object.values(st)[0]}
+                onDelete={() => handleDeleteTag(st as Tag)}
+                sx={{ borderRadius: 1.5, fontWeight: 600 }}
               />
-              {
+            ))}
+          </Box>
+          <Autocomplete
+            disablePortal
+            options={Object.values(tags)}
+            includeInputInList
+            fullWidth
+            onChange={(_, tag) => tag && handleAddTag(tag)}
+            renderInput={(params) => (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  {...params}
+                  name="tags"
+                  label="Buscar o crear etiqueta"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                />
                 <Button
-                  onClick={() =>
-                    handleAddTag(params.inputProps.value as string)
-                  }
-                  title="Nueva etiqueta"
+                  onClick={() => handleAddTag(params.inputProps.value as string)}
+                  variant="contained"
+                  sx={{ minWidth: 40, p: 0, borderRadius: 2 }}
                 >
-                  <AddCircleOutlinedIcon color="success" />
+                  <AddCircleOutlinedIcon />
                 </Button>
-              }
-            </div>
-          )}
-        />
+              </Box>
+            )}
+          />
+        </Box>
+
         <MultiselectComponent
           labels={
             users
               ?.filter((u) => u.isActive && !u.permissions.includes('PROVIDER'))
               .map((u) => getUserNameByKey(u.key as string, users)) as string[]
           }
-          title="Responsables"
+          title="Responsables Asignados"
           value={selectedOwnerKeys}
           setValue={setSelectedOwnerKeys}
         />
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            disablePast
-            format={"DD/MM/YYYY"}
-            label="Fecha Límite"
-            name="dueDate"
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            onChange={(val, _) =>
-              setValue("dueDate", val?.format("DD/MM/YYYY"))
-            }
-          />
-        </LocalizationProvider>
-        <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-          <InputLabel id="demo-select-small-label">Prioridad</InputLabel>
-          <Select
-            labelId="demo-select-small-label"
-            id="demo-select-small"
-            value={priority}
-            label="Prioridad"
-            onChange={({ target }) => setPriority(target.value as Priority)}
-          >
-            <MenuItem value="LOW">
-              <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
-            </MenuItem>
-            <MenuItem value="NORMAL">
-              <EmojiFlagsOutlinedIcon sx={{ color: "blue" }} /> Normal
-            </MenuItem>
-            <MenuItem value="HIGH">
-              <EmojiFlagsOutlinedIcon sx={{ color: "orange" }} /> Alta
-            </MenuItem>
-            <MenuItem value="URGENT">
-              <EmojiFlagsOutlinedIcon sx={{ color: "red" }} /> Urgente
-            </MenuItem>
-          </Select>
-        </FormControl>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              disablePast
+              format={"DD/MM/YYYY"}
+              label="Fecha Límite"
+              slotProps={{ textField: { variant: 'outlined', fullWidth: true, size: 'medium' } }}
+              onChange={(val) => setValue("dueDate", val?.format("DD/MM/YYYY"))}
+            />
+          </LocalizationProvider>
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel>Prioridad</InputLabel>
+            <Select
+              value={priority}
+              label="Prioridad"
+              onChange={({ target }) => setPriority(target.value as Priority)}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="LOW">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
+                </Box>
+              </MenuItem>
+              <MenuItem value="NORMAL">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiFlagsOutlinedIcon sx={{ color: "#0a84ff" }} /> Normal
+                </Box>
+              </MenuItem>
+              <MenuItem value="HIGH">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiFlagsOutlinedIcon sx={{ color: "#ff9f0a" }} /> Alta
+                </Box>
+              </MenuItem>
+              <MenuItem value="URGENT">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiFlagsOutlinedIcon sx={{ color: "#ff453a" }} /> Urgente
+                </Box>
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
         <MultiselectComponent
           labels={
             workgroups
               ?.filter((wg) => wg.isActive)
-              .map((w) =>
-                getWorkgroupNameByKey(w.key as string, workgroups)
-              ) as string[]
+              .map((w) => getWorkgroupNameByKey(w.key as string, workgroups)) as string[]
           }
-          title="Grupos de trabajo"
+          title="Grupos de Trabajo"
           value={selectedGroupKeys}
           setValue={setSelectedGroupKeys}
         />
+
         <TextField
-          label="Notas"
-          type="text"
+          label="Notas Adicionales"
+          multiline
+          rows={3}
           {...register("notes")}
-          variant="standard"
+          variant="outlined"
           fullWidth
-          error={!!errors.notes}
-          helperText={errors.notes?.message as string}
-          autoCapitalize="words"
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
         />
+
         <Button
           fullWidth
           type="submit"
-          variant="outlined"
+          variant="contained"
           size="large"
-          color="success"
+          sx={{ 
+            py: 1.5, 
+            borderRadius: 3, 
+            fontWeight: 700, 
+            background: 'linear-gradient(135deg, #30d158 0%, #28cd41 100%)',
+            boxShadow: '0 4px 15px rgba(48, 209, 88, 0.3)',
+            '&:hover': { background: 'linear-gradient(135deg, #28cd41 0%, #30d158 100%)' }
+          }}
         >
           Crear Tarea
         </Button>
       </Stack>
-    </form>
+    </Box>
   );
 };

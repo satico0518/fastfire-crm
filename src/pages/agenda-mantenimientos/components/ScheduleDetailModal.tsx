@@ -1,12 +1,19 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Avatar, Stack, Chip } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Avatar, Stack, Chip, Button, DialogActions } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
+import { MaintenanceService } from '../../../services/maintenance.service';
 import dayjs from 'dayjs';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import BlockIcon from '@mui/icons-material/Block';
+import { useAuhtStore } from '../../../stores';
+import { useUiStore } from '../../../stores/ui/ui.store';
 
 interface Props {
   open: boolean;
@@ -35,8 +42,29 @@ const getStatusText = (status: string) => {
 };
 
 export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }) => {
+  const user = useAuhtStore(state => state.user);
+  const setSnackbar = useUiStore(state => state.setSnackbar);
+  
+  const isAllowedToManage = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
   const dateObj = dayjs(schedule.dateStr);
   const statusColor = getStatusColor(schedule.status);
+
+  const handleDelete = async () => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este agendamiento?")) return;
+    
+    const resp = await MaintenanceService.deleteSchedule(schedule.id);
+    if (resp.result === "OK") {
+      setSnackbar({ open: true, message: "Agendamiento eliminado", severity: "success" });
+      onClose();
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus: MaintenanceSchedule['status']) => {
+    const resp = await MaintenanceService.updateSchedule(schedule.id, { status: newStatus });
+    if (resp.result === "OK") {
+      setSnackbar({ open: true, message: `Estado actualizado a: ${getStatusText(newStatus)}`, severity: "success" });
+    }
+  };
   
   return (
     <Dialog 
@@ -68,16 +96,23 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
            {schedule.priority === 'URGENT' && (
              <Chip label="URGENTE" size="small" sx={{ mb: 1.5, ml: 1, fontWeight: 800, bgcolor: 'rgba(255,69,58,0.2)', color: '#ff453a' }} />
            )}
-           <Typography variant="h5" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.2, color: 'white' }}>
+           <Typography variant="h5" component="div" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.2, color: 'white' }}>
              {schedule.title}
            </Typography>
         </Box>
-        <IconButton onClick={onClose} size="small" sx={{ ml: 2, bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
-          <CloseIcon />
-        </IconButton>
+        <Stack direction="row" spacing={1}>
+          {isAllowedToManage && (
+            <IconButton onClick={handleDelete} size="small" sx={{ bgcolor: 'rgba(255,69,58,0.1)', color: '#ff453a', '&:hover': { bgcolor: 'rgba(255,69,58,0.2)' } }}>
+              <DeleteOutlineIcon />
+            </IconButton>
+          )}
+          <IconButton onClick={onClose} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </Stack>
       </DialogTitle>
       
-      <DialogContent sx={{ px: 3, pb: 4, pt: 1 }}>
+      <DialogContent sx={{ px: 3, pb: 2, pt: 1 }}>
         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           
           <Stack direction="row" spacing={2} alignItems="center" sx={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -131,10 +166,10 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
               Operarios Asignados
             </Typography>
             <Stack spacing={1}>
-              {schedule.operatorNames.length === 0 && (
+              {(schedule.operatorNames || []).length === 0 && (
                 <Typography variant="body2" color="rgba(255,255,255,0.5)">Ninguno</Typography>
               )}
-              {schedule.operatorNames.map((name, i) => (
+              {(schedule.operatorNames || []).map((name, i) => (
                 <Stack key={i} direction="row" spacing={1.5} alignItems="center" sx={{ color: 'rgba(255,255,255,0.8)' }}>
                   <Avatar sx={{ width: 28, height: 28, fontSize: '0.8rem', bgcolor: '#0a84ff', color: 'white' }}>
                     {name.charAt(0)}
@@ -164,6 +199,41 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
            </Typography>
         </Box>
       </DialogContent>
+      
+      {isAllowedToManage && (
+        <DialogActions sx={{ px: 3, pb: 3, pt: 1, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
+          <Button 
+            size="small" 
+            variant="outlined" 
+            startIcon={<PlayCircleOutlineIcon />} 
+            onClick={() => handleUpdateStatus('IN_PROGRESS')}
+            disabled={schedule.status === 'IN_PROGRESS'}
+            sx={{ borderRadius: 2, color: '#ff9f0a', borderColor: 'rgba(255,159,10,0.5)' }}
+          >
+            Iniciar
+          </Button>
+          <Button 
+            size="small" 
+            variant="outlined" 
+            startIcon={<CheckCircleOutlineIcon />} 
+            onClick={() => handleUpdateStatus('COMPLETED')}
+            disabled={schedule.status === 'COMPLETED'}
+            sx={{ borderRadius: 2, color: '#30d158', borderColor: 'rgba(48,209,88,0.5)' }}
+          >
+            Completar
+          </Button>
+          <Button 
+            size="small" 
+            variant="outlined" 
+            startIcon={<BlockIcon />} 
+            onClick={() => handleUpdateStatus('CANCELLED')}
+            disabled={schedule.status === 'CANCELLED'}
+            sx={{ borderRadius: 2, color: '#ff453a', borderColor: 'rgba(255,69,58,0.5)' }}
+          >
+            Cancelar
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };

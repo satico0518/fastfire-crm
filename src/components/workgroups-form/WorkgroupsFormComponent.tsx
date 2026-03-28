@@ -18,6 +18,7 @@ import { User } from "../../interfaces/User";
 import { AutocompleteField } from "../../interfaces/Shared";
 import { ColorPickerComponent } from "../color-picker/ColorPickerComponent";
 import { ColorResult } from "react-color";
+import { Box, Typography } from "@mui/material";
 
 interface WorkgroupsFormComponentProps {
   editingGroup?: Workgroup;
@@ -157,76 +158,98 @@ export const WorkgroupsFormComponent = ({
     setShowColorPicker(false);
   };
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"}>
-        <div className="wg-name">
-          <div className="wg-icon" style={{ backgroundColor: bgColor }}>
-            <Button
-              onClick={() => setShowColorPicker(true)}
-              sx={{ color: "white" }}
-            >
-              G
-            </Button>
+   return (
+    <Box component="form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} sx={{ mt: 1 }}>
+      <Stack spacing={3} width={"100%"}>
+        <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <Box 
+            sx={{ 
+              width: 80, 
+              height: 80, 
+              bgcolor: bgColor, 
+              borderRadius: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: `0 8px 24px ${bgColor}44`,
+              border: '2px solid rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+              '&:hover': { transform: 'scale(1.05)' },
+              position: 'relative'
+            }}
+            onClick={() => setShowColorPicker(true)}
+          >
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 900 }}>G</Typography>
             <ColorPickerComponent
               visible={showColorPicker}
               handleChange={handleColorChange}
             />
-          </div>
+          </Box>
           <TextField
-            label="Nombre"
+            label="Nombre del Grupo"
             type="text"
-            {...register("name", { required: true })}
-            variant="standard"
+            {...register("name", { required: "El nombre es obligatorio" })}
+            variant="outlined"
             fullWidth
             error={!!errors.name}
             helperText={errors.name?.message as string}
-            autoCapitalize="words"
             required
             placeholder="P. ej. marketing, ingeniería, RRHH"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
           />
-        </div>
+        </Box>
+
         <TextField
           label="Descripción (opcional)"
-          type="text"
+          multiline
+          rows={2}
           {...register("description")}
-          variant="standard"
+          variant="outlined"
           fullWidth
-          autoCapitalize="sentences"
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
         />
-        <div className="private">
-          <div className="text">
-            <div className="text__title">Hacer Privado</div>
-            <p className="text__content">
-              Solo tu y los colaboradores invitados tienen acceso
-            </p>
-          </div>
+
+        <Box sx={{ 
+          p: 2, 
+          borderRadius: 3, 
+          bgcolor: 'rgba(255,255,255,0.03)', 
+          border: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Hacer Privado</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+              Solo tú y los colaboradores invitados tendrán acceso
+            </Typography>
+          </Box>
           <Switch
-            defaultChecked={isPrivate}
-            value={isPrivate}
+            checked={isPrivate}
             onChange={() => setIsPrivate(!isPrivate)}
+            color="primary"
           />
-        </div>
+        </Box>
+
         {isPrivate && (
-          <>
-            <div style={{ maxWidth: "500px" }}>
-              <div className="text__title">Colaboradores seleccionados:</div>
-              <br />
-              <div className="selected-colaborators">
-                {selectedMembers.map(({ key, label }) => (
-                  <div key={key} className="selected-chip">
-                    <Chip
-                      key={key}
-                      className="selected-chip"
-                      size="small"
-                      color="success"
-                      label={label}
-                      onDelete={() => handleDeleteMember(key as string)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+          <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>
+              Colaboradores Invitados
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {selectedMembers.map(({ key, label }) => (
+                <Chip
+                  key={key as string}
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  label={label}
+                  onDelete={() => handleDeleteMember(key as string)}
+                  sx={{ borderRadius: 1.5, fontWeight: 600 }}
+                />
+              ))}
+            </Box>
             <Autocomplete
               options={availableMembers}
               includeInputInList
@@ -239,29 +262,34 @@ export const WorkgroupsFormComponent = ({
                 <TextField
                   {...params}
                   name="colaborators"
-                  label="Agrega Colaboradores"
-                  type="text"
-                  variant="standard"
+                  label="Buscar colaboradores para agregar"
+                  variant="outlined"
+                  size="small"
                   fullWidth
-                  error={!!errors.location}
-                  helperText={errors.location?.message as string}
-                  autoCapitalize="words"
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
               )}
             />
-          </>
+          </Box>
         )}
 
         <Button
           fullWidth
           type="submit"
-          variant="outlined"
+          variant="contained"
           size="large"
-          color="success"
+          sx={{ 
+            py: 1.5, 
+            borderRadius: 3, 
+            fontWeight: 700, 
+            background: 'linear-gradient(135deg, #0a84ff 0%, #007aff 100%)',
+            boxShadow: '0 4px 15px rgba(10, 132, 255, 0.3)',
+            '&:hover': { background: 'linear-gradient(135deg, #007aff 0%, #0a84ff 100%)' }
+          }}
         >
-          {editingGroup ? "Modificar Grupo" : "Crear Grupo"}
+          {editingGroup ? "Guardar Cambios" : "Crear Grupo"}
         </Button>
       </Stack>
-    </form>
+    </Box>
   );
 };

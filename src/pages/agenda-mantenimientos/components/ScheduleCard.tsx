@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Card, CardActionArea, Typography, Chip, Stack, Avatar, AvatarGroup } from '@mui/material';
+import { Box, Card, CardActionArea, Typography, Chip, Avatar, AvatarGroup } from '@mui/material';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { ScheduleDetailModal } from './ScheduleDetailModal';
@@ -48,32 +48,35 @@ export const ScheduleCard: React.FC<Props> = ({ schedule }) => {
           zIndex: 1
         }} />
 
-        <CardActionArea sx={{ p: 2, pl: 2.5 }} onClick={() => setOpen(true)}>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 0.5 }}>
-            <Box>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)', mb: 0.2, fontSize: '0.85rem' }}>
-                {isAllDay ? 'All Day' : timeStr}
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, color: 'white', fontSize: '1.05rem', mb: 0.5 }}>
+        <CardActionArea sx={{ p: 1.5, pl: 2.5 }} onClick={() => setOpen(true)}>
+          {/* Top Row: Title and Time */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+            <Box sx={{ maxWidth: '75%' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, color: 'white', fontSize: '1rem' }}>
                 {schedule.title}
               </Typography>
             </Box>
-            
-            {schedule.priority === 'URGENT' && (
-              <Chip label="URGENT" size="small" sx={{ bgcolor: 'rgba(255,69,58,0.2)', color: '#ff453a', fontWeight: 800, fontSize: '0.65rem', height: 20 }} />
-            )}
-          </Stack>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, color: 'rgba(255,255,255,0.5)' }}>
-            <LocationOnOutlinedIcon sx={{ fontSize: 16, mr: 0.5 }} />
-            <Typography variant="caption" sx={{ fontWeight: 500 }} noWrap>
-              {schedule.address}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#0a84ff', fontSize: '0.8rem' }}>
+                {isAllDay ? 'Todo el día' : timeStr}
+              </Typography>
+              {schedule.priority === 'URGENT' && (
+                <Chip label="URGENTE" size="small" sx={{ bgcolor: 'rgba(255,69,58,0.2)', color: '#ff453a', fontWeight: 800, fontSize: '0.6rem', height: 18 }} />
+              )}
+            </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 1 }}>
-            <AvatarGroup max={4} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.65rem', border: '2px solid #1c1c1e', bgcolor: 'rgba(255,255,255,0.2)' } }}>
-              {schedule.operatorNames.map((name, i) => (
+          {/* Bottom Row: Location and Technicians */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.4)', maxWidth: '65%' }}>
+              <LocationOnOutlinedIcon sx={{ fontSize: 14, mr: 0.5 }} />
+              <Typography variant="caption" sx={{ fontWeight: 500 }} noWrap>
+                {schedule.address}
+              </Typography>
+            </Box>
+            
+            <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 22, height: 22, fontSize: '0.6rem', border: '1px solid #1c1c1e', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+              {(schedule.operatorNames || []).map((name, i) => (
                 <Avatar key={i} alt={name}>{name.charAt(0)}</Avatar>
               ))}
             </AvatarGroup>

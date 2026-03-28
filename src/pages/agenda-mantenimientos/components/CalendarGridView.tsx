@@ -130,7 +130,10 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
                 key={idx} 
                 onClick={() => {
                   if (isAdmin && dayNum) {
-                    const dateStr = currentMonth.date(dayNum).format('YYYY-MM-DD');
+                    const date = currentMonth.date(dayNum);
+                    if (date.isBefore(dayjs(), 'day')) return; // Bloquear días pasados
+                    
+                    const dateStr = date.format('YYYY-MM-DD');
                     onOpenCreation(dateStr);
                   }
                 }}
@@ -140,8 +143,8 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
                 borderBottom: idx < calendarMatrix.length - 7 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                 bgcolor: dayNum ? 'transparent' : 'rgba(0,0,0,0.15)',
                 transition: 'background-color 0.2s',
-                cursor: (isAdmin && dayNum) ? 'pointer' : 'default',
-                '&:hover': { bgcolor: dayNum ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.15)' },
+                cursor: (isAdmin && dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) ? 'pointer' : 'default',
+                '&:hover': { bgcolor: (dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) ? 'rgba(255,255,255,0.03)' : 'transparent' },
                 overflow: 'hidden' // hide overflow internally unless we want to scroll events within the cell
               }}>
                 {dayNum && (
