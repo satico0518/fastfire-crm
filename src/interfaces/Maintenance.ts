@@ -1,17 +1,17 @@
 export interface MaintenanceSchedule {
   id: string;
-  title: string; // Actividad principal
-  dateStr: string; // ISO String (YYYY-MM-DD o full timestamp)
-  address: string; // Ubicación
+  title: string; 
+  dateStr: string; 
+  address: string; 
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-  description?: string; // Detalle adicional / Actividad
-  observations?: string; // Nuevo campo opcional
+  description?: string; 
+  observations?: string; 
   contactName?: string;
   contactPhone?: string;
   priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  hasQuotation: 'SI' | 'NO' | 'NA';
+  hasQuotation?: 'SI' | 'NO' | 'NA';
   quotationNumber?: string;
-  hasReport: 'SI' | 'NO' | 'NA';
+  hasReport?: 'SI' | 'NO' | 'NA';
   createdAt: string;
   createdBy: string;
 }

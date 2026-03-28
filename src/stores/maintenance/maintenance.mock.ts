@@ -6,7 +6,6 @@ export const mockSchedules: MaintenanceSchedule[] = [
     title: "Mantenimiento Preventivo CC Santafé",
     dateStr: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), // Ayer
     address: "Calle 185 #45-03, Bogotá",
-    operatorNames: ["Carlos Pérez", "Diego Gómez"],
     status: "COMPLETED",
     description: "Revisión general de bombas y rociadores en sótanos 1 y 2.",
     contactName: "Julián Ruiz (Jefe Mantenimiento)",
@@ -20,7 +19,6 @@ export const mockSchedules: MaintenanceSchedule[] = [
     title: "Ajuste de Presión Red Industrial",
     dateStr: new Date().toISOString(), // Hoy (hace un rato)
     address: "Autopista Medellín Km 2, Planta Pepsico",
-    operatorNames: ["Ana Martínez", "Carlos Pérez"],
     status: "IN_PROGRESS",
     description: "Fuga reportada en el múltiple principal. Se requiere ajuste de presión PSI.",
     contactName: "Ricardo Vargas",
@@ -34,7 +32,6 @@ export const mockSchedules: MaintenanceSchedule[] = [
     title: "Inspección Anual Rociadores",
     dateStr: new Date(new Date().getTime() + 4 * 60 * 60 * 1000).toISOString(), // Hoy (más tarde)
     address: "Torre empresarial Q",
-    operatorNames: ["Roberto Sánchez"],
     status: "SCHEDULED",
     description: "Prueba de hermeticidad a toda la tubería troncal.",
     contactName: "Luisa Fernández",
@@ -48,7 +45,6 @@ export const mockSchedules: MaintenanceSchedule[] = [
     title: "Cambio de Panel Contra Incendios",
     dateStr: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), // Mañana
     address: "Edificio Horizonte, Cr 7 #100-20",
-    operatorNames: ["Diego Gómez", "Roberto Sánchez"],
     status: "SCHEDULED",
     description: "Sustitución técnica del panel de alarmas y panel esclavo.",
     contactName: "Marta Gómez",
@@ -62,7 +58,6 @@ export const mockSchedules: MaintenanceSchedule[] = [
     title: "Mantenimiento Correctivo Sensores",
     dateStr: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), // Mañana
     address: "Clínica del Norte",
-    operatorNames: ["Ana Martínez"],
     status: "SCHEDULED",
     description: "Revisar sensores de humo en piso 4 que están marcando falsa alarma.",
     contactName: "Dr. Torres",
@@ -76,7 +71,6 @@ export const mockSchedules: MaintenanceSchedule[] = [
     title: "Limpieza Cuarto de Bombas",
     dateStr: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), // En 3 días
     address: "Conjunto Residencial La Floresta",
-    operatorNames: ["Carlos Pérez", "Ana Martínez"],
     status: "SCHEDULED",
     description: "Mantenimiento trimestral limpieza y purga.",
     contactName: "Administración",
