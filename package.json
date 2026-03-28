@@ -21,6 +21,7 @@
     "@mui/x-data-grid": "^7.20.0",
     "@mui/x-date-pickers": "^7.21.0",
     "@types/react-signature-canvas": "^1.0.7",
+    "browser-image-compression": "^2.0.2",
     "dayjs": "^1.11.13",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.7.0",

@@ -29,6 +29,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
+import imageCompression from "browser-image-compression";
 import SendIcon from "@mui/icons-material/Send";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -319,42 +320,61 @@ export const FormatSelector = () => {
                   accept="image/*"
                   capture="environment"
                   style={{ display: "none" }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
+                  onChange={async (e) => {
+                    const originalFile = e.target.files?.[0];
+                    if (!originalFile) return;
 
-                    const MAX_BASE64_BYTES = 9 * 1024 * 1024;
-
-                    if (file.size > MAX_BASE64_BYTES) {
-                      const uwScript = document.getElementById("uw-format");
-                      const loadAndUpload = () => {
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-ignore window.cloudinary injected by CDN
-                        const widget = window.cloudinary?.createUploadWidget(
-                          { cloudName: "fastfire", uploadPreset: "vr0sleie" },
-                          (_err: unknown, result: { event: string; info: { secure_url: string } }) => {
-                            if (!_err && result?.event === "success") {
-                              setValue(field.name, result.info.secure_url);
-                            }
-                          }
-                        );
-                        widget?.open();
+                    try {
+                      // Compress image to a max of 0.5MB and 1200px width/height
+                      const options = {
+                        maxSizeMB: 0.5,
+                        maxWidthOrHeight: 1200,
+                        useWebWorker: true,
+                        initialQuality: 0.8,
                       };
-
-                      if (!uwScript) {
-                        const script = document.createElement("script");
-                        script.id = "uw-format";
-                        script.src = "https://upload-widget.cloudinary.com/global/all.js";
-                        script.async = true;
-                        script.onload = loadAndUpload;
-                        document.body.appendChild(script);
-                      } else {
-                        loadAndUpload();
+                      
+                      let fileToUse = originalFile;
+                      if (originalFile.type.startsWith("image/")) {
+                        fileToUse = await imageCompression(originalFile, options);
                       }
-                    } else {
-                      const reader = new FileReader();
-                      reader.onloadend = () => setValue(field.name, reader.result as string);
-                      reader.readAsDataURL(file);
+                      
+                      const MAX_BASE64_BYTES = 9 * 1024 * 1024;
+
+                      if (fileToUse.size > MAX_BASE64_BYTES) {
+                        const uwScript = document.getElementById("uw-format");
+                        const loadAndUpload = () => {
+                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                          // @ts-ignore window.cloudinary injected by CDN
+                          const widget = window.cloudinary?.createUploadWidget(
+                            { cloudName: "fastfire", uploadPreset: "vr0sleie" },
+                            (_err: unknown, result: { event: string; info: { secure_url: string } }) => {
+                              if (!_err && result?.event === "success") {
+                                setValue(field.name, result.info.secure_url);
+                              }
+                            }
+                          );
+                          widget?.open();
+                        };
+
+                        if (!uwScript) {
+                          const script = document.createElement("script");
+                          script.id = "uw-format";
+                          script.src = "https://upload-widget.cloudinary.com/global/all.js";
+                          script.async = true;
+                          script.onload = loadAndUpload;
+                          document.head.appendChild(script);
+                        } else {
+                          loadAndUpload();
+                        }
+                      } else {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setValue(field.name, reader.result as string);
+                        };
+                        reader.readAsDataURL(fileToUse);
+                      }
+                    } catch (error) {
+                      console.error("Error compressing image:", error);
                     }
                   }}
                 />
