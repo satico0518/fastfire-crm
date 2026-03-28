@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Card, CardActionArea, Typography, Chip, Avatar, AvatarGroup } from '@mui/material';
+import { Box, Card, CardActionArea, Typography, Chip } from '@mui/material';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { ScheduleDetailModal } from './ScheduleDetailModal';
 import dayjs from 'dayjs';
+import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 
 interface Props {
   schedule: MaintenanceSchedule;
@@ -75,11 +77,27 @@ export const ScheduleCard: React.FC<Props> = ({ schedule }) => {
               </Typography>
             </Box>
             
-            <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 22, height: 22, fontSize: '0.6rem', border: '1px solid #1c1c1e', bgcolor: 'rgba(255,255,255,0.1)' } }}>
-              {(schedule.operatorNames || []).map((name, i) => (
-                <Avatar key={i} alt={name}>{name.charAt(0)}</Avatar>
-              ))}
-            </AvatarGroup>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              {/* Quotation Indicator */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                color: schedule.hasQuotation === 'SI' ? '#30d158' : (schedule.hasQuotation === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.2)'),
+                transition: 'color 0.2s'
+              }}>
+                <RequestQuoteOutlinedIcon sx={{ fontSize: 16 }} />
+              </Box>
+
+              {/* Report Indicator */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                color: schedule.hasReport === 'SI' ? '#0a84ff' : (schedule.hasReport === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.2)'),
+                transition: 'color 0.2s'
+              }}>
+                <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
+              </Box>
+            </Box>
           </Box>
         </CardActionArea>
       </Card>

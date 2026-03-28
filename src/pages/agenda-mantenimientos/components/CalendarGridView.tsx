@@ -33,7 +33,6 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
   const nextMonth = () => setCurrentMonth(currentMonth.add(1, 'month'));
 
   const calendarMatrix = useMemo(() => {
-    // day() returns 0 (Sunday) to 6 (Saturday). We want Monday (0) to Sunday (6).
     const jsDay = currentMonth.startOf('month').day();
     const startDayIndex = jsDay === 0 ? 6 : jsDay - 1; 
     
@@ -86,7 +85,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
 
       {/* Grid Container */}
       <Paper elevation={0} sx={{ 
-        bgcolor: 'rgba(20, 20, 25, 0.4)', // Translucent dark background
+        bgcolor: 'rgba(20, 20, 25, 0.4)', 
         backdropFilter: 'blur(12px)',
         borderRadius: 4, 
         border: '1px solid rgba(255,255,255,0.1)',
@@ -94,7 +93,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
         display: 'flex',
         flexDirection: 'column',
         flexGrow: 1,
-        minHeight: 0 // critical for nested flex to shrink correctly
+        minHeight: 0 
       }}>
         {/* Days of week header */}
         <Box sx={{ 
@@ -110,7 +109,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
               sx={{ 
                 p: 2, 
                 textAlign: 'center',
-                bgcolor: dIdx === 6 ? 'rgba(255, 69, 58, 0.1)' : 'transparent', // Highlight Sunday header
+                bgcolor: dIdx === 6 ? 'rgba(255, 69, 58, 0.1)' : 'transparent', 
               }}
             >
               <Typography 
@@ -133,7 +132,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
           gridTemplateColumns: 'repeat(7, 1fr)',
           gridTemplateRows: `repeat(${calendarMatrix.length / 7}, 1fr)`,
           flexGrow: 1,
-          minHeight: 0, // important to let inner content scroll if needed without blowing up the grid
+          minHeight: 0,
         }}>
           {calendarMatrix.map((dayNum, idx) => {
             const isToday = dayNum === dayjs().date() && currentMonth.isSame(dayjs(), 'month');
@@ -146,79 +145,95 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
                 onClick={() => {
                   if (isAdmin && dayNum) {
                     const date = currentMonth.date(dayNum);
-                    if (date.isBefore(dayjs(), 'day')) return; // Bloquear días pasados
-                    
-                    const dateStr = date.format('YYYY-MM-DD');
-                    onOpenCreation(dateStr);
+                    if (date.isBefore(dayjs(), 'day')) return; 
+                    onOpenCreation(date.format('YYYY-MM-DD'));
                   }
                 }}
                 sx={{ 
-                p: 1.5,
-                borderRight: isSunday ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                borderBottom: idx < calendarMatrix.length - 7 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                bgcolor: dayNum 
-                  ? (isSunday ? 'rgba(255, 69, 58, 0.22)' : 'transparent') 
-                  : 'rgba(0,0,0,0.15)',
-                transition: 'background-color 0.2s',
-                cursor: (isAdmin && dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) ? 'pointer' : 'default',
-                '&:hover': { bgcolor: (dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) 
-                  ? (isSunday ? 'rgba(255, 69, 58, 0.35)' : 'rgba(255,255,255,0.03)') 
-                  : 'transparent' 
-                },
-                overflow: 'hidden' // hide overflow internally unless we want to scroll events within the cell
-              }}>
+                  p: 0,
+                  borderRight: isSunday ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: idx < calendarMatrix.length - 7 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  bgcolor: dayNum 
+                    ? (isSunday ? 'rgba(255, 69, 58, 0.22)' : 'transparent') 
+                    : 'rgba(0,0,0,0.15)',
+                  transition: 'background-color 0.2s',
+                  cursor: (isAdmin && dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) ? 'pointer' : 'default',
+                  '&:hover': { bgcolor: (dayNum && !currentMonth.date(dayNum).isBefore(dayjs(), 'day')) 
+                    ? (isSunday ? 'rgba(255, 69, 58, 0.35)' : 'rgba(255,255,255,0.03)') 
+                    : 'transparent' 
+                  },
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minHeight: 0
+                }}
+              >
                 {dayNum && (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    {/* Date Number Badge */}
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                  <>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, pb: 0.5, flexShrink: 0 }}>
                       <Box sx={{ 
-                        width: 28, height: 28, 
+                        width: 26, height: 26, 
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         borderRadius: '50%',
                         bgcolor: isToday ? '#0a84ff' : 'transparent',
                         color: isToday ? 'white' : (isSunday ? '#ff453a' : 'rgba(255,255,255,0.8)'),
                         fontWeight: (isToday || isSunday) ? 800 : 500,
-                        fontSize: '0.85rem'
+                        fontSize: '0.8rem'
                       }}>
                         {dayNum}
                       </Box>
                     </Box>
-
-                    {/* Events list in day */}
-                    <Stack spacing={0.5}>
-                      {daySchedules.map(sch => (
-                        <Tooltip title={sch.title} key={sch.id} arrow placement="top">
-                          <Box 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedSchedule(sch);
-                            }}
-                            sx={{ 
-                              bgcolor: 'rgba(255,255,255,0.1)', 
-                              borderLeft: `3px solid ${getStatusColor(sch.status)}`,
-                              borderRadius: 1, 
-                              px: 1, 
-                              py: 0.5,
-                              cursor: 'pointer',
-                              '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
-                              transition: 'background-color 0.15s'
-                            }}>
-                            <Typography variant="caption" sx={{ 
-                              color: 'white', 
-                              fontWeight: 700, 
-                              display: '-webkit-box',
-                              WebkitLineClamp: 1,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                              lineHeight: 1.2
-                            }}>
-                              {dayjs(sch.dateStr).format('HH:mm')} {sch.title}
-                            </Typography>
-                          </Box>
-                        </Tooltip>
-                      ))}
-                    </Stack>
-                  </Box>
+                    
+                    <Box sx={{ 
+                      flexGrow: 1, 
+                      overflowY: 'auto', 
+                      px: 1, 
+                      pb: 1,
+                      minHeight: 0,
+                      '&::-webkit-scrollbar': { width: '3px' },
+                      '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+                      '&::-webkit-scrollbar-thumb': { 
+                        bgcolor: 'rgba(255,255,255,0.1)', 
+                        borderRadius: 10,
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }
+                      }
+                    }}>
+                      <Stack spacing={0.5}>
+                        {daySchedules.map(sch => (
+                          <Tooltip title={sch.title} key={sch.id} arrow placement="top">
+                            <Box 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSchedule(sch);
+                              }}
+                              sx={{ 
+                                bgcolor: 'rgba(255,255,255,0.1)', 
+                                borderLeft: `3px solid ${getStatusColor(sch.status)}`,
+                                borderRadius: 1, 
+                                px: 1, 
+                                py: 0.5,
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                                transition: 'all 0.15s'
+                              }}>
+                              <Typography variant="caption" sx={{ 
+                                color: 'white', 
+                                fontWeight: 700, 
+                                display: '-webkit-box',
+                                WebkitLineClamp: 1,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                lineHeight: 1.2,
+                                fontSize: '0.7rem'
+                              }}>
+                                {dayjs(sch.dateStr).format('HH:mm')} {sch.title}
+                              </Typography>
+                            </Box>
+                          </Tooltip>
+                        ))}
+                      </Stack>
+                    </Box>
+                  </>
                 )}
               </Box>
             );

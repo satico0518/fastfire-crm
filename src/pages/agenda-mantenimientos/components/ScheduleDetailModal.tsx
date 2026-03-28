@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Avatar, Stack, Chip, Button, DialogActions } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Stack, Chip, Button, DialogActions } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { MaintenanceService } from '../../../services/maintenance.service';
@@ -12,6 +12,8 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import BlockIcon from '@mui/icons-material/Block';
+import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import { useAuhtStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 
@@ -163,20 +165,56 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
 
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
-              Operarios Asignados
+              Cotización
             </Typography>
-            <Stack spacing={1}>
-              {(schedule.operatorNames || []).length === 0 && (
-                <Typography variant="body2" color="rgba(255,255,255,0.5)">Ninguno</Typography>
-              )}
-              {(schedule.operatorNames || []).map((name, i) => (
-                <Stack key={i} direction="row" spacing={1.5} alignItems="center" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                  <Avatar sx={{ width: 28, height: 28, fontSize: '0.8rem', bgcolor: '#0a84ff', color: 'white' }}>
-                    {name.charAt(0)}
-                  </Avatar>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{name}</Typography>
-                </Stack>
-              ))}
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box sx={{ 
+                p: 0.8, 
+                bgcolor: schedule.hasQuotation === 'SI' ? 'rgba(48,209,88,0.15)' : (schedule.hasQuotation === 'NO' ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.05)'), 
+                borderRadius: 1.5, 
+                color: schedule.hasQuotation === 'SI' ? '#30d158' : (schedule.hasQuotation === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.4)'), 
+                display: 'flex' 
+              }}>
+                <RequestQuoteOutlinedIcon fontSize="small" />
+              </Box>
+              <Box>
+                <Typography variant="body2" sx={{ 
+                  fontWeight: 700, 
+                  color: schedule.hasQuotation === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
+                }}>
+                  {schedule.hasQuotation === 'SI' ? 'SÍ TIENE' : (schedule.hasQuotation === 'NO' ? 'PENDIENTE' : 'N/A')}
+                </Typography>
+                {schedule.hasQuotation === 'SI' && schedule.quotationNumber && (
+                   <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block' }}>
+                     Nº {schedule.quotationNumber}
+                   </Typography>
+                )}
+              </Box>
+            </Stack>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
+              Informe Técnico
+            </Typography>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box sx={{ 
+                p: 0.8, 
+                bgcolor: schedule.hasReport === 'SI' ? 'rgba(10,132,255,0.15)' : (schedule.hasReport === 'NO' ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.05)'), 
+                borderRadius: 1.5, 
+                color: schedule.hasReport === 'SI' ? '#0a84ff' : (schedule.hasReport === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.4)'), 
+                display: 'flex' 
+              }}>
+                <FactCheckOutlinedIcon fontSize="small" />
+              </Box>
+              <Box>
+                <Typography variant="body2" sx={{ 
+                  fontWeight: 700, 
+                  color: schedule.hasReport === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
+                }}>
+                  {schedule.hasReport === 'SI' ? 'ENTREGADO' : (schedule.hasReport === 'NO' ? 'PENDIENTE' : 'N/A')}
+                </Typography>
+              </Box>
             </Stack>
           </Grid>
         </Grid>
