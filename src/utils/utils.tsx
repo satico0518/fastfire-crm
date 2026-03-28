@@ -191,11 +191,7 @@ export const downloadExcelFile = (jsonData: unknown[], fileName: string) => {
   const book = XLSX.utils.book_new();
   const sheet = XLSX.utils.json_to_sheet(jsonData);
   XLSX.utils.book_append_sheet(book, sheet);
-  sheet['!cols'] = [
-    { hidden: true },
-    { hidden: false },
-    { hidden: false },
-  ];
+  sheet['!cols'] = Object.keys((jsonData[0] as object) || {}).map(() => ({ hidden: false, wch: 20 }));
   
   const wbout = XLSX.write(book, { bookType: "xlsx", type: "array" });
   const blob = new Blob([new Uint8Array(wbout)], {

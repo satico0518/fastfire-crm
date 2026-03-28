@@ -74,6 +74,11 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { TagsInput } from "../tags-input/TagsInput";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import Popover from "@mui/material/Popover";
+import MenuList from "@mui/material/MenuList";
+import MenuItem from "@mui/material/MenuItem";
+import CheckIcon from "@mui/icons-material/Check";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -102,6 +107,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
   const apiRef = useGridApiRef();
+  const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
+  const [tagAnchorEl, setTagAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [historyTask, setHistoryTask] = useState<Task | null>(null);
   const [openHistoryDialog, setOpenHistoryDialog] = useState(false);
@@ -490,6 +497,19 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     downloadExcelFile(data, `tareas_${dayjs().format('YYYY-MM-DD')}.xlsx`);
   };
 
+  const getFilteredByTags = (taskList: Task[]): Task[] => {
+    if (activeTagFilters.length === 0) return taskList;
+    return taskList.filter((t) =>
+      activeTagFilters.some((tag) => t.tags?.includes(tag))
+    );
+  };
+
+  const toggleTagFilter = (tag: string) => {
+    setActiveTagFilters((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const getTaskByRole = (): Task[] => {
     if (workgroup) {
       return tasks
@@ -502,23 +522,27 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     }
 
     if (!currentUser?.permissions.includes("ADMIN"))
-      return tasks
-        ?.filter((t) =>
-          currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
-        )
-        .filter(
-          (t) =>
-            t.status !== "DELETED" &&
-            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
-        ) as Task[];
+      return getFilteredByTags(
+        tasks
+          ?.filter((t) =>
+            currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
+          )
+          .filter(
+            (t) =>
+              t.status !== "DELETED" &&
+              (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
+          ) as Task[]
+      );
 
-    return tasks !== null
-      ? tasks?.filter(
-          (t) =>
-            t.status !== "DELETED" &&
-            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
-        )
-      : [];
+    return getFilteredByTags(
+      tasks !== null
+        ? tasks?.filter(
+            (t) =>
+              t.status !== "DELETED" &&
+              (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
+          )
+        : []
+    );
   };
 
   const columns: GridColDef[] = [
@@ -1058,11 +1082,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         }}
       />
       </Paper>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "24px" }}>
+      {/* Row 1: Nueva Tarea | Archivadas + Excel */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
         <TaskCreatorRowComponent />
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <FormControlLabel
-            sx={{ color: "white" }}
+            sx={{ color: "white", margin: 0 }}
             control={
               <Switch
                 color={showArchivedTasks ? "info" : "default"}
@@ -1079,10 +1104,113 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             color="success"
             onClick={handleExport}
             startIcon={<DownloadOutlinedIcon />}
+            size="small"
           >
             EXCEL
           </Button>
         </div>
+      </div>
+
+      {/* Row 2: Tag filter pill */}
+      <div style={{ display: "flex", alignItems: "center", marginTop: "6px" }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          flexWrap: "wrap",
+          background: activeTagFilters.length > 0 ? "rgba(255,255,255,0.08)" : "transparent",
+          borderRadius: "20px",
+          padding: activeTagFilters.length > 0 ? "4px 10px 4px 4px" : "0",
+          border: activeTagFilters.length > 0 ? "1px solid rgba(255,255,255,0.2)" : "none",
+          backdropFilter: activeTagFilters.length > 0 ? "blur(8px)" : "none",
+          transition: "all 0.25s ease",
+        }}>
+          <Button
+            variant={activeTagFilters.length > 0 ? "contained" : "outlined"}
+            color="primary"
+            size="small"
+            startIcon={<LocalOfferIcon />}
+            onClick={(e) => setTagAnchorEl(e.currentTarget)}
+            sx={{
+              color: activeTagFilters.length > 0 ? "white" : "rgba(255,255,255,0.8)",
+              borderColor: "rgba(255,255,255,0.4)",
+              fontSize: "0.75rem",
+              borderRadius: "16px",
+              flexShrink: 0,
+            }}
+          >
+            Etiquetas{activeTagFilters.length > 0 ? ` (${activeTagFilters.length})` : ""}
+          </Button>
+
+          {activeTagFilters.map((tag) => (
+            <Chip
+              key={tag}
+              label={tag}
+              size="small"
+              icon={<LocalOfferIcon style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)' }} />}
+              onDelete={() => toggleTagFilter(tag)}
+              sx={{
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                background: "linear-gradient(135deg, rgba(99,102,241,0.85) 0%, rgba(168,85,247,0.85) 100%)",
+                backdropFilter: "blur(8px)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.25)",
+                boxShadow: "0 2px 8px rgba(99,102,241,0.45)",
+                transition: "all 0.2s ease",
+                "& .MuiChip-deleteIcon": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "14px",
+                  "&:hover": { color: "white" },
+                },
+                "&:hover": {
+                  boxShadow: "0 4px 14px rgba(99,102,241,0.6)",
+                  transform: "translateY(-1px)",
+                },
+              }}
+            />
+          ))}
+        </div>
+
+        <Popover
+          open={Boolean(tagAnchorEl)}
+          anchorEl={tagAnchorEl}
+          onClose={() => setTagAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        >
+          <MenuList dense sx={{ maxHeight: 300, overflowY: "auto", minWidth: 200 }}>
+            {(() => {
+              const baseTasks = (tasks ?? []).filter(t =>
+                t.status !== "DELETED" &&
+                (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
+              );
+              const tagCountMap = new Map<string, number>();
+              baseTasks.forEach(t => {
+                t.tags?.forEach(tag => {
+                  tagCountMap.set(tag, (tagCountMap.get(tag) ?? 0) + 1);
+                });
+              });
+              const availableTags = [...tagCountMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+              if (availableTags.length === 0) return (
+                <MenuItem disabled><ListItemText primary="Sin etiquetas en las tareas" /></MenuItem>
+              );
+
+              return availableTags.map(([tag, count]) => (
+                <MenuItem key={tag} onClick={() => toggleTagFilter(tag)} selected={activeTagFilters.includes(tag)}>
+                  {activeTagFilters.includes(tag) && <CheckIcon fontSize="small" sx={{ mr: 1, color: "primary.main" }} />}
+                  <ListItemText primary={`${tag} (${count})`} />
+                </MenuItem>
+              ));
+            })()}
+            {activeTagFilters.length > 0 && (
+              <MenuItem onClick={() => { setActiveTagFilters([]); setTagAnchorEl(null); }} sx={{ borderTop: "1px solid", borderColor: "divider", color: "error.main" }}>
+                <ListItemText primary="Limpiar filtros" />
+              </MenuItem>
+            )}
+          </MenuList>
+        </Popover>
       </div>
       <TagsInput
         openTagsDialog={openTagsDialog}
