@@ -19,8 +19,11 @@ declare global {
   }
 }
 
+import { useUiStore } from "./stores/ui/ui.store";
+
 const Main = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -29,7 +32,7 @@ const Main = () => {
         onToggleMobileMenu={() => setIsMobileMenuOpen((s) => !s)}
       />
 
-      <div className="body-container">
+      <div className={`body-container ${isSidebarCollapsed ? 'body-container--collapsed' : ''}`}>
         <MenuComponent
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={() => setIsMobileMenuOpen(false)}

@@ -11,6 +11,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --sidebar-width: 300px;
+  --sidebar-collapsed-width: 74px;
 }
 
 *,
@@ -21,13 +23,23 @@
 
 .body-container {
   display: flex;
+  transition: all 0.3s ease-in-out;
 }
 
 .page-container {
   display: flex;
-  width: calc(100% - 300px);
+  width: calc(100% - var(--sidebar-width));
   padding: 20px;
   min-height: calc(100vh - 50px);
+  transition: width 0.3s ease-in-out;
+}
+
+.body-container--collapsed .page-container {
+  width: calc(100% - var(--sidebar-collapsed-width));
+}
+
+.body-container--collapsed .menu {
+  width: var(--sidebar-collapsed-width);
 }
 
 a {
