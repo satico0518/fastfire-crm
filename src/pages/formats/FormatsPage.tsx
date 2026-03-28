@@ -1,35 +1,76 @@
-import { Box, Typography } from "@mui/material";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import { useState } from "react";
+import { Box, Tab, Tabs } from "@mui/material";
 import { useAuhtStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
+import { FormatSelector } from "../../components/format-selector/FormatSelector";
+import { FormatResultsTable } from "../../components/format-results/FormatResultsTable";
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`formats-tabpanel-${index}`}
+      aria-labelledby={`formats-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: { xs: 0.5, md: 1 }, pt: 2 }}>{children}</Box>}
+    </div>
+  );
+}
 
 export const FormatsPage = () => {
   const user = useAuhtStore((state) => state.user);
-  const hasAccess =
-    user?.permissions.includes("ADMIN") ||
-    user?.permissions.includes("FORMATER");
+  const isAdmin = user?.permissions.includes("ADMIN");
+  const isFormater = user?.permissions.includes("FORMATER");
 
+  const hasAccess = isAdmin || isFormater;
   if (!hasAccess) return <UnauthorizedPage />;
 
+  const [tabValue, setTabValue] = useState(0);
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "60vh",
-        gap: 3,
-        color: "white",
-      }}
-    >
-      <ArticleOutlinedIcon sx={{ fontSize: 72, opacity: 0.6 }} />
-      <Typography variant="h4" fontWeight={700}>
-        Formatos
-      </Typography>
-      <Typography variant="body1" sx={{ opacity: 0.7 }}>
-        Módulo de Formatos en construcción.
-      </Typography>
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs
+          sx={{
+            backgroundColor: "white",
+            "& .MuiTab-root": {
+              fontSize: "0.8rem",
+              minHeight: "34px",
+              padding: "6px 8px",
+              height: "34px",
+            },
+            "& .MuiTabs-indicator": {
+              height: "2px",
+            },
+          }}
+          value={tabValue}
+          onChange={(_e, newValue) => setTabValue(newValue)}
+        >
+          <Tab label="Formatos" id="formats-tab-0" aria-controls="formats-tabpanel-0" />
+          {isAdmin && (
+            <Tab label="Resultados" id="formats-tab-1" aria-controls="formats-tabpanel-1" />
+          )}
+        </Tabs>
+      </Box>
+
+      <TabPanel value={tabValue} index={0}>
+        <FormatSelector />
+      </TabPanel>
+
+      {isAdmin && (
+        <TabPanel value={tabValue} index={1}>
+          <FormatResultsTable />
+        </TabPanel>
+      )}
     </Box>
   );
 };
