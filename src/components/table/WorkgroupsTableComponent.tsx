@@ -229,7 +229,7 @@ export default function WorksgroupTable() {
       headerName: "Nombre",
       flex: 1,
       renderCell: ({ value }: GridRenderCellParams<Workgroup>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, color: 'white' }}>
           {value}
         </Box>
       )
@@ -247,7 +247,7 @@ export default function WorksgroupTable() {
                 titleAccess="Público"
                 fontSize="medium"
                 sx={{
-                  color: "rgba(0,0,0,0.2)",
+                  color: "rgba(255,255,255,0.3)",
                 }}
               />
             </Box>
@@ -270,7 +270,7 @@ export default function WorksgroupTable() {
                 </div>
               }
             >
-              <Groups2OutlinedIcon sx={{ color: '#444' }} />
+              <Groups2OutlinedIcon sx={{ color: 'rgba(255,255,255,0.7)' }} />
             </HtmlTooltip>
           </Box>
         );
@@ -281,7 +281,7 @@ export default function WorksgroupTable() {
       headerName: "Descripción",
       width: 450,
       renderCell: ({ value }: GridRenderCellParams<Workgroup>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#666' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
           {value}
         </Box>
       )
@@ -289,7 +289,15 @@ export default function WorksgroupTable() {
   ];
 
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ 
+      height: "calc(100vh - 230px)", 
+      width: "100%", 
+      backgroundColor: 'rgba(28, 28, 30, 0.6)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+    }}>
       <DataGrid
         rows={workgroupsByRole() as Workgroup[]}
         columns={columns}
@@ -301,12 +309,27 @@ export default function WorksgroupTable() {
         }}
         sx={{ 
           border: 0,
+          color: 'white',
           '& .MuiDataGrid-cell': {
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 0,
+            color: 'rgba(255, 255, 255, 0.7)',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiTablePagination-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
           },
           '& .MuiDataGrid-row:hover': {
-            backgroundColor: 'rgba(255,255,255,0.05)',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }
         }}
       />

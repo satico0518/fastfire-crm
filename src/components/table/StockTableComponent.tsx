@@ -140,7 +140,7 @@ export default function StockTableComponent() {
         <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
           <Checkbox 
             checked={row.showInTender} 
-            sx={{ color: 'rgba(0,0,0,0.1)', '&.Mui-checked': { color: '#30d158' } }}
+            sx={{ color: 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#30d158' } }}
           />
         </Box>
       ),
@@ -151,7 +151,7 @@ export default function StockTableComponent() {
       type: "string",
       width: 100,
       renderCell: ({ value }: GridRenderCellParams<Item>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 700, color: 'rgba(0,0,0,0.3)' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
           {value}
         </Box>
       )
@@ -163,7 +163,7 @@ export default function StockTableComponent() {
       width: 300,
       flex: 1,
       renderCell: ({ row }: GridRenderCellParams<Item>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 500 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 500, color: 'white' }}>
           <span
             style={{
               opacity: row.status === "INACTIVE" ? 0.5 : 1,
@@ -179,7 +179,7 @@ export default function StockTableComponent() {
           <Input 
             inputRef={inputRef} 
             placeholder={row.name}
-            sx={{ color: '#444', borderBottom: '1px solid rgba(0,0,0,0.2)', width: '100%' }}
+            sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)', width: '100%' }}
           />
           <IconButton
             title="Guardar"
@@ -211,7 +211,7 @@ export default function StockTableComponent() {
       width: 200,
       valueGetter: (value) => formatToCOP(value),
       renderCell: ({ value }: GridRenderCellParams<Item>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, color: 'white' }}>
           {value}
         </Box>
       ),
@@ -221,7 +221,7 @@ export default function StockTableComponent() {
           <Input 
             type="number" 
             inputRef={inputRef} 
-            sx={{ color: '#444', borderBottom: '1px solid rgba(0,0,0,0.2)' }}
+            sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)' }}
           />
           <IconButton
             title="Guardar"
@@ -252,7 +252,7 @@ export default function StockTableComponent() {
       type: "number",
       width: 200,
       renderCell: ({ value }: GridRenderCellParams<Item>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#666' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
           {value} unidades
         </Box>
       ),
@@ -262,7 +262,7 @@ export default function StockTableComponent() {
           <Input 
             type="number" 
             inputRef={inputRef} 
-            sx={{ color: '#444', borderBottom: '1px solid rgba(0,0,0,0.2)' }}
+            sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)' }}
           />
           <IconButton
             title="Guardar"
@@ -324,7 +324,15 @@ export default function StockTableComponent() {
   };
 
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ 
+      height: "calc(100vh - 230px)", 
+      width: "100%", 
+      backgroundColor: 'rgba(28, 28, 30, 0.6)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+    }}>
       <DataGrid
         rows={stock?.filter(s => s.status === 'ACTIVE') as Item[]}
         columns={columns}
@@ -338,12 +346,27 @@ export default function StockTableComponent() {
         }}
         sx={{ 
           border: 0,
+          color: 'white',
           '& .MuiDataGrid-cell': {
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 0,
+            color: 'rgba(255, 255, 255, 0.7)',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiTablePagination-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
           },
           '& .MuiDataGrid-row:hover': {
-            backgroundColor: 'rgba(255,255,255,0.05)',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }
         }}
       />

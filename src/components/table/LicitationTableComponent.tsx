@@ -188,7 +188,16 @@ export default function LicitationTableComponent({
 
   return (
     <>
-      <Paper sx={{ height: "calc(100vh - 230px)", width: "550px" }}>
+      <Paper sx={{ 
+        height: "calc(100vh - 230px)", 
+        width: "550px",
+        backgroundColor: 'rgba(28, 28, 30, 0.6)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        p: 1
+      }}>
         <DataGrid
           rows={items}
           columns={columns}
@@ -200,7 +209,27 @@ export default function LicitationTableComponent({
           localeText={{
             MuiTablePagination: { labelRowsPerPage: "Filas por página" },
           }}
-          sx={{ border: 0 }}
+          sx={{ 
+            border: 0,
+            color: 'white',
+            '& .MuiDataGrid-cell': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.8)'
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              bgcolor: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: 0,
+              color: 'rgba(255, 255, 255, 0.7)',
+              borderColor: 'rgba(255, 255, 255, 0.1)'
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            '& .MuiTablePagination-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+            }
+          }}
           loading={isLoading}
         />
         <div
@@ -243,8 +272,8 @@ export default function LicitationTableComponent({
               onChange={(e) => readExcel(e || null)}
             />
           </Button>
-          <span style={{ color: "white" }}>
-            Valor total licitado: <strong>{formatToCOP(totalAmount)}</strong>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: '0.9rem' }}>
+            Valor total licitado: <strong style={{ color: 'white' }}>{formatToCOP(totalAmount)}</strong>
           </span>
         </div>
       </Paper>

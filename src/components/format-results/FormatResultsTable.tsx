@@ -451,7 +451,15 @@ export const FormatResultsTable = () => {
       </Box>
 
       {/* DataGrid */}
-      <Paper sx={{ width: "100%", height: "calc(100vh - 280px)" }}>
+      <Paper sx={{ 
+        width: "100%", 
+        height: "calc(100vh - 280px)",
+        backgroundColor: 'rgba(28, 28, 30, 0.6)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+      }}>
         <DataGrid
           rows={filteredSubmissions}
           columns={columns}
@@ -464,9 +472,29 @@ export const FormatResultsTable = () => {
             border: 0,
             fontSize: "0.82rem",
             cursor: "pointer",
-            "& .MuiDataGrid-row:hover": { bgcolor: "action.hover" },
-            "& .MuiDataGrid-columnHeader": { fontSize: "0.78rem", fontWeight: 700 },
-            "& .MuiDataGrid-cell": { display: "flex", alignItems: "center" },
+            color: 'white',
+            '& .MuiDataGrid-cell': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              display: "flex", 
+              alignItems: "center"
+            },
+            '& .MuiDataGrid-columnHeader': { 
+              fontSize: "0.78rem", 
+              fontWeight: 700,
+              bgcolor: 'rgba(0, 0, 0, 0.3)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              borderColor: 'rgba(255, 255, 255, 0.1)'
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            '& .MuiTablePagination-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            }
           }}
         />
       </Paper>

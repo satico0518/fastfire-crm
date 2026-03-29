@@ -155,7 +155,7 @@ export default function UsersTable() {
       sortable: false,
       width: 220,
       renderCell: ({ row }: GridRenderCellParams<User>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', color: '#1a1a1a' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', color: 'white' }}>
           {row.avatarURL ? (
             <Avatar
               src={row.avatarURL}
@@ -186,7 +186,7 @@ export default function UsersTable() {
               {(row.firstName?.[0] || '') + (row.lastName?.[0] || '')}
             </Avatar>
           ) : (
-            <StoreOutlinedIcon fontSize="large" sx={{ color: '#444' }} />
+            <StoreOutlinedIcon fontSize="large" sx={{ color: 'rgba(255,255,255,0.7)' }} />
           )}
           <span style={{ fontWeight: 600 }}>
             {row.firstName || ""} {row.lastName || ""}
@@ -200,7 +200,7 @@ export default function UsersTable() {
       type: "string",
       width: 220,
       renderCell: ({ value }: GridRenderCellParams<User>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#666', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {value}
         </Box>
       )
@@ -289,7 +289,15 @@ export default function UsersTable() {
   ];
 
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%", bgcolor: 'white' }}>
+    <Paper sx={{ 
+      height: "calc(100vh - 230px)", 
+      width: "100%", 
+      backgroundColor: 'rgba(28, 28, 30, 0.6)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+    }}>
       <DataGrid
         rows={users?.filter((u) => u.isActive) as User[]}
         columns={columns}
@@ -301,19 +309,27 @@ export default function UsersTable() {
         }}
         sx={{ 
           border: 0,
+          color: 'white',
           '& .MuiDataGrid-cell': {
             display: 'flex',
             alignItems: 'center',
-            borderBottom: '1px solid rgba(0,0,0,0.05)'
+            borderColor: 'rgba(255, 255, 255, 0.1)'
           },
           '& .MuiDataGrid-columnHeaders': {
-            bgcolor: '#f8f9fa',
+            bgcolor: 'rgba(0, 0, 0, 0.3)',
             borderRadius: 0,
-            color: '#1a1a1a',
-            fontWeight: 800
+            color: 'rgba(255, 255, 255, 0.7)',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiTablePagination-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
           },
           '& .MuiDataGrid-row:hover': {
-            backgroundColor: 'rgba(0,122,255,0.02)',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }
         }}
       />

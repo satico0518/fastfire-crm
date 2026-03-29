@@ -201,7 +201,7 @@ export default function ProjectsTable() {
       width: 300,
       flex: 1,
       renderCell: ({ row }: GridRenderCellParams<Project>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', fontWeight: 500 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'white', fontWeight: 500 }}>
           <span
             style={{
               textDecoration: row.status === "DONE" ? "line-through" : "none",
@@ -319,7 +319,7 @@ export default function ProjectsTable() {
       type: "string",
       width: 250,
       renderCell: ({ value }: GridRenderCellParams<Project>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#666' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
           {value}
         </Box>
       )
@@ -331,7 +331,7 @@ export default function ProjectsTable() {
       width: 250,
       valueGetter: (value) => translateTimestampToString(value),
       renderCell: ({ value }: GridRenderCellParams<Project>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#666' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
           {value}
         </Box>
       )
@@ -343,7 +343,7 @@ export default function ProjectsTable() {
       width: 200,
       valueGetter: (value) => formatToCOP(value),
       renderCell: ({ value }: GridRenderCellParams<Project>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: '#444', fontWeight: 600 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'white', fontWeight: 600 }}>
           {value}
         </Box>
       )
@@ -351,7 +351,15 @@ export default function ProjectsTable() {
   ];
 
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ 
+      height: "calc(100vh - 230px)", 
+      width: "100%", 
+      backgroundColor: 'rgba(28, 28, 30, 0.6)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+    }}>
       <DataGrid
         rows={projects as Project[]}
         columns={columns}
@@ -363,12 +371,27 @@ export default function ProjectsTable() {
         }}
         sx={{ 
           border: 0,
+          color: 'white',
           '& .MuiDataGrid-cell': {
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 0,
+            color: 'rgba(255, 255, 255, 0.7)',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiTablePagination-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
           },
           '& .MuiDataGrid-row:hover': {
-            backgroundColor: 'rgba(255,255,255,0.05)',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }
         }}
       />
