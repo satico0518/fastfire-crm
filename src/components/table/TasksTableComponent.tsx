@@ -977,14 +977,40 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         const taskWorkgroups = workgroups?.filter((wg) =>
           row.workgroupKeys?.some((k) => k === (wg.key as string))
         );
-        return taskWorkgroups?.map((wg) => (
-          <Chip 
-            key={wg.key} 
-            style={{ marginLeft: "5px" }} 
-            size="small" 
-            label={wg.name} 
-          />
-        ));
+        return (
+          <div style={{ display: "flex", gap: "4px", flexWrap: "nowrap", overflow: "hidden" }}>
+            {taskWorkgroups?.map((wg) => (
+              <Chip
+                key={wg.key}
+                size="small"
+                label={wg.name}
+                sx={{
+                  fontSize: "0.65rem",
+                  fontWeight: 800,
+                  height: "18px",
+                  borderRadius: "6px",
+                  backgroundColor: `${wg.color}15`,
+                  color: wg.color,
+                  border: `1px solid ${wg.color}40`,
+                  backdropFilter: "blur(4px)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  cursor: "default",
+                  "& .MuiChip-label": {
+                    padding: "0 6px",
+                  },
+                  "&:hover": {
+                    backgroundColor: `${wg.color}25`,
+                    border: `1px solid ${wg.color}80`,
+                    transform: "translateY(-1px)",
+                    boxShadow: `0 2px 8px ${wg.color}30`,
+                  },
+                }}
+              />
+            ))}
+          </div>
+        );
       },
       editable: true,
       renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
