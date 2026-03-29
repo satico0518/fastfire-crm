@@ -32,7 +32,6 @@ import { TaskService } from "../../services/task.service";
 import { Priority, Task } from "../../interfaces/Task";
 import { useTagsStore } from "../../stores/tags/tags.store";
 import { TagsService } from "../../services/tags.service";
-import { Tag } from "../../interfaces/Tag";
 import { useAuhtStore } from "../../stores";
 import { MultiselectComponent } from "../multi-select/MultiselectComponent";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";

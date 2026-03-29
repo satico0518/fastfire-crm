@@ -2,7 +2,6 @@ import {
   DataGrid,
   GridActionsCellItem,
   GridColDef,
-  GridColumnResizeParams,
   GridFilterModel,
   GridRenderCellParams,
   GridRenderEditCellParams,
@@ -89,16 +88,6 @@ interface TasksTableProps {
   workgroup?: Workgroup;
 }
 
-interface ColumnWidhts {
-  status: number;
-  name: number;
-  ownerKeys: number;
-  dueDate: number;
-  notes: number;
-  priority: number;
-  createdDate: number;
-  workgroupKeys: number;
-}
 
 export default function TasksTable({ workgroup }: TasksTableProps) {
   const isMobile = useMediaQuery('(max-width: 1100px)');
@@ -138,9 +127,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const [openNotesDialog, setOpenNotesDialog] = useState(false);
   const [taskNotes, setTaskNotes] = useState<string | null>();
 
-  const [columWidths, setColumWidths] = useState<ColumnWidhts | null>(
-    JSON.parse(sessionStorage.getItem("columWidths") || "{}")
-  );
 
   const translateHistoryAction = (action: string) => {
     switch (action) {
@@ -554,7 +540,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "actions",
       type: "actions",
       width: 50,
-      resizable: false,
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
@@ -612,7 +597,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "status",
       headerName: "Estado",
       type: "string",
-      width: columWidths?.status ?? 180,
+      width: 180,
       filterable: true,
       valueGetter: (_value: any, row: Task) => {
         // Para el filtro, devolvemos el estado traducido
@@ -727,7 +712,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "name",
       headerName: "Nombre",
       width: 400,
-      resizable: true,
       editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -786,7 +770,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Responsables",
       sortable: false,
       filterable: true,
-      width: columWidths?.ownerKeys ?? 150,
+      width: 150,
       align: "center",
       editable: true,
       valueGetter: (_value: any, row: Task) => {
@@ -873,7 +857,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "dueDate",
       headerName: "Fecha Limite",
       type: "string",
-      width: columWidths?.dueDate ?? 120,
+      width: 120,
       renderCell: ({ row }: GridRenderCellParams<Task>) =>
         row?.dueDate
           ? dayjs(changeDateFromDMA_MDA(row.dueDate as string)).format(
@@ -903,7 +887,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       type: "string",
       sortable: false,
       disableColumnMenu: true,
-      width: columWidths?.notes ?? 60,
+      width: 60,
       align: "center",
       renderCell: ({ row }: GridRenderCellParams<Task>) =>
         row.notes?.length > 0 ? (
@@ -934,7 +918,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "priority",
       headerName: "Prioridad",
       type: "string",
-      width: columWidths?.priority ?? 150,
+      width: 150,
       renderCell: (params: GridRenderCellParams<Task>) =>
         params.row?.priority ? translatePriority(params.row.priority) : "-",
       editable: true,
@@ -955,7 +939,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "createdDate",
       headerName: "Fecha de Creación",
       type: "string",
-      width: columWidths?.createdDate ?? 180,
+      width: 180,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <span
           style={{ cursor: "pointer" }}
@@ -972,7 +956,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "workgroupKeys",
       headerName: "Grupos de Trabajo",
       type: "string",
-      width: columWidths?.workgroupKeys ?? 250,
+      width: 250,
       renderCell: ({ row }: GridRenderCellParams<Task>) => {
         const taskWorkgroups = workgroups?.filter((wg) =>
           row.workgroupKeys?.some((k) => k === (wg.key as string))
@@ -1183,11 +1167,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           },
         }}
         rowHeight={28}
-        onColumnWidthChange={({ colDef, width }: GridColumnResizeParams) => {
-          const widths = { ...columWidths, [colDef.field]: width };
-          setColumWidths(widths as ColumnWidhts);
-          sessionStorage.setItem("columWidths", JSON.stringify(widths));
-        }}
       />
       </Paper>
       {/* Row 1: Nueva Tarea | Archivadas + Excel */}
