@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Button, Stack } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import AddIcon from '@mui/icons-material/Add';
 import { MaintenanceSchedule } from '../../interfaces/Maintenance';
@@ -13,6 +13,7 @@ import 'dayjs/locale/es';
 import { ScheduleDayBlock } from './components/ScheduleDayBlock';
 import { CalendarGridView } from './components/CalendarGridView';
 import { ScheduleCreationModal } from './components/ScheduleCreationModal';
+import { MaintenanceExportControls } from './components/MaintenanceExportControls';
 import { useNavigate } from 'react-router-dom';
 import { useAuhtStore } from '../../stores';
 import { useUiStore } from '../../stores/ui/ui.store';
@@ -150,11 +151,49 @@ export const AgendaMantenimientosPage = () => {
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#2b90ff', flexGrow: 1 }}>
           Calendario
         </Typography>
-        {isPlanner && (
-          <IconButton size="small" onClick={() => handleOpenCreation()} sx={{ color: 'white', bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0070e0' } }}>
-            <AddIcon />
-          </IconButton>
-        )}
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
+          {isPlanner && (
+            <IconButton size="small" onClick={() => handleOpenCreation()} sx={{ color: 'white', bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0070e0' } }}>
+              <AddIcon />
+            </IconButton>
+          )}
+        </Stack>
+      </Box>
+
+      {/* DESKTOP HEADER */}
+      <Box sx={{ display: { xs: 'none', lg: 'flex' }, justifyContent: 'space-between', alignItems: 'center', mb: 1, mt: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px' }}>
+          Agenda de Mantenimientos
+        </Typography>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+          <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
+          {isPlanner && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenCreation()}
+              sx={{
+                background: 'rgba(10,132,255,0.15)',
+                border: '1px solid rgba(10,132,255,0.4)',
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 700,
+                color: '#0a84ff',
+                backdropFilter: 'blur(10px)',
+                py: 0.5,
+                px: 2,
+                '&:hover': {
+                  background: 'rgba(10,132,255,0.25)',
+                  border: '1px solid #0a84ff'
+                }
+              }}
+            >
+              Nuevo Agendamiento
+            </Button>
+          )}
+        </Stack>
       </Box>
 
       {/* MOBILE LIST VIEW */}
