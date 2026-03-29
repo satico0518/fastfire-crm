@@ -71,7 +71,7 @@ export const TasksFormComponent = ({
 }: TasksFormComponentProps) => {
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedOwnerKeys, setSelectedOwnerKeys] = useState<string[]>([]);
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([
     workgroups?.filter((wg) => wg.key === workgroupKey)[0]?.name as string || '',
@@ -92,16 +92,16 @@ export const TasksFormComponent = ({
     formState: { errors },
   } = useForm();
 
-  const handleAddTag = (tag: Tag | string) => {
-    if (!Object.values(tags).some((t) => t === tag)) {
-      TagsService.createTag(tag as string);
+  const handleAddTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      TagsService.createTag(tag);
     }
-    if (!selectedTags.some((t) => t === tag)) {
-      setSelectedTags([...selectedTags, tag as Tag]);
+    if (!selectedTags.includes(tag)) {
+      setSelectedTags([...selectedTags, tag]);
     }
   };
 
-  const handleDeleteTag = (tag: Tag) => {
+  const handleDeleteTag = (tag: string) => {
     setSelectedTags(selectedTags.filter((st) => st !== tag));
   };
 
@@ -180,12 +180,12 @@ export const TasksFormComponent = ({
             Etiquetas
           </Typography>
           <Box className="selected-members" sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {selectedTags.length > 0 ? selectedTags.map((st: Tag | string) => (
+            {selectedTags.length > 0 ? selectedTags.map((st: string) => (
               <Chip
-                key={typeof st === 'string' ? st : (st as any).key || JSON.stringify(st)}
+                key={st}
                 size="small"
-                label={typeof st === 'string' ? st : Object.values(st)[0]}
-                onDelete={() => handleDeleteTag(st as Tag)}
+                label={st}
+                onDelete={() => handleDeleteTag(st)}
                 sx={{ 
                   borderRadius: '8px', 
                   fontWeight: 600, 
@@ -201,7 +201,7 @@ export const TasksFormComponent = ({
           </Box>
           <Autocomplete
             disablePortal
-            options={Object.values(tags)}
+            options={Array.from(new Set(tags))}
             includeInputInList
             fullWidth
             onChange={(_, tag) => tag && handleAddTag(tag)}

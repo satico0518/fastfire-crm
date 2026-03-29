@@ -316,6 +316,9 @@ export default function WorksgroupTable() {
             alignItems: 'center',
             borderColor: 'rgba(255, 255, 255, 0.1)',
           },
+          '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+            color: 'white'
+          },
           '& .MuiDataGrid-columnHeaders': {
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
             borderRadius: 0,

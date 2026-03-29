@@ -11,7 +11,7 @@ import {
 import Paper from "@mui/material/Paper";
 import { Project } from "../../interfaces/Project";
 import { Button, Chip, IconButton, Box } from "@mui/material";
-import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
@@ -90,9 +90,9 @@ export default function ProjectsTable() {
     {
       field: "actions",
       type: "actions",
-      headerAlign: "right",
-      align: "right",
-      width: 140,
+      headerAlign: "center",
+      align: "center",
+      width: 160,
       resizable: false,
       getActions: (params: GridRowParams<Project>) => {
         const baseActions = [
@@ -198,8 +198,8 @@ export default function ProjectsTable() {
       field: "name",
       headerName: "Nombre",
       type: "string",
-      width: 300,
-      flex: 1,
+      width: 500,
+      flex: 2,
       renderCell: ({ row }: GridRenderCellParams<Project>) => (
         <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'white', fontWeight: 500 }}>
           <span
@@ -236,6 +236,7 @@ export default function ProjectsTable() {
                   })
                 }
                 sx={{
+                  ml: 1,
                   color: '#30d158',
                   background: 'rgba(48,209,88,0.1)',
                   border: '1px solid rgba(48,209,88,0.3)',
@@ -247,7 +248,7 @@ export default function ProjectsTable() {
                   }
                 }}
               >
-                <PlayCircleFilledOutlinedIcon fontSize="small" />
+                <PlayCircleFilledIcon fontSize="small" />
               </IconButton>
             </>
           )}
@@ -278,7 +279,7 @@ export default function ProjectsTable() {
                   }
                 }}
               >
-                <PlayCircleFilledOutlinedIcon fontSize="small" />
+                <PlayCircleFilledIcon fontSize="small" />
               </IconButton>
             </>
           )}
@@ -295,6 +296,7 @@ export default function ProjectsTable() {
                   })
                 }
                 sx={{
+                  ml: 1,
                   color: '#30d158',
                   background: 'rgba(48,209,88,0.1)',
                   border: '1px solid rgba(48,209,88,0.3)',
@@ -306,7 +308,7 @@ export default function ProjectsTable() {
                   }
                 }}
               >
-                <PlayCircleFilledOutlinedIcon fontSize="small" />
+                <PlayCircleFilledIcon fontSize="small" />
               </IconButton>
             </>
           )}
@@ -377,6 +379,9 @@ export default function ProjectsTable() {
             display: 'flex',
             alignItems: 'center',
             borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+            color: 'white'
           },
           '& .MuiDataGrid-columnHeaders': {
             backgroundColor: 'rgba(0, 0, 0, 0.3)',

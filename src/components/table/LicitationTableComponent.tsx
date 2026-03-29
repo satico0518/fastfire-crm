@@ -214,8 +214,12 @@ export default function LicitationTableComponent({
             border: 0,
             color: 'white',
             '& .MuiDataGrid-cell': {
-              borderColor: 'rgba(255, 255, 255, 0.1)',
-              color: 'rgba(255, 255, 255, 0.8)'
+              display: 'flex',
+              alignItems: 'center',
+              borderColor: 'rgba(255, 255, 255, 0.1)'
+            },
+            '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+              color: 'white'
             },
             '& .MuiDataGrid-columnHeaders': {
               backgroundColor: 'rgba(0, 0, 0, 0.3)',

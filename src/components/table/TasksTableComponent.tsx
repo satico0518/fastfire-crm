@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogActions,
   FormControlLabel,
+  IconButton,
   Input,
   List,
   ListItem,
@@ -29,7 +30,7 @@ import {
   useMediaQuery,
   Box,
 } from "@mui/material";
-import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -68,7 +69,6 @@ import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 import AddIcon from "@mui/icons-material/Add";
-import { Fab } from "@mui/material";
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
 import { PriorityInput } from "../priority-input/PriorityInput";
@@ -629,17 +629,30 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                 color="error"
                 label={translateStatus(params.row.status).replace("/.$/", "a")}
               />
-              <Button
+              <IconButton
                 title="Reiniciar"
+                size="small"
                 onClick={() =>
                   updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
                 }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
               >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
             </>
           )}
           {params.row.status === "ARCHIVED" && (
@@ -651,33 +664,59 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           {params.row.status === "DONE" && (
             <>
               <Chip color="info" label={translateStatus(params.row.status)} />
-              <Button
+              <IconButton
                 title="Reiniciar"
+                size="small"
                 onClick={() =>
                   updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
                 }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
               >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
             </>
           )}
           {params.row.status === "TODO" && (
             <>
               <span>{translateStatus(params.row.status)}</span>
-              <Button
+              <IconButton
                 title="Iniciar"
+                size="small"
                 onClick={() =>
                   updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
                 }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
               >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
             </>
           )}
         </>
@@ -687,8 +726,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     {
       field: "name",
       headerName: "Nombre",
-      type: "string",
-      width: columWidths?.name ?? 380,
+      width: 400,
+      resizable: true,
       editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -1075,6 +1114,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               maxHeight: "28px !important",
             },
           },
+          "& .MuiDataGrid-actionsCell .MuiIconButton-root": {
+            color: "white",
+          },
           "& .MuiChip-root": {
             fontSize: "0.65rem",
             height: "22px",
@@ -1454,28 +1496,6 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           <Button onClick={() => setOpenHistoryDialog(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
-
-      {/* FAB for mobile for quick access if top button is scrolled away */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 80,
-          right: 16,
-          display: { xs: 'flex', lg: 'none' },
-          bgcolor: '#0776e6ff',
-          zIndex: 1400, // Above table, below menu
-          '&:hover': { bgcolor: '#0070e0' }
-        }}
-        onClick={() => setModal({
-          open: true,
-          title: "Nueva Tarea",
-          content: <TasksFormComponent />,
-        })}
-      >
-        <AddIcon />
-      </Fab>
     </>
   );
 }

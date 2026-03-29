@@ -497,6 +497,9 @@ export const FormatResultsTable = () => {
               display: "flex", 
               alignItems: "center"
             },
+            '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+              color: 'white'
+            },
             '& .MuiDataGrid-columnHeaders': {
               backgroundColor: 'rgba(0, 0, 0, 0.3)',
               borderRadius: 0,
