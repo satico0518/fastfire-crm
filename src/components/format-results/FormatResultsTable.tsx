@@ -20,7 +20,7 @@ import {
 } from "@mui/x-data-grid";
 import { useFormatsStore } from "../../stores/formats/formats.store";
 import { useUsersStore } from "../../stores/users/users.store";
-import { FormatSubmission, FormatStatus, FormatTypeId } from "../../interfaces/Format";
+import { FormatSubmission, FormatStatus, FormatTypeId, FormatField } from "../../interfaces/Format";
 import { getUserNameByKey, translateTimestampToString } from "../../utils/utils";
 import { FORMAT_CATALOG, getFormatTypeById } from "../../config/formatCatalog";
 import { getColumnsForFormat } from "../../config/formatColumns";
@@ -125,7 +125,25 @@ export const FormatResultsTable = () => {
     return value.startsWith("data:image/") || value.startsWith("https://res.cloudinary.com");
   };
 
-  const renderFieldValue = (fieldName: string, value: unknown) => {
+  const renderFieldValue = (fieldName: string, value: unknown, field?: FormatField, allData?: Record<string, any>) => {
+    if (field?.type === "calculated-sum" && field.calculateSum) {
+      const parts = field.calculateSum.split(".");
+      if (parts.length === 2 && allData) {
+        const arr = allData[parts[0]];
+        if (Array.isArray(arr)) {
+          const total = arr.reduce((acc: number, curr: any) => {
+            const val = Number(curr[parts[1]]);
+            return acc + (isNaN(val) ? 0 : val);
+          }, 0);
+          return (
+            <Typography variant="body1" sx={{ color: '#30d158', fontWeight: 800, fontSize: '1.2rem' }}>
+              $ {total.toLocaleString('es-CO')}
+            </Typography>
+          );
+        }
+      }
+    }
+    
     if (isImageValue(value)) {
       const src = value as string;
       const isCloudinary = src.startsWith("https://");
@@ -179,8 +197,8 @@ export const FormatResultsTable = () => {
     if (!viewSubmission) return null;
     const formatType = getFormatTypeById(viewSubmission.formatTypeId);
     const data = viewSubmission.data || {};
-    const fields = formatType
-      ? formatType.fields.map((f) => ({ name: f.name, label: f.label }))
+    const fields: { name: string; label: string; type?: string; calculateSum?: string }[] = formatType
+      ? (formatType.fields as any[])
       : Object.keys(data).map((k) => ({ name: k, label: k }));
 
     return (
@@ -225,43 +243,43 @@ export const FormatResultsTable = () => {
         </DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <Box sx={{ mt: 1 }}>
-            {fields.map(({ name, label }) => (
-              <Box key={name} sx={{ mb: 2 }}>
+            {fields.map((f) => (
+              <Box key={f.name} sx={{ mb: 2 }}>
                 <Typography
                   variant="caption"
                   sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}
                 >
-                  {label}
+                  {f.label}
                 </Typography>
-                {renderFieldValue(name, data[name])}
+                {renderFieldValue(f.name, data[f.name], f as any, data)}
               </Box>
             ))}
+            {viewSubmission.reviewNotes && (
+              <Box sx={{ mt: 2, p: 1.5, bgcolor: "rgba(255,159,10,0.1)", borderRadius: 2, border: '1px solid rgba(255,159,10,0.2)' }}>
+                <Typography variant="caption" fontWeight={700} color="#ff9f0a" display="block">
+                  Notas del revisor
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'white' }}>{viewSubmission.reviewNotes}</Typography>
+              </Box>
+            )}
+            {viewSubmission.status === "SUBMITTED" && (
+              <TextField
+                label="Notas de revisión (opcional)"
+                value={reviewNotes}
+                onChange={(e) => setReviewNotes(e.target.value)}
+                fullWidth size="small" multiline minRows={2} 
+                sx={{ 
+                  mt: 2,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                  },
+                  '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' }
+                }}
+              />
+            )}
           </Box>
-          {viewSubmission.reviewNotes && (
-            <Box sx={{ mt: 2, p: 1.5, bgcolor: "#fff3e0", borderRadius: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="warning.dark" display="block">
-                Notas del revisor
-              </Typography>
-              <Typography variant="body2">{viewSubmission.reviewNotes}</Typography>
-            </Box>
-          )}
-          {viewSubmission.status === "SUBMITTED" && (
-            <TextField
-              label="Notas de revisión (opcional)"
-              value={reviewNotes}
-              onChange={(e) => setReviewNotes(e.target.value)}
-              fullWidth size="small" multiline minRows={2} 
-              sx={{ 
-                mt: 2,
-                '& .MuiOutlinedInput-root': {
-                  color: 'white',
-                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                },
-                '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' }
-              }}
-            />
-          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2, gap: 1.5 }}>
           <Button 

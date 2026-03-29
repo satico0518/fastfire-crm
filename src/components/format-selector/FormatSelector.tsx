@@ -118,6 +118,24 @@ export const FormatSelector = () => {
 
     setIsLoading(true);
 
+    // Inject calculated sums into data
+    const finalData = { ...formData };
+    selectedFormat.fields.forEach(f => {
+      if (f.type === "calculated-sum" && f.calculateSum) {
+        const parts = f.calculateSum.split(".");
+        if (parts.length === 2) {
+          const arr = finalData[parts[0]];
+          if (Array.isArray(arr)) {
+            const total = arr.reduce((acc: number, curr: any) => {
+              const val = Number(curr[parts[1]]);
+              return acc + (isNaN(val) ? 0 : val);
+            }, 0);
+            finalData[f.name] = total;
+          }
+        }
+      }
+    });
+
     const submission: Omit<FormatSubmission, "key"> = {
       formatTypeId: selectedFormat.id,
       formatTypeName: selectedFormat.name,
@@ -125,7 +143,7 @@ export const FormatSelector = () => {
       createdByUserKey: currentUser.key || "unknown",
       createdDate: Date.now(),
       updatedDate: Date.now(),
-      data: formData,
+      data: finalData,
     };
 
     const resp = await FormatService.createSubmission(submission);
