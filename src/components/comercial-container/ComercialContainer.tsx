@@ -117,10 +117,19 @@ export const ComercialContainer = () => {
     <Box sx={{ width: "100%" }}>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          sx={{ backgroundColor: "white" }}
+          sx={{ 
+            backgroundColor: 'rgba(28, 28, 30, 0.8)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            "& .MuiTab-root": {
+              color: 'rgba(255, 255, 255, 0.6)',
+              "&.Mui-selected": { color: '#0a84ff' }
+            }
+          }}
           value={tabsValue}
           onChange={handleTabsChange}
           aria-label="basic tabs example"
+          variant={window.innerWidth < 1101 ? "fullWidth" : "standard"}
         >
           <Tab label="Órdenes de Compra" {...a11yProps(0)} />
           <Tab label="Licitaciones" {...a11yProps(1)} />

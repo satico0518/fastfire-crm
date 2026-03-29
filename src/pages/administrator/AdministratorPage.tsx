@@ -59,7 +59,7 @@ export const AdministratorPage = () => {
           value={tabsValue}
           onChange={handleTabsChange}
           aria-label="basic tabs example"
-          variant={window.innerWidth < 768 ? "fullWidth" : "standard"}
+          variant={window.innerWidth < 1101 ? "fullWidth" : "standard"}
         >
           <Tab label="Listado de Usuarios" {...a11yProps(0)} />
           <Tab label="Proyectos" {...a11yProps(1)} />

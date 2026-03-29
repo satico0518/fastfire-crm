@@ -121,7 +121,7 @@ export const AgendaMantenimientosPage = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: { xs: '100vh', md: 'calc(100vh - 90px)' }, 
+        height: { xs: '100vh', lg: 'calc(100vh - 90px)' }, 
         width: '100%' 
       }}>
         <CircularProgress size={40} sx={{ color: '#2b90ff' }} />
@@ -131,21 +131,19 @@ export const AgendaMantenimientosPage = () => {
 
   return (
     <Box sx={{ 
-      p: { xs: 2, md: 1 }, // Reduced padding on desktop
-      pb: { xs: 10, md: 2 }, // Only large padding on mobile
+      p: { xs: 2, lg: 1 }, 
       width: '100%',
-      maxWidth: { xs: '600px', md: '100%' }, 
+      maxWidth: { xs: '100%', lg: '100%' }, 
       margin: '0 auto',
-      minHeight: { xs: '100vh', md: 'calc(100vh - 90px)' },
-      height: { md: 'calc(100vh - 90px)' },
+      height: { xs: 'calc(100vh - 50px - 16px)', lg: 'calc(100vh - 90px)' },
       display: 'flex',
       flexDirection: 'column',
-      bgcolor: { xs: '#000000', md: 'transparent' }, 
+      bgcolor: { xs: '#000000', lg: 'transparent' }, 
       color: 'white',
-      overflow: 'hidden', // Prevent page-level scroll on desktop
+      overflow: 'hidden', 
     }}>
       {/* Header */}
-      <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', mb: 3, pt: 2 }}>
+      <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', mb: 1, pt: 1 }}>
         <IconButton onClick={() => navigate('/home')} sx={{ color: '#2b90ff', p: 0, mr: 1 }}>
           <ArrowBackIosNewIcon sx={{ fontSize: 24, strokeWidth: 2 }} />
         </IconButton>
@@ -160,22 +158,30 @@ export const AgendaMantenimientosPage = () => {
       </Box>
 
       {/* MOBILE LIST VIEW */}
-      <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ 
+        display: { xs: 'flex', lg: 'none' }, 
+        flexDirection: 'column', 
+        gap: 1.5,
+        flex: 1,
+        overflowY: 'auto',
+        pb: 12, // More padding to avoid collision with nav / FAB
+        px: 0.5,
+        scrollbarWidth: 'none', // Hide scrollbar for cleaner look
+        '&::-webkit-scrollbar': { display: 'none' } 
+      }}>
          {Object.entries(groupedSchedules).map(([dateLabel, schedules]) => (
            <ScheduleDayBlock key={dateLabel} dateLabel={dateLabel} schedules={schedules} />
          ))}
-      </Box>
-
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        {Object.keys(groupedSchedules).length === 0 && (
-           <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
-             No hay programaciones en los últimos 3 meses.
-           </Typography>
-        )}
+         
+         {Object.keys(groupedSchedules).length === 0 && (
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
+              No hay programaciones en los últimos 3 meses.
+            </Typography>
+         )}
       </Box>
 
       {/* DESKTOP GRID VIEW */}
-      <Box sx={{ display: { xs: 'none', md: 'flex' }, pt: 2, flexGrow: 1, minHeight: 0 }}>
+      <Box sx={{ display: { xs: 'none', lg: 'flex' }, pt: 2, flexGrow: 1, minHeight: 0 }}>
         <CalendarGridView 
           schedules={schedulesData} 
           onOpenCreation={handleOpenCreation}

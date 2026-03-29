@@ -161,8 +161,8 @@ export const TasksFormComponent = ({
   };
 
    return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} sx={{ mt: 1 }}>
-      <Stack spacing={3} width={"100%"} direction={"column"}>
+    <Box component="form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} sx={{ mt: 1, pb: 4 }}>
+      <Stack spacing={2.5} width={"100%"} direction={"column"}>
         <TextField
           label="Nombre de la Tarea"
           type="text"
@@ -176,7 +176,7 @@ export const TasksFormComponent = ({
         />
         
         <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mb: 1, display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>
             Etiquetas
           </Typography>
           <Box className="selected-members" sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -249,7 +249,7 @@ export const TasksFormComponent = ({
           setValue={setSelectedOwnerKeys}
         />
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               disablePast

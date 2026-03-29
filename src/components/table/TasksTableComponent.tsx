@@ -27,6 +27,7 @@ import {
   Tooltip,
   Typography,
   useMediaQuery,
+  Box,
 } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
@@ -65,6 +66,9 @@ import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
+import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
+import AddIcon from "@mui/icons-material/Add";
+import { Fab } from "@mui/material";
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
 import { PriorityInput } from "../priority-input/PriorityInput";
@@ -97,10 +101,11 @@ interface ColumnWidhts {
 }
 
 export default function TasksTable({ workgroup }: TasksTableProps) {
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobile = useMediaQuery('(max-width: 1100px)');
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
+  const setModal = useUiStore((state) => state.setModal);
   const tasks = useTasksStore((state) => state.tasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
@@ -983,16 +988,40 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         sx={{ 
           height: isMobile ? "calc(100vh - 185px)" : "calc(100vh - 245px)", 
           width: "100%",
-          backgroundColor: showArchivedTasks ? "#fffaf5" : "#ffffff",
-          borderLeft: showArchivedTasks ? "20px solid #FF9800" : "none",
-          opacity: showArchivedTasks ? 0.95 : 1,
-          transition: "all 0.3s ease-in-out"
+          backgroundColor: 'rgba(28, 28, 30, 0.6)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease-in-out',
+          '& .MuiDataGrid-root': {
+            border: 0,
+            color: 'white',
+            '& .MuiDataGrid-cell': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            '& .MuiTablePagination-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+            }
+          }
         }}
       >
       <DataGrid
         autoPageSize
         rows={getTaskByRole()}
-        columns={columns}
+        columns={isMobile 
+          ? columns.filter(col => ['actions', 'status', 'name', 'ownerKeys', 'dueDate'].includes(col.field))
+          : columns
+        }
         filterModel={filterModel}
         onFilterModelChange={(newModel) => setFilterModel(newModel)}
         initialState={{ pagination: { paginationModel } }}
@@ -1049,7 +1078,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           "& .MuiSvgIcon-root": {
             fontSize: "1rem",
           },
-          "@media (max-width: 767px)": {
+          "@media (max-width: 1100px)": {
             fontSize: "0.68rem",
             "& .MuiChip-root": {
               fontSize: "0.6rem",
@@ -1087,8 +1116,41 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       />
       </Paper>
       {/* Row 1: Nueva Tarea | Archivadas + Excel */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
-        <TaskCreatorRowComponent />
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
+        <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+          <TaskCreatorRowComponent />
+        </Box>
+        
+        {/* Mobile ONLY creator button */}
+        <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => setModal({
+              open: true,
+              title: "Nueva Tarea",
+              content: <TasksFormComponent />,
+            })}
+            sx={{
+              background: 'rgba(10,132,255,0.15)',
+              border: '1px solid rgba(10,132,255,0.4)',
+              borderRadius: '10px',
+              textTransform: 'none',
+              fontWeight: 700,
+              color: '#0a84ff',
+              backdropFilter: 'blur(10px)',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                background: 'rgba(10,132,255,0.25)',
+                border: '1px solid #0a84ff'
+              }
+            }}
+          >
+            Nueva Tarea
+          </Button>
+        </Box>
+
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
 
           {/* Archivadas toggle */}
@@ -1148,7 +1210,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             Excel
           </Button>
         </div>
-      </div>
+      </Box>
 
       {/* Row 2: Tag filter pill */}
       <div style={{ display: "flex", alignItems: "center", marginTop: "6px" }}>
@@ -1385,6 +1447,28 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           <Button onClick={() => setOpenHistoryDialog(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
+
+      {/* FAB for mobile for quick access if top button is scrolled away */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        sx={{
+          position: 'fixed',
+          bottom: 80,
+          right: 16,
+          display: { xs: 'flex', lg: 'none' },
+          bgcolor: '#0a84ff',
+          zIndex: 1400, // Above table, below menu
+          '&:hover': { bgcolor: '#0070e0' }
+        }}
+        onClick={() => setModal({
+          open: true,
+          title: "Nueva Tarea",
+          content: <TasksFormComponent />,
+        })}
+      >
+        <AddIcon />
+      </Fab>
     </>
   );
 }
