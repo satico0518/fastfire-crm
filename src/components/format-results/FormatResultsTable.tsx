@@ -481,6 +481,7 @@ export const FormatResultsTable = () => {
         <DataGrid
           rows={filteredSubmissions}
           columns={columns}
+          columnHeaderHeight={36}
           getRowId={(row) => row.key || row.createdDate}
           rowHeight={56}
           pageSizeOptions={[10, 20, 50]}
@@ -496,12 +497,18 @@ export const FormatResultsTable = () => {
               display: "flex", 
               alignItems: "center"
             },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: 0,
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
             '& .MuiDataGrid-columnHeader': { 
-              fontSize: "0.78rem", 
-              fontWeight: 700,
-              bgcolor: 'rgba(0, 0, 0, 0.3)',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               color: 'rgba(255, 255, 255, 0.7)',
-              borderColor: 'rgba(255, 255, 255, 0.1)'
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              fontSize: "0.75rem",
             },
             '& .MuiDataGrid-footerContainer': {
               borderColor: 'rgba(255, 255, 255, 0.1)',

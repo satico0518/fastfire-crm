@@ -301,6 +301,7 @@ export default function UsersTable() {
       <DataGrid
         rows={users?.filter((u) => u.isActive) as User[]}
         columns={columns}
+        columnHeaderHeight={36}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
         rowHeight={60}
@@ -316,10 +317,16 @@ export default function UsersTable() {
             borderColor: 'rgba(255, 255, 255, 0.1)'
           },
           '& .MuiDataGrid-columnHeaders': {
-            bgcolor: 'rgba(0, 0, 0, 0.3)',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
             borderRadius: 0,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
             color: 'rgba(255, 255, 255, 0.7)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
           },
           '& .MuiDataGrid-footerContainer': {
             borderColor: 'rgba(255, 255, 255, 0.1)',

@@ -1000,10 +1000,16 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             '& .MuiDataGrid-cell': {
               borderColor: 'rgba(255, 255, 255, 0.1)',
             },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
             '& .MuiDataGrid-columnHeader': {
               backgroundColor: 'rgba(0, 0, 0, 0.3)',
               color: 'rgba(255, 255, 255, 0.7)',
               borderColor: 'rgba(255, 255, 255, 0.1)',
+              fontWeight: 800,
+              textTransform: 'uppercase',
             },
             '& .MuiDataGrid-footerContainer': {
               borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -1017,6 +1023,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       >
       <DataGrid
         autoPageSize
+        columnHeaderHeight={36}
         rows={getTaskByRole()}
         columns={isMobile 
           ? columns.filter(col => ['actions', 'status', 'name', 'ownerKeys', 'dueDate'].includes(col.field))
@@ -1457,7 +1464,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           bottom: 80,
           right: 16,
           display: { xs: 'flex', lg: 'none' },
-          bgcolor: '#0a84ff',
+          bgcolor: '#0776e6ff',
           zIndex: 1400, // Above table, below menu
           '&:hover': { bgcolor: '#0070e0' }
         }}
