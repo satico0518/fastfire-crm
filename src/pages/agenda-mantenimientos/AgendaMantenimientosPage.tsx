@@ -299,7 +299,7 @@ export const AgendaMantenimientosPage = () => {
           </Stack>
         </Box>
 
-        <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between' }}>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', display: { xs: 'none', lg: 'flex' } }}>
           {[
             { id: 'day', label: 'Día' },
             { id: 'week', label: 'Semana' },
@@ -325,28 +325,6 @@ export const AgendaMantenimientosPage = () => {
         </Stack>
       </Box>
 
-      {/* MOBILE HEADER - Day/Week Navigation Controls */}
-      {(viewMode === 'day' || viewMode === 'week') && (
-        <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
-          <IconButton onClick={viewMode === 'day' ? prevDay : prevWeek} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
-            <KeyboardArrowLeftIcon />
-          </IconButton>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white', textTransform: 'capitalize' }}>
-            {viewMode === 'day' 
-              ? currentDay.format('dddd, D MMM').toUpperCase()
-              : `${currentWeekStart.format('D MMM')} - ${currentWeekStart.add(6, 'day').format('D MMM')}`.toUpperCase()
-            }
-          </Typography>
-          <Stack direction="row" spacing={0.5}>
-            <Button onClick={goToToday} size="small" sx={{ color: 'white', fontSize: '0.75rem', fontWeight: 600, bgcolor: 'rgba(255,255,255,0.1)', minWidth: 'auto', px: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
-              HOY
-            </Button>
-            <IconButton onClick={viewMode === 'day' ? nextDay : nextWeek} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
-              <KeyboardArrowRightIcon />
-            </IconButton>
-          </Stack>
-        </Box>
-      )}
       <Box sx={{ display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', gap: 1, mb: 1, mt: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px' }}>
@@ -430,38 +408,36 @@ export const AgendaMantenimientosPage = () => {
         </Box>
       )}
 
-      {/* MOBILE LIST VIEW */}
-      {(viewMode === 'day' || viewMode === 'week') && (
-        <Box
-          ref={scheduleListRef}
-          sx={{
-            display: { xs: 'flex', lg: 'none' },
-            flexDirection: 'column',
-            gap: 1.5,
-            flex: 1,
-            overflowY: 'auto',
-            pb: 12, // More padding to avoid collision with nav / FAB
-            px: 0.5,
-            scrollbarWidth: 'none', // Hide scrollbar for cleaner look
-            '&::-webkit-scrollbar': { display: 'none' }
-          }}
-        >
-          {Object.entries(displayedSchedules).map(([dateLabel, schedules]) => (
-            <ScheduleDayBlock
-              key={dateLabel}
-              dateLabel={dateLabel}
-              schedules={schedules}
-              isTodayGroup={dateLabel.startsWith('HOY')}
-            />
-          ))}
+      {/* MOBILE LIST VIEW - Shows all schedules */}
+      <Box
+        ref={scheduleListRef}
+        sx={{
+          display: { xs: 'flex', lg: 'none' },
+          flexDirection: 'column',
+          gap: 1.5,
+          flex: 1,
+          overflowY: 'auto',
+          pb: 12,
+          px: 0.5,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
+        {Object.entries(groupedSchedules).map(([dateLabel, schedules]) => (
+          <ScheduleDayBlock
+            key={dateLabel}
+            dateLabel={dateLabel}
+            schedules={schedules}
+            isTodayGroup={dateLabel.startsWith('HOY')}
+          />
+        ))}
 
-          {Object.keys(displayedSchedules).length === 0 && (
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
-              No hay programaciones en los últimos 3 meses.
-            </Typography>
-          )}
-        </Box>
-      )}
+        {Object.keys(groupedSchedules).length === 0 && (
+          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
+            No hay programaciones en los últimos 3 meses.
+          </Typography>
+        )}
+      </Box>
 
       {/* DESKTOP LIST VIEW (día/semana) */}
       {(viewMode === 'day' || viewMode === 'week') && (
