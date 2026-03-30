@@ -80,7 +80,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
     if (hasQuotation === 'SI' && !quotationNumber.trim()) {
       setSnackbar({
         open: true,
-        message: 'Debes completar el número de cotización',
+        message: 'Debes completar el número de factura',
         severity: 'warning'
       });
       return;
@@ -197,7 +197,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
 
            <Box>
              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-               <RequestQuoteOutlinedIcon fontSize="small" /> ¿Ya tiene Cotización?
+               <RequestQuoteOutlinedIcon fontSize="small" /> ¿Ya tiene Factura?
              </Typography>
              <ToggleButtonGroup
                value={hasQuotation}
@@ -232,7 +232,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
              {hasQuotation === 'SI' && (
                <TextField 
                  fullWidth
-                 placeholder="Escribe el Nº de Cotización..."
+                 placeholder="Escribe el Nº de Factura..."
                  variant="outlined"
                  size="small"
                  required

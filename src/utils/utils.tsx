@@ -191,7 +191,7 @@ export const changeDateFromDMA_MDA = (date: string): string => {
   return "";
 };
 
-export const downloadExcelFile = (jsonData: unknown[], fileName: string, logoUrl?: string) => {
+export const downloadExcelFile = (jsonData: unknown[], fileName: string) => {
   const book = XLSX.utils.book_new();
   
   // Create header rows with company branding
@@ -204,10 +204,10 @@ export const downloadExcelFile = (jsonData: unknown[], fileName: string, logoUrl
   
   // Convert data to array format
   const dataRows = XLSX.utils.json_to_sheet(jsonData);
-  const dataArray = XLSX.utils.sheet_to_json(dataRows, { header: 1 });
+  const dataArray: unknown[][] = XLSX.utils.sheet_to_json(dataRows, { header: 1 });
   
   // Combine header and data
-  const fullData = [...headerRows, ...dataArray];
+  const fullData: unknown[][] = [...headerRows, ...dataArray];
   
   // Create the final sheet
   const sheet = XLSX.utils.aoa_to_sheet(fullData);

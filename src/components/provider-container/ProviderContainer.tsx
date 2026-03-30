@@ -28,7 +28,6 @@ import {
 } from "../../interfaces/Licitation";
 import { useAuhtStore } from "../../stores";
 import { PurchaseService } from "../../services/purchase.service";
-import logo from "../../assets/img/Logo.jpg";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Item } from "../../interfaces/Item";
 
@@ -180,7 +179,7 @@ export const ProviderContainer = () => {
       item: s.name,
       precio: 0,
     }));
-    downloadExcelFile(jsonToExcel, "plantilla_de_licitacion_Fastfire.xlsx", logo);
+    downloadExcelFile(jsonToExcel, "plantilla_de_licitacion_Fastfire.xlsx");
   };
 
   return (

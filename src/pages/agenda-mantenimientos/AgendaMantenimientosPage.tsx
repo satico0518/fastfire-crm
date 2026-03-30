@@ -84,32 +84,58 @@ export const AgendaMantenimientosPage = () => {
     // Filter to last 3 months only
     const threeMonthsAgo = dayjs().subtract(3, 'month').startOf('day');
     const filtered = schedulesData.filter(s => dayjs(s.dateStr).isAfter(threeMonthsAgo));
-    
+
     // Sort ascending
     const sorted = [...filtered].sort((a, b) => new Date(a.dateStr).getTime() - new Date(b.dateStr).getTime());
-    
-    const groups: Record<string, MaintenanceSchedule[]> = {};
+
+    const scheduleByDate: Record<string, MaintenanceSchedule[]> = {};
     sorted.forEach((schedule) => {
-      const dt = dayjs(schedule.dateStr);
-      let dayWord = '';
-      
-      if (dt.isToday()) dayWord = 'HOY';
-      else if (dt.isTomorrow()) dayWord = 'MAÑANA';
-      else if (dt.isYesterday()) dayWord = 'AYER';
-      else {
-        dayWord = dt.format('dddd').toUpperCase();
+      const dateKey = dayjs(schedule.dateStr).format('YYYY-MM-DD');
+      if (!scheduleByDate[dateKey]) {
+        scheduleByDate[dateKey] = [];
       }
-      
-      const monDay = dt.format('MMM D').toUpperCase().replace('.', '');
-      const groupKey = `${dayWord} • ${monDay}`;
-      
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(schedule);
+      scheduleByDate[dateKey].push(schedule);
     });
-    
-    return groups;
+
+    // Ensure at least the next 14 days are visible, even if no schedules exist.
+    const nextDays = 14;
+    const result: Record<string, MaintenanceSchedule[]> = {};
+    for (let i = 0; i < nextDays; i += 1) {
+      const date = dayjs().add(i, 'day');
+      let dayWord = '';
+
+      if (date.isToday()) dayWord = 'HOY';
+      else if (date.isTomorrow()) dayWord = 'MAÑANA';
+      else if (date.isYesterday()) dayWord = 'AYER';
+      else dayWord = date.format('dddd').toUpperCase();
+
+      const monDay = date.format('MMM D').toUpperCase().replace('.', '');
+      const groupKey = `${dayWord} • ${monDay}`;
+      const dateKey = date.format('YYYY-MM-DD');
+
+      result[groupKey] = scheduleByDate[dateKey] || [];
+    }
+
+    // Add any additional scheduled days outside the 14-day window
+    Object.keys(scheduleByDate).sort().forEach((dateKey) => {
+      const date = dayjs(dateKey);
+      const isWithinRange = date.isSame(dayjs(), 'day') || (date.isAfter(dayjs(), 'day') && date.isBefore(dayjs().add(nextDays, 'day'), 'day'));
+      if (!isWithinRange) {
+        let dayWord = date.format('dddd').toUpperCase();
+        if (date.isToday()) dayWord = 'HOY';
+        else if (date.isTomorrow()) dayWord = 'MAÑANA';
+        else if (date.isYesterday()) dayWord = 'AYER';
+
+        const monDay = date.format('MMM D').toUpperCase().replace('.', '');
+        const groupKey = `${dayWord} • ${monDay}`;
+
+        if (!result[groupKey]) {
+          result[groupKey] = scheduleByDate[dateKey];
+        }
+      }
+    });
+
+    return result;
   }, [schedulesData]);
 
   if (!isAllowedToView) {

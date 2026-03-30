@@ -29,9 +29,27 @@ export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules }) => {
 
       {/* Cards List */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {schedules.map(schedule => (
-          <ScheduleCard key={schedule.id} schedule={schedule} />
-        ))}
+        {schedules.length > 0 ? (
+          schedules.map(schedule => (
+            <ScheduleCard key={schedule.id} schedule={schedule} />
+          ))
+        ) : (
+          <Box sx={{
+            px: 2,
+            py: 1.2,
+            borderRadius: 2,
+            border: '1px dashed rgba(255,255,255,0.25)',
+            bgcolor: 'rgba(255,255,255,0.04)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: 44,
+          }}>
+            <Typography sx={{ color: '#ff9f0a', fontWeight: 700, fontSize: '0.8rem' }}>
+              sin agendamiento
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );

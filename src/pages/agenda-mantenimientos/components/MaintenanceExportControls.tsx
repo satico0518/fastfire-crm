@@ -9,7 +9,6 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import dayjs from 'dayjs';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { downloadExcelFile } from '../../../utils/utils';
-import logo from '../../../assets/img/Logo.jpg';
 
 interface Props {
   schedules: MaintenanceSchedule[];
@@ -90,8 +89,8 @@ export const MaintenanceExportControls: React.FC<Props> = ({ schedules, setSnack
       'Dirección': s.address,
       'Estado': s.status === 'SCHEDULED' ? 'Agendado' : s.status === 'IN_PROGRESS' ? 'En Progreso' : s.status === 'COMPLETED' ? 'Completado' : 'Cancelado',
       'Prioridad': s.priority === 'LOW' ? 'Baja' : s.priority === 'NORMAL' ? 'Normal' : s.priority === 'HIGH' ? 'Alta' : 'Urgente',
-      'Cotización': s.hasQuotation || '-',
-      'Nº Cotización': s.quotationNumber || '-',
+      'Factura': s.hasQuotation || '-',
+      'Nº Factura': s.quotationNumber || '-',
       'Reporte': s.hasReport || '-',
       'Contacto': s.contactName || '-',
       'Teléfono': s.contactPhone || '-',
@@ -101,7 +100,7 @@ export const MaintenanceExportControls: React.FC<Props> = ({ schedules, setSnack
       'Fecha Creación': dayjs(s.createdAt).format('DD/MM/YYYY HH:mm')
     }));
 
-    downloadExcelFile(excelData, `Reporte_Mantenimientos_${dayjs().format('YYYYMMDD')}.xlsx`, logo);
+    downloadExcelFile(excelData, `Reporte_Mantenimientos_${dayjs().format('YYYYMMDD')}.xlsx`);
     handleClose();
     setSnackbar({ open: true, message: "Excel generado exitosamente", severity: "success" });
   };

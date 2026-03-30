@@ -165,7 +165,7 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
 
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
-              Cotización
+              Factura
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Box sx={{ 

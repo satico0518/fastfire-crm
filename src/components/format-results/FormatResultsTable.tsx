@@ -39,7 +39,6 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
 import dayjs from "dayjs";
-import logo from "../../assets/img/Logo.jpg";
 
 const FORMAT_ICONS: Record<FormatTypeId, ElementType<SvgIconProps>> = {
   LEGALIZACION_CUENTAS: ReceiptLongIcon,
@@ -147,7 +146,7 @@ export const FormatResultsTable = () => {
     });
 
     const formatName = selectedFormat.name.replace(/\s+/g, '_').toLowerCase();
-    downloadExcelFile(data, `${formatName}_${dayjs().format('YYYY-MM-DD')}.xlsx`, logo);
+    downloadExcelFile(data, `${formatName}_${dayjs().format('YYYY-MM-DD')}.xlsx`);
   };
 
   const downloadImage = (imageSrc: string, fieldName: string) => {
