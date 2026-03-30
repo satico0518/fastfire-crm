@@ -12,6 +12,7 @@ dayjs.extend(localeData);
 interface Props {
   schedules: MaintenanceSchedule[];
   onOpenCreation: (dateStr: string) => void;
+  onEdit?: (schedule: MaintenanceSchedule) => void;
   isAdmin?: boolean;
 }
 
@@ -25,7 +26,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, isAdmin }) => {
+export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, onEdit, isAdmin }) => {
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf('month'));
   const [selectedSchedule, setSelectedSchedule] = useState<MaintenanceSchedule | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -260,7 +261,8 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
         <ScheduleDetailModal 
           open={!!selectedSchedule} 
           onClose={() => setSelectedSchedule(null)} 
-          schedule={selectedSchedule} 
+          schedule={selectedSchedule}
+          onEdit={onEdit}
         />
       )}
     </Box>

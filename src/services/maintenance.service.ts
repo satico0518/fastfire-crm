@@ -1,7 +1,7 @@
 import { db } from "../firebase/firebase.config";
-import { push, ref, set, onValue, update, remove } from "firebase/database";
+import { push, ref, set, onValue, update, remove, get } from "firebase/database";
 import { ServiceResponse } from "../interfaces/Shared";
-import { MaintenanceSchedule } from "../interfaces/Maintenance";
+import { MaintenanceSchedule, MaintenanceAuditEntry } from "../interfaces/Maintenance";
 
 export class MaintenanceService {
   private static TABLE_NAME = "maintenance_schedules";
@@ -22,7 +22,12 @@ export class MaintenanceService {
         id,
       };
 
-      await set(newRef, payload);
+      // Filtrar campos undefined antes de guardar en Firebase
+      const cleanPayload = Object.fromEntries(
+        Object.entries(payload).filter(([_, value]) => value !== undefined)
+      );
+
+      await set(newRef, cleanPayload);
 
       return {
         result: "OK",
@@ -67,15 +72,78 @@ export class MaintenanceService {
   }
 
   /**
-   * Actualiza un agendamiento existente
+   * Actualiza un agendamiento existente y registra el histórico de cambios
    */
   static async updateSchedule(
     id: string,
-    updates: Partial<MaintenanceSchedule>
+    updates: Partial<MaintenanceSchedule>,
+    changedBy: string
   ): Promise<ServiceResponse> {
     try {
       const scheduleRef = ref(db, `${this.TABLE_NAME}/${id}`);
-      await update(scheduleRef, updates);
+      const snapshot = await get(scheduleRef);
+      const currentSchedule = snapshot.val() as MaintenanceSchedule | null;
+
+      if (!currentSchedule) {
+        return {
+          result: "ERROR",
+          errorMessage: "El agendamiento no existe.",
+        };
+      }
+
+      // Detecta qué cambió
+      const changes: Record<string, { old: any; new: any }> = {};
+      const fieldsToTrack = ['title', 'dateStr', 'address', 'status', 'description', 'observations', 'contactName', 'contactPhone', 'priority', 'hasQuotation', 'quotationNumber', 'hasReport'];
+      
+      fieldsToTrack.forEach(field => {
+        const fieldKey = field as keyof MaintenanceSchedule;
+        const newValue = updates[fieldKey];
+        const currentValue = currentSchedule[fieldKey];
+        
+        // Solo registrar si el campo está siendo actualizado y hay un cambio real
+        if (field in updates) {
+          // Para campos opcionales, normalizar undefined a null para Firebase
+          const normalizedOld = currentValue === undefined ? null : currentValue;
+          const normalizedNew = newValue === undefined ? null : newValue;
+          
+          // Solo registrar si hay un cambio real
+          if (normalizedOld !== normalizedNew) {
+            changes[field] = {
+              old: normalizedOld,
+              new: normalizedNew,
+            };
+          }
+        }
+      });
+
+      // Si no hay cambios, retorna directamente
+      if (Object.keys(changes).length === 0) {
+        return {
+          result: "OK",
+          message: "No hay cambios para registrar.",
+        };
+      }
+
+      // Crea entrada de auditoría
+      const auditEntry: MaintenanceAuditEntry = {
+        timestamp: new Date().toISOString(),
+        changedBy,
+        changes,
+      };
+
+      // Actualiza el schedule con el histórico (filtrar undefined de updates)
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, value]) => value !== undefined)
+      );
+
+      const updatedSchedule = {
+        ...cleanUpdates,
+        updatedAt: new Date().toISOString(),
+        updatedBy: changedBy,
+        editHistory: [...(currentSchedule.editHistory || []), auditEntry],
+      };
+
+      await update(scheduleRef, updatedSchedule);
 
       return {
         result: "OK",

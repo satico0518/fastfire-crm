@@ -145,6 +145,16 @@ h1 {
   }
 }
 
+/* Botones disabled mayor contraste (tema oscuro) */
+.MuiButton-root.Mui-disabled,
+.MuiButton-root.Mui-disabled:hover,
+button.Mui-disabled {
+  background-color: rgba(125,125,125,0.45) !important;
+  color: rgba(245,245,245,0.85) !important;
+  border: 1px solid rgba(180,180,180,0.75) !important;
+  opacity: 1 !important;
+}
+
 /* Tabs styling */
 .MuiTabs-root {
   min-height: 34px !important;

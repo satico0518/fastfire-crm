@@ -6,11 +6,12 @@ import { ScheduleCard } from './ScheduleCard';
 interface Props {
   dateLabel: string;
   schedules: MaintenanceSchedule[];
+  isTodayGroup?: boolean;
 }
 
-export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules }) => {
+export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules, isTodayGroup = false }) => {
   return (
-    <Box sx={{ mb: 1 }}>
+    <Box sx={{ mb: 1 }} data-today-group={isTodayGroup ? 'true' : undefined}>
       {/* Date Header Tag */}
       <Box sx={{
         mb: 1,

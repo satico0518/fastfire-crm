@@ -196,9 +196,9 @@ export const SignaturePadField = ({
                   boxShadow: '0 0 10px rgba(10,132,255,0.3)',
                 },
                 '&.Mui-disabled': {
-                  background: 'rgba(255,255,255,0.05)',
-                  color: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.05)'
+                  background: 'rgba(125,125,125,0.4)',
+                  color: 'rgba(245,245,245,0.8)',
+                  border: '1px solid rgba(180,180,180,0.7)'
                 }
               }}
             >

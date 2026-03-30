@@ -1,3 +1,9 @@
+export interface MaintenanceAuditEntry {
+  timestamp: string;
+  changedBy: string;
+  changes: Record<string, { old: any; new: any }>;
+}
+
 export interface MaintenanceSchedule {
   id: string;
   title: string; 
@@ -14,4 +20,7 @@ export interface MaintenanceSchedule {
   hasReport?: 'SI' | 'NO' | 'NA';
   createdAt: string;
   createdBy: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  editHistory?: MaintenanceAuditEntry[];
 }

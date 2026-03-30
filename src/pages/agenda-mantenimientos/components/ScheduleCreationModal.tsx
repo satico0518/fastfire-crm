@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
+import { MaintenanceService } from '../../../services/maintenance.service';
 import { useAuhtStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
@@ -28,6 +29,7 @@ interface Props {
   onClose: () => void;
   selectedDateStr: string | null;
   onSave: (schedule: MaintenanceSchedule) => void;
+  editingSchedule?: MaintenanceSchedule | null;
 }
 
 const darkInputFieldSx = {
@@ -46,9 +48,10 @@ const darkInputFieldSx = {
   '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
 };
 
-export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selectedDateStr, onSave }) => {
+export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selectedDateStr, onSave, editingSchedule }) => {
   const user = useAuhtStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [ubication, setUbication] = useState('');
   const [activity, setActivity] = useState('');
@@ -59,13 +62,31 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   const [quotationNumber, setQuotationNumber] = useState('');
   const [hasReport, setHasReport] = useState<'SI' | 'NO' | 'NA'>('NO');
 
-  useEffect(() => {
-    if (open && selectedDateStr) {
-      setDateVal(selectedDateStr + 'T08:00'); // default 8am
-    }
-  }, [open, selectedDateStr]);
+  const isEditMode = !!editingSchedule;
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (open && editingSchedule) {
+      // Modo edición: cargar datos existentes
+      setUbication(editingSchedule.address || '');
+      setActivity(editingSchedule.title || '');
+      setObs(editingSchedule.observations || '');
+      setDateVal(editingSchedule.dateStr ? dayjs(editingSchedule.dateStr).format('YYYY-MM-DDTHH:mm') : '');
+      setHasQuotation(editingSchedule.hasQuotation || 'NO');
+      setQuotationNumber(editingSchedule.quotationNumber || '');
+      setHasReport(editingSchedule.hasReport || 'NO');
+    } else if (open && selectedDateStr) {
+      // Modo creación: inicializar con fecha seleccionada
+      setDateVal(selectedDateStr + 'T08:00');
+      setUbication('');
+      setActivity('');
+      setObs('');
+      setHasQuotation('NO');
+      setQuotationNumber('');
+      setHasReport('NO');
+    }
+  }, [open, selectedDateStr, editingSchedule]);
+
+  const handleSave = async () => {
     if (!ubication || !activity || !dateVal) return;
 
     if (dayjs(dateVal).isBefore(dayjs().startOf('day'))) {
@@ -86,31 +107,81 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       return;
     }
 
-    const newSched: Omit<MaintenanceSchedule, 'id'> = {
-      title: activity,
-      dateStr: new Date(dateVal).toISOString(),
-      address: ubication,
-      description: activity,
-      observations: obs,
-      hasQuotation,
-      quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
-      hasReport,
-      status: 'SCHEDULED',
-      priority: 'NORMAL',
-      createdAt: new Date().toISOString(),
-      createdBy: user ? `${user.firstName} ${user.lastName}` : 'Administrador',
-    };
+    setIsLoading(true);
 
-    onSave(newSched as MaintenanceSchedule);
-    
-    // reset
-    setUbication('');
-    setActivity('');
-    setObs('');
-    setHasQuotation('NO');
-    setQuotationNumber('');
-    setHasReport('NO');
-    onClose();
+    try {
+      if (isEditMode && editingSchedule) {
+        // Modo actualización
+        const updates: Partial<MaintenanceSchedule> = {
+          title: activity,
+          dateStr: new Date(dateVal).toISOString(),
+          address: ubication,
+          description: activity,
+          observations: obs,
+          hasQuotation,
+          quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
+          hasReport,
+        };
+
+        const resp = await MaintenanceService.updateSchedule(
+          editingSchedule.id,
+          updates,
+          user?.email || 'Sistema'
+        );
+
+        if (resp.result === 'OK') {
+          setSnackbar({
+            open: true,
+            message: 'Agendamiento actualizado correctamente',
+            severity: 'success'
+          });
+          
+          // Reset y cierre
+          setUbication('');
+          setActivity('');
+          setObs('');
+          setHasQuotation('NO');
+          setQuotationNumber('');
+          setHasReport('NO');
+          onClose();
+        } else {
+          setSnackbar({
+            open: true,
+            message: resp.errorMessage || 'Error al actualizar',
+            severity: 'error'
+          });
+        }
+      } else {
+        // Modo creación
+        const newSched: Omit<MaintenanceSchedule, 'id'> = {
+          title: activity,
+          dateStr: new Date(dateVal).toISOString(),
+          address: ubication,
+          description: activity,
+          observations: obs,
+          hasQuotation,
+          quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
+          hasReport,
+          status: 'SCHEDULED',
+          priority: 'NORMAL',
+          createdAt: new Date().toISOString(),
+          createdBy: user ? `${user.firstName} ${user.lastName}` : 'Administrador',
+        };
+
+        onSave(newSched as MaintenanceSchedule);
+        
+        // reset
+        setUbication('');
+        setActivity('');
+        setObs('');
+        setHasQuotation('NO');
+        setQuotationNumber('');
+        setHasReport('NO');
+        onClose();
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -134,7 +205,9 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
     >
 
       <DialogTitle sx={{ p: 3, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 800 }}>Nuevo Agendamiento</Typography>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 800 }}>
+          {isEditMode ? 'Editar Agendamiento' : 'Nuevo Agendamiento'}
+        </Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
           <CloseIcon />
         </IconButton>
@@ -317,8 +390,8 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
         </Button>
         <Button 
           variant="contained" 
-          onClick={handleSave} 
-          disabled={!activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim())}
+          onClick={handleSave}
+          disabled={!activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim()) || isLoading}
           sx={{ 
             bgcolor: 'rgba(10,132,255,0.2)', 
             border: '1px solid rgba(10,132,255,0.5)',
@@ -334,13 +407,13 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
               border: '1px solid rgba(10,132,255,0.8)'
             },
             '&.Mui-disabled': {
-              bgcolor: 'rgba(255,255,255,0.05)',
-              color: 'rgba(255,255,255,0.2)',
-              border: '1px solid rgba(255,255,255,0.1)'
+              bgcolor: 'rgba(125,125,125,0.4)',
+              color: 'rgba(245,245,245,0.8)',
+              border: '1px solid rgba(180,180,180,0.7)'
             }
           }}
         >
-          Agendar Mantenimiento
+          {isLoading ? 'Guardando...' : (isEditMode ? 'Actualizar Agendamiento' : 'Agendar Mantenimiento')}
         </Button>
       </DialogActions>
     </Dialog>

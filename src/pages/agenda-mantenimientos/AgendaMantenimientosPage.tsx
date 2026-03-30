@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, IconButton, CircularProgress, Button, Stack } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import AddIcon from '@mui/icons-material/Add';
@@ -32,6 +32,8 @@ export const AgendaMantenimientosPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreationOpen, setIsCreationOpen] = useState(false);
   const [creationDate, setCreationDate] = useState<string | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<MaintenanceSchedule | null>(null);
+  const scheduleListRef = useRef<HTMLDivElement | null>(null);
   
   const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
   const isPlanner = user?.permissions?.includes("PLANNER");
@@ -72,11 +74,18 @@ export const AgendaMantenimientosPage = () => {
   };
 
   const handleOpenCreation = (dateStr?: string) => {
+    setEditingSchedule(null); // Limpiar modo edición
     if (dateStr) {
       setCreationDate(dateStr);
     } else {
       setCreationDate(dayjs().format('YYYY-MM-DD'));
     }
+    setIsCreationOpen(true);
+  };
+
+  const handleEditSchedule = (schedule: MaintenanceSchedule) => {
+    setEditingSchedule(schedule);
+    setCreationDate(null);
     setIsCreationOpen(true);
   };
 
@@ -99,44 +108,82 @@ export const AgendaMantenimientosPage = () => {
 
     // Ensure at least the next 14 days are visible, even if no schedules exist.
     const nextDays = 14;
-    const result: Record<string, MaintenanceSchedule[]> = {};
+
+    const today = dayjs().startOf('day');
+    const futureLimit = dayjs().add(nextDays - 1, 'day').startOf('day');
+
+    const steps: Array<{ dateKey: string; label: string; schedules: MaintenanceSchedule[] }> = [];
+
+    // Past schedule days (antes de hoy)
+    Object.keys(scheduleByDate)
+      .sort()
+      .filter(dateKey => dayjs(dateKey).isBefore(today, 'day'))
+      .forEach(dateKey => {
+        const date = dayjs(dateKey);
+        const dayWord = date.isYesterday() ? 'AYER' : date.format('dddd').toUpperCase();
+        const monDay = date.format('MMM D').toUpperCase().replace('.', '');
+        const groupKey = `${dayWord} • ${monDay}`;
+        steps.push({ dateKey, label: groupKey, schedules: scheduleByDate[dateKey] });
+      });
+
+    // Next 14 days (incluye hoy)
     for (let i = 0; i < nextDays; i += 1) {
       const date = dayjs().add(i, 'day');
       let dayWord = '';
 
       if (date.isToday()) dayWord = 'HOY';
       else if (date.isTomorrow()) dayWord = 'MAÑANA';
-      else if (date.isYesterday()) dayWord = 'AYER';
       else dayWord = date.format('dddd').toUpperCase();
 
       const monDay = date.format('MMM D').toUpperCase().replace('.', '');
       const groupKey = `${dayWord} • ${monDay}`;
       const dateKey = date.format('YYYY-MM-DD');
 
-      result[groupKey] = scheduleByDate[dateKey] || [];
+      const existingIndex = steps.findIndex(step => step.dateKey === dateKey);
+      if (existingIndex !== -1) {
+        steps[existingIndex].label = groupKey; // mantener label actual si se sobreescribe
+      } else {
+        steps.push({ dateKey, label: groupKey, schedules: scheduleByDate[dateKey] || [] });
+      }
     }
 
-    // Add any additional scheduled days outside the 14-day window
-    Object.keys(scheduleByDate).sort().forEach((dateKey) => {
-      const date = dayjs(dateKey);
-      const isWithinRange = date.isSame(dayjs(), 'day') || (date.isAfter(dayjs(), 'day') && date.isBefore(dayjs().add(nextDays, 'day'), 'day'));
-      if (!isWithinRange) {
-        let dayWord = date.format('dddd').toUpperCase();
-        if (date.isToday()) dayWord = 'HOY';
-        else if (date.isTomorrow()) dayWord = 'MAÑANA';
-        else if (date.isYesterday()) dayWord = 'AYER';
-
+    // Future schedule days beyond the 14-day window
+    Object.keys(scheduleByDate)
+      .sort()
+      .filter(dateKey => dayjs(dateKey).isAfter(futureLimit, 'day'))
+      .forEach(dateKey => {
+        const date = dayjs(dateKey);
+        const dayWord = date.format('dddd').toUpperCase();
         const monDay = date.format('MMM D').toUpperCase().replace('.', '');
         const groupKey = `${dayWord} • ${monDay}`;
 
-        if (!result[groupKey]) {
-          result[groupKey] = scheduleByDate[dateKey];
+        const exists = steps.some(step => step.dateKey === dateKey);
+        if (!exists) {
+          steps.push({ dateKey, label: groupKey, schedules: scheduleByDate[dateKey] });
         }
-      }
+      });
+
+    // Convert steps to object manteniendo orden cronológico
+    const orderedResult: Record<string, MaintenanceSchedule[]> = {};
+    steps.forEach(entry => {
+      orderedResult[entry.label] = entry.schedules;
     });
 
-    return result;
+    return orderedResult;
   }, [schedulesData]);
+
+  useEffect(() => {
+    const todayEntry = Object.keys(groupedSchedules).find(label => label.startsWith('HOY'));
+    if (!todayEntry) return;
+
+    const container = scheduleListRef.current;
+    if (!container) return;
+
+    const todayNode = container.querySelector('[data-today-group]') as HTMLElement | null;
+    if (todayNode) {
+      todayNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [groupedSchedules]);
 
   if (!isAllowedToView) {
     return <UnauthorizedPage />;
@@ -223,19 +270,27 @@ export const AgendaMantenimientosPage = () => {
       </Box>
 
       {/* MOBILE LIST VIEW */}
-      <Box sx={{ 
-        display: { xs: 'flex', lg: 'none' }, 
-        flexDirection: 'column', 
-        gap: 1.5,
-        flex: 1,
-        overflowY: 'auto',
-        pb: 12, // More padding to avoid collision with nav / FAB
-        px: 0.5,
-        scrollbarWidth: 'none', // Hide scrollbar for cleaner look
-        '&::-webkit-scrollbar': { display: 'none' } 
-      }}>
+      <Box
+        ref={scheduleListRef}
+        sx={{
+          display: { xs: 'flex', lg: 'none' },
+          flexDirection: 'column',
+          gap: 1.5,
+          flex: 1,
+          overflowY: 'auto',
+          pb: 12, // More padding to avoid collision with nav / FAB
+          px: 0.5,
+          scrollbarWidth: 'none', // Hide scrollbar for cleaner look
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
          {Object.entries(groupedSchedules).map(([dateLabel, schedules]) => (
-           <ScheduleDayBlock key={dateLabel} dateLabel={dateLabel} schedules={schedules} />
+           <ScheduleDayBlock
+             key={dateLabel}
+             dateLabel={dateLabel}
+             schedules={schedules}
+             isTodayGroup={dateLabel.startsWith('HOY')}
+           />
          ))}
          
          {Object.keys(groupedSchedules).length === 0 && (
@@ -250,15 +305,20 @@ export const AgendaMantenimientosPage = () => {
         <CalendarGridView 
           schedules={schedulesData} 
           onOpenCreation={handleOpenCreation}
+          onEdit={handleEditSchedule}
           isAdmin={isPlanner}
         />
       </Box>
 
       <ScheduleCreationModal 
         open={isCreationOpen} 
-        onClose={() => setIsCreationOpen(false)}
+        onClose={() => {
+          setIsCreationOpen(false);
+          setEditingSchedule(null);
+        }}
         selectedDateStr={creationDate} 
         onSave={handleCreateSchedule}
+        editingSchedule={editingSchedule}
       />
     </Box>
   );

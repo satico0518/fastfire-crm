@@ -1,5 +1,5 @@
-import React from 'react';
-import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Stack, Chip, Button, DialogActions } from '@mui/material';
+import React, { useState } from 'react';
+import { Dialog, DialogTitle, DialogContent, Typography, Box, IconButton, Divider, Grid, Stack, Chip, Button, DialogActions, Collapse } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { MaintenanceService } from '../../../services/maintenance.service';
@@ -14,6 +14,8 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import HistoryIcon from '@mui/icons-material/History';
 import { useAuhtStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 
@@ -21,6 +23,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   schedule: MaintenanceSchedule;
+  onEdit?: (schedule: MaintenanceSchedule) => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -43,9 +46,10 @@ const getStatusText = (status: string) => {
   }
 };
 
-export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }) => {
+export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, onEdit }) => {
   const user = useAuhtStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
+  const [showHistory, setShowHistory] = useState(false);
   
   const isAllowedToManage = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
   const dateObj = dayjs(schedule.dateStr);
@@ -62,7 +66,7 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
   };
 
   const handleUpdateStatus = async (newStatus: MaintenanceSchedule['status']) => {
-    const resp = await MaintenanceService.updateSchedule(schedule.id, { status: newStatus });
+    const resp = await MaintenanceService.updateSchedule(schedule.id, { status: newStatus }, user?.email || 'Sistema');
     if (resp.result === "OK") {
       setSnackbar({ open: true, message: `Estado actualizado a: ${getStatusText(newStatus)}`, severity: "success" });
     }
@@ -103,6 +107,29 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
            </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
+          {schedule.editHistory && schedule.editHistory.length > 0 && (
+            <IconButton 
+              onClick={() => setShowHistory(!showHistory)} 
+              size="small" 
+              sx={{ bgcolor: 'rgba(10,132,255,0.1)', color: '#0a84ff', '&:hover': { bgcolor: 'rgba(10,132,255,0.2)' } }}
+              title="Ver histórico de cambios"
+            >
+              <HistoryIcon />
+            </IconButton>
+          )}
+          {isAllowedToManage && (
+            <IconButton 
+              onClick={() => {
+                onEdit?.(schedule);
+                onClose();
+              }} 
+              size="small" 
+              sx={{ bgcolor: 'rgba(10,132,255,0.1)', color: '#0a84ff', '&:hover': { bgcolor: 'rgba(10,132,255,0.2)' } }}
+              title="Editar agendamiento"
+            >
+              <EditIcon />
+            </IconButton>
+          )}
           {isAllowedToManage && (
             <IconButton onClick={handleDelete} size="small" sx={{ bgcolor: 'rgba(255,69,58,0.1)', color: '#ff453a', '&:hover': { bgcolor: 'rgba(255,69,58,0.2)' } }}>
               <DeleteOutlineIcon />
@@ -236,6 +263,46 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule }
              {schedule.createdAt ? dayjs(schedule.createdAt).format('DD/MMM/YYYY HH:mm') : ''}
            </Typography>
         </Box>
+
+        {schedule.updatedBy && (
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+              Última actualización: {schedule.updatedBy}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+              {schedule.updatedAt ? dayjs(schedule.updatedAt).format('DD/MMM/YYYY HH:mm') : ''}
+            </Typography>
+          </Box>
+        )}
+
+        <Collapse in={showHistory} timeout="auto" unmountOnExit>
+          <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, color: 'rgba(255,255,255,0.7)' }}>
+              Histórico de Cambios
+            </Typography>
+            <Stack spacing={2}>
+              {schedule.editHistory?.map((entry, idx) => (
+                <Box key={idx} sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 1.5, borderLeft: '3px solid #0a84ff' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>
+                      {entry.changedBy}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                      {dayjs(entry.timestamp).format('DD/MMM HH:mm')}
+                    </Typography>
+                  </Box>
+                  <Stack spacing={0.5}>
+                    {Object.entries(entry.changes).map(([field, change]) => (
+                      <Typography key={field} variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>
+                        <strong>{field}:</strong> <span style={{textDecoration: 'line-through', opacity: 0.6}}>{JSON.stringify(change.old)}</span> → <span style={{color: '#30d158'}}>{JSON.stringify(change.new)}</span>
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        </Collapse>
       </DialogContent>
       
       {isAllowedToManage && (
