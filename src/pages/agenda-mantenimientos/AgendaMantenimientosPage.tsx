@@ -361,11 +361,11 @@ export const AgendaMantenimientosPage = () => {
         </Box>
       </Box>
 
-      <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', lg: 'flex' }, mb: 0.5, transform: 'scale(0.5)', transformOrigin: 'left center' }}>
+      <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', lg: 'flex' }, mb: 0.2, transform: 'scale(0.7)', transformOrigin: 'left center' }}>
         {[
-          { id: 'day', label: 'Día' },
-          { id: 'week', label: 'Semana' },
-          { id: 'month', label: 'Mes' }
+          { id: 'day', label: 'DÍA' },
+          { id: 'week', label: 'SEMANA' },
+          { id: 'month', label: 'MES' }
         ].map(view => (
           <Button
             key={view.id}
@@ -461,7 +461,7 @@ export const AgendaMantenimientosPage = () => {
 
       {/* DESKTOP GRID VIEW (mes) */}
       {viewMode === 'month' && (
-        <Box sx={{ display: { xs: 'none', lg: 'flex' }, pt: 2, flexGrow: 1, minHeight: 0 }}>
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, pt: 0.5, flexGrow: 1, minHeight: 0 }}>
           <CalendarGridView
             schedules={schedulesData}
             onOpenCreation={handleOpenCreation}

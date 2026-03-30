@@ -83,10 +83,10 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
   const daysOfWeek = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 
   return (
-    <Box sx={{ width: '100%', pt: 2, px: { md: 0, lg: 2 }, display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <Box sx={{ width: '100%', pt: 0.5, px: { md: 0, lg: 2 }, display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       
       {/* Calendar Header */}
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2, px: 1 }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5, px: 1 }}>
         <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px', textTransform: 'capitalize', fontSize: '1.3rem' }}>
           {currentMonth.format('MMMM YYYY')}
         </Typography>
