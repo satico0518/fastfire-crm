@@ -44,5 +44,6 @@ export interface FormatSubmission {
   reviewedByUserKey?: string;
   reviewedDate?: number;
   reviewNotes?: string;
+  isPublicSubmission?: boolean;
   data: Record<string, unknown>;
 }

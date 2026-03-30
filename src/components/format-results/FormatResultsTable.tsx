@@ -97,9 +97,12 @@ export const FormatResultsTable = () => {
     const data = filteredSubmissions.map(submission => {
       const row: any = {
         'Estado': statusConfig[submission.status]?.label || submission.status,
-        'Creado por': getUserNameByKey(submission.createdByUserKey, users || []) || 'NA',
+        'Creado por': submission.createdByUserKey === 'PUBLIC' 
+          ? 'Usuario Público' 
+          : getUserNameByKey(submission.createdByUserKey, users || []) || 'NA',
         'Fecha de Creación': translateTimestampToString(submission.createdDate),
         'Notas del Revisor': submission.reviewNotes || '',
+        'Envío Público': submission.isPublicSubmission ? 'Sí' : 'No',
       };
 
       // Add format-specific fields
@@ -350,8 +353,17 @@ export const FormatResultsTable = () => {
               size="small"
               sx={{ bgcolor: "rgba(255,255,255,0.25)", color: "white", border: "none" }}
             />
+            {viewSubmission.isPublicSubmission && (
+              <Chip
+                label="Público"
+                size="small"
+                sx={{ bgcolor: "rgba(10,132,255,0.3)", color: "#0a84ff", border: "1px solid rgba(10,132,255,0.5)", fontWeight: 700 }}
+              />
+            )}
             <Typography variant="caption" sx={{ opacity: 0.85 }}>
-              {getUserNameByKey(viewSubmission.createdByUserKey, users || [])} — {translateTimestampToString(viewSubmission.createdDate)}
+              {viewSubmission.createdByUserKey === 'PUBLIC' 
+                ? 'Usuario Público' 
+                : getUserNameByKey(viewSubmission.createdByUserKey, users || [])} — {translateTimestampToString(viewSubmission.createdDate)}
             </Typography>
           </Box>
         </DialogTitle>

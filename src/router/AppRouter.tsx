@@ -14,6 +14,7 @@ import { ConfirmationComponent } from "../components/confirmation/ConfirmationCo
 import { TasksbyGroupPage } from "../pages/tasks-by-group/TasksbyGroupPage";
 import { FormatsPage } from "../pages/formats/FormatsPage";
 import { AgendaMantenimientosPage } from "../pages/agenda-mantenimientos/AgendaMantenimientosPage";
+import { PublicFormatPage } from "../pages/formats/PublicFormatPage";
 
 export const AppRouter = () => {
   const isLoading = useUiStore(state => state.isLoading);
@@ -46,6 +47,7 @@ export const AppRouter = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/agenda-mantenimientos" element={<AgendaMantenimientosPage />} />
         </Route>
+        <Route path="/public-format/:formatId" element={<PublicFormatPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="*" element={<LoginPage />} />
         </Route>
