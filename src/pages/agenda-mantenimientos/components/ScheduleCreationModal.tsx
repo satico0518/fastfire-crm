@@ -66,7 +66,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
 
   useEffect(() => {
     if (open && editingSchedule) {
-      // Modo edición: cargar datos existentes
+      {/* Modo edición: cargar datos existentes */}
       setUbication(editingSchedule.address || '');
       setActivity(editingSchedule.title || '');
       setObs(editingSchedule.observations || '');
@@ -75,7 +75,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       setQuotationNumber(editingSchedule.quotationNumber || '');
       setHasReport(editingSchedule.hasReport || 'NO');
     } else if (open && selectedDateStr) {
-      // Modo creación: inicializar con fecha seleccionada
+      {/* Modo creación: inicializar con fecha seleccionada */}
       setDateVal(selectedDateStr + 'T08:00');
       setUbication('');
       setActivity('');
@@ -111,7 +111,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
 
     try {
       if (isEditMode && editingSchedule) {
-        // Modo actualización
+        {/* Modo actualización */}
         const updates: Partial<MaintenanceSchedule> = {
           title: activity,
           dateStr: new Date(dateVal).toISOString(),
@@ -136,7 +136,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
             severity: 'success'
           });
           
-          // Reset y cierre
+          {/* Reset y cierre */}
           setUbication('');
           setActivity('');
           setObs('');
@@ -152,7 +152,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           });
         }
       } else {
-        // Modo creación
+        {/* Modo creación */}
         const newSched: Omit<MaintenanceSchedule, 'id'> = {
           title: activity,
           dateStr: new Date(dateVal).toISOString(),
@@ -170,7 +170,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
 
         onSave(newSched as MaintenanceSchedule);
         
-        // reset
+        {/* Reset y cierre */}
         setUbication('');
         setActivity('');
         setObs('');

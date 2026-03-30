@@ -27,7 +27,7 @@ export const AgendaMantenimientosPage = () => {
   const navigate = useNavigate();
   const user = useAuhtStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
-  
+
   const [schedulesData, setSchedulesData] = useState<MaintenanceSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreationOpen, setIsCreationOpen] = useState(false);
@@ -35,7 +35,7 @@ export const AgendaMantenimientosPage = () => {
   const [editingSchedule, setEditingSchedule] = useState<MaintenanceSchedule | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
   const scheduleListRef = useRef<HTMLDivElement | null>(null);
-  
+
   const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
   const isPlanner = user?.permissions?.includes("PLANNER");
 
@@ -44,7 +44,7 @@ export const AgendaMantenimientosPage = () => {
     if (!isAllowedToView) {
       return;
     }
-    
+
     const unsubscribe = MaintenanceService.subscribeToSchedules((data) => {
       setSchedulesData(data);
       setIsLoading(false);
@@ -58,7 +58,7 @@ export const AgendaMantenimientosPage = () => {
   const handleCreateSchedule = async (newSchedule: MaintenanceSchedule) => {
     const { id, ...dataToSave } = newSchedule;
     const resp = await MaintenanceService.createSchedule(dataToSave);
-    
+
     if (resp.result === "OK") {
       setSnackbar({
         open: true,
@@ -227,12 +227,12 @@ export const AgendaMantenimientosPage = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: { xs: '100vh', lg: 'calc(100vh - 90px)' }, 
-        width: '100%' 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: { xs: '100vh', lg: 'calc(100vh - 90px)' },
+        width: '100%'
       }}>
         <CircularProgress size={40} sx={{ color: '#2b90ff' }} />
       </Box>
@@ -240,17 +240,17 @@ export const AgendaMantenimientosPage = () => {
   }
 
   return (
-    <Box sx={{ 
-      p: { xs: 2, lg: 1 }, 
+    <Box sx={{
+      p: { xs: 2, lg: 1 },
       width: '100%',
-      maxWidth: { xs: '100%', lg: '100%' }, 
+      maxWidth: { xs: '100%', lg: '100%' },
       margin: '0 auto',
       height: { xs: 'calc(100vh - 50px - 16px)', lg: 'calc(100vh - 90px)' },
       display: 'flex',
       flexDirection: 'column',
-      bgcolor: { xs: '#000000', lg: 'transparent' }, 
+      bgcolor: { xs: '#000000', lg: 'transparent' },
       color: 'white',
-      overflow: 'hidden', 
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <Box sx={{ display: { xs: 'flex', lg: 'none' }, flexDirection: 'column', gap: 1, mb: 1, pt: 1 }}>
@@ -307,30 +307,31 @@ export const AgendaMantenimientosPage = () => {
             <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
             {isPlanner && (
               <Button
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenCreation()}
-              sx={{
-                background: 'rgba(10,132,255,0.15)',
-                border: '1px solid rgba(10,132,255,0.4)',
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontWeight: 700,
-                color: '#0a84ff',
-                backdropFilter: 'blur(10px)',
-                py: 0.5,
-                px: 2,
-                '&:hover': {
-                  background: 'rgba(10,132,255,0.25)',
-                  border: '1px solid #0a84ff'
-                }
-              }}
-            >
-              Nuevo Agendamiento
-            </Button>
-          )}
-        </Stack>
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenCreation()}
+                sx={{
+                  background: 'rgba(10,132,255,0.15)',
+                  border: '1px solid rgba(10,132,255,0.4)',
+                  borderRadius: '10px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  color: '#0a84ff',
+                  backdropFilter: 'blur(10px)',
+                  py: 0.5,
+                  px: 2,
+                  '&:hover': {
+                    background: 'rgba(10,132,255,0.25)',
+                    border: '1px solid #0a84ff'
+                  }
+                }}
+              >
+                Nuevo Agendamiento
+              </Button>
+            )}
+          </Stack>
+        </Box>
       </Box>
 
       <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', lg: 'flex' }, mb: 1 }}>
@@ -373,20 +374,20 @@ export const AgendaMantenimientosPage = () => {
             '&::-webkit-scrollbar': { display: 'none' }
           }}
         >
-           {Object.entries(displayedSchedules).map(([dateLabel, schedules]) => (
-             <ScheduleDayBlock
-               key={dateLabel}
-               dateLabel={dateLabel}
-               schedules={schedules}
-               isTodayGroup={dateLabel.startsWith('HOY')}
-             />
-           ))}
-           
-           {Object.keys(displayedSchedules).length === 0 && (
-              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
-                No hay programaciones en los últimos 3 meses.
-              </Typography>
-           )}
+          {Object.entries(displayedSchedules).map(([dateLabel, schedules]) => (
+            <ScheduleDayBlock
+              key={dateLabel}
+              dateLabel={dateLabel}
+              schedules={schedules}
+              isTodayGroup={dateLabel.startsWith('HOY')}
+            />
+          ))}
+
+          {Object.keys(displayedSchedules).length === 0 && (
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
+              No hay programaciones en los últimos 3 meses.
+            </Typography>
+          )}
         </Box>
       )}
 
@@ -413,8 +414,8 @@ export const AgendaMantenimientosPage = () => {
       {/* DESKTOP GRID VIEW (mes) */}
       {viewMode === 'month' && (
         <Box sx={{ display: { xs: 'none', lg: 'flex' }, pt: 2, flexGrow: 1, minHeight: 0 }}>
-          <CalendarGridView 
-            schedules={schedulesData} 
+          <CalendarGridView
+            schedules={schedulesData}
             onOpenCreation={handleOpenCreation}
             onEdit={handleEditSchedule}
             isAdmin={isPlanner}
@@ -422,13 +423,13 @@ export const AgendaMantenimientosPage = () => {
         </Box>
       )}
 
-      <ScheduleCreationModal 
-        open={isCreationOpen} 
+      <ScheduleCreationModal
+        open={isCreationOpen}
         onClose={() => {
           setIsCreationOpen(false);
           setEditingSchedule(null);
         }}
-        selectedDateStr={creationDate} 
+        selectedDateStr={creationDate}
         onSave={handleCreateSchedule}
         editingSchedule={editingSchedule}
       />
