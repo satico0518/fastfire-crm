@@ -638,6 +638,14 @@ export const FormatResultsTable = () => {
           pageSizeOptions={[10, 20, 50]}
           initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
           onRowClick={(params) => setViewSubmission(params.row as FormatSubmission)}
+          localeText={{
+            MuiTablePagination: { 
+              labelRowsPerPage: "Filas por página",
+              labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+            },
+            noRowsLabel: "Sin filas",
+            footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
+          }}
           sx={{
             border: 0,
             fontSize: "0.82rem",

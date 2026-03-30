@@ -343,7 +343,12 @@ export default function StockTableComponent() {
         showColumnVerticalBorder
         density="standard"
         localeText={{
-          MuiTablePagination: { labelRowsPerPage: "Filas por página" },
+          MuiTablePagination: { 
+            labelRowsPerPage: "Filas por página",
+            labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+          },
+          noRowsLabel: "Sin filas",
+          footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
         }}
         sx={{ 
           border: 0,

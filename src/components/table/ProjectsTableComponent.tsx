@@ -370,7 +370,12 @@ export default function ProjectsTable() {
         pageSizeOptions={[15, 30]}
         rowHeight={60}
         localeText={{
-          MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
+          MuiTablePagination: { 
+            labelRowsPerPage: "Filas por página",
+            labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+          },
+          noRowsLabel: "Sin filas",
+          footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
         }}
         sx={{ 
           border: 0,
