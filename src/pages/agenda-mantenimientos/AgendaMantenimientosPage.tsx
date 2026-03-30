@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, IconButton, CircularProgress, Button, Stack } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import AddIcon from '@mui/icons-material/Add';
 import { MaintenanceSchedule } from '../../interfaces/Maintenance';
 import { MaintenanceService } from '../../services/maintenance.service';
@@ -34,10 +36,22 @@ export const AgendaMantenimientosPage = () => {
   const [creationDate, setCreationDate] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState<MaintenanceSchedule | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+  const [currentWeekStart, setCurrentWeekStart] = useState(dayjs().startOf('week'));
+  const [currentDay, setCurrentDay] = useState(dayjs().startOf('day'));
   const scheduleListRef = useRef<HTMLDivElement | null>(null);
 
   const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
   const isPlanner = user?.permissions?.includes("PLANNER");
+
+  // Navigation handlers
+  const prevWeek = () => setCurrentWeekStart(currentWeekStart.subtract(1, 'week'));
+  const nextWeek = () => setCurrentWeekStart(currentWeekStart.add(1, 'week'));
+  const prevDay = () => setCurrentDay(currentDay.subtract(1, 'day'));
+  const nextDay = () => setCurrentDay(currentDay.add(1, 'day'));
+  const goToToday = () => {
+    setCurrentWeekStart(dayjs().startOf('week'));
+    setCurrentDay(dayjs().startOf('day'));
+  };
 
   // Real-time subscription
   useEffect(() => {
@@ -173,40 +187,54 @@ export const AgendaMantenimientosPage = () => {
     return orderedResult;
   }, [schedulesData]);
 
+  // Direct index by date key for day/week views (not limited by groupedSchedules range)
+  const schedulesByDate = useMemo(() => {
+    const result: Record<string, MaintenanceSchedule[]> = {};
+    schedulesData.forEach(schedule => {
+      const dateKey = dayjs(schedule.dateStr).format('YYYY-MM-DD');
+      if (!result[dateKey]) {
+        result[dateKey] = [];
+      }
+      result[dateKey].push(schedule);
+    });
+    return result;
+  }, [schedulesData]);
+
   const displayedSchedules = useMemo(() => {
     if (viewMode === 'month') {
       return groupedSchedules;
     }
 
-    const today = dayjs().startOf('day');
-    const endDate = viewMode === 'week' ? today.add(6, 'day') : today;
     const result: Record<string, MaintenanceSchedule[]> = {};
 
-    Object.entries(groupedSchedules).forEach(([label, schedules]) => {
-      const datePart = label.split('•')[1]?.trim() || '';
-      const parsedDate = dayjs(datePart, 'MMM D', 'es').year(today.year());
+    if (viewMode === 'day') {
+      // For day view, use schedulesByDate directly
+      const currentDayKey = currentDay.format('YYYY-MM-DD');
+      const isToday = currentDay.isToday();
+      const dayWord = isToday ? 'HOY' : currentDay.format('dddd').toUpperCase();
+      const monDay = currentDay.format('MMM D').toUpperCase().replace('.', '');
+      const label = `${dayWord} • ${monDay}`;
 
-      if (viewMode === 'day' && label.startsWith('HOY')) {
-        result[label] = schedules;
-        return;
+      result[label] = schedulesByDate[currentDayKey] || [];
+      return result;
+    }
+
+    if (viewMode === 'week') {
+      // For week view, show all days in the current week using schedulesByDate
+      for (let i = 0; i < 7; i++) {
+        const date = currentWeekStart.add(i, 'day');
+        const dateKey = date.format('YYYY-MM-DD');
+        const isToday = date.isToday();
+        const dayWord = isToday ? 'HOY' : date.format('dddd').toUpperCase();
+        const monDay = date.format('MMM D').toUpperCase().replace('.', '');
+        const label = `${dayWord} • ${monDay}`;
+
+        result[label] = schedulesByDate[dateKey] || [];
       }
-
-      if (!parsedDate.isValid()) {
-        return;
-      }
-
-      if (!parsedDate.isBefore(today, 'day') && !parsedDate.isAfter(endDate, 'day')) {
-        result[label] = schedules;
-      }
-    });
-
-    if (viewMode === 'day' && Object.keys(result).length === 0) {
-      const todayLabel = `HOY • ${today.format('MMM D').toUpperCase()}`.replace('.', '');
-      result[todayLabel] = [];
     }
 
     return result;
-  }, [groupedSchedules, viewMode]);
+  }, [groupedSchedules, viewMode, currentDay, currentWeekStart, schedulesByDate]);
 
   useEffect(() => {
     const todayEntry = Object.keys(groupedSchedules).find(label => label.startsWith('HOY'));
@@ -297,7 +325,28 @@ export const AgendaMantenimientosPage = () => {
         </Stack>
       </Box>
 
-      {/* DESKTOP HEADER */}
+      {/* MOBILE HEADER - Day/Week Navigation Controls */}
+      {(viewMode === 'day' || viewMode === 'week') && (
+        <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+          <IconButton onClick={viewMode === 'day' ? prevDay : prevWeek} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+            <KeyboardArrowLeftIcon />
+          </IconButton>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white', textTransform: 'capitalize' }}>
+            {viewMode === 'day' 
+              ? currentDay.format('dddd, D MMM').toUpperCase()
+              : `${currentWeekStart.format('D MMM')} - ${currentWeekStart.add(6, 'day').format('D MMM')}`.toUpperCase()
+            }
+          </Typography>
+          <Stack direction="row" spacing={0.5}>
+            <Button onClick={goToToday} size="small" sx={{ color: 'white', fontSize: '0.75rem', fontWeight: 600, bgcolor: 'rgba(255,255,255,0.1)', minWidth: 'auto', px: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+              HOY
+            </Button>
+            <IconButton onClick={viewMode === 'day' ? nextDay : nextWeek} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+              <KeyboardArrowRightIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+      )}
       <Box sx={{ display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', gap: 1, mb: 1, mt: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px' }}>
@@ -357,6 +406,29 @@ export const AgendaMantenimientosPage = () => {
           </Button>
         ))}
       </Stack>
+
+      {/* DESKTOP Day/Week Navigation Controls */}
+      {(viewMode === 'day' || viewMode === 'week') && (
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, alignItems: 'center', justifyContent: 'space-between', mt: 1, mb: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <IconButton onClick={viewMode === 'day' ? prevDay : prevWeek} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+              <KeyboardArrowLeftIcon />
+            </IconButton>
+            <Button onClick={goToToday} sx={{ color: 'white', px: 2, fontSize: '0.9rem', fontWeight: 600, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+              HOY
+            </Button>
+            <IconButton onClick={viewMode === 'day' ? nextDay : nextWeek} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+              <KeyboardArrowRightIcon />
+            </IconButton>
+          </Stack>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: 'white', textTransform: 'capitalize' }}>
+            {viewMode === 'day' 
+              ? currentDay.format('dddd, D [de] MMMM YYYY')
+              : `Semana del ${currentWeekStart.format('D [de] MMMM')} al ${currentWeekStart.add(6, 'day').format('D [de] MMMM YYYY')}`
+            }
+          </Typography>
+        </Box>
+      )}
 
       {/* MOBILE LIST VIEW */}
       {(viewMode === 'day' || viewMode === 'week') && (
