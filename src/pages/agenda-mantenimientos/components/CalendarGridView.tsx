@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, IconButton, Button, Paper, Stack, Tooltip, useMediaQuery } from '@mui/material';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
@@ -30,6 +30,14 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf('month'));
   const [selectedSchedule, setSelectedSchedule] = useState<MaintenanceSchedule | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+
+  // Track window height for responsive cell sizing
+  useEffect(() => {
+    const handleResize = () => setWindowHeight(window.innerHeight);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const prevMonth = () => setCurrentMonth(currentMonth.subtract(1, 'month'));
   const nextMonth = () => setCurrentMonth(currentMonth.add(1, 'month'));
@@ -48,6 +56,16 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
 
     return [...blanks, ...monthDays, ...endBlanks];
   }, [currentMonth]);
+
+  // Calculate optimal cell height based on viewport (after calendarMatrix is defined)
+  const cellHeight = useMemo(() => {
+    // Subtract space for: main header (~140px), days header (~40px), padding/margins (~80px)
+    const availableHeight = windowHeight - 260;
+    const rows = Math.ceil(calendarMatrix.length / 7); // Actual number of rows in current month
+    const minCellHeight = isMobile ? 40 : 56;
+    const calculatedHeight = Math.floor((availableHeight / rows) * 0.8); // Reduced by 20%
+    return Math.max(calculatedHeight, minCellHeight);
+  }, [windowHeight, isMobile, calendarMatrix]);
 
   const schedulesByDay = useMemo(() => {
     const map: Record<number, MaintenanceSchedule[]> = {};
@@ -94,7 +112,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        flexGrow: 1,
+        flexShrink: 0,
         minHeight: 0 
       }}>
         {/* Days of week header */}
@@ -109,7 +127,8 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
             <Box 
               key={day} 
               sx={{ 
-                p: 2, 
+                py: 1, 
+                px: 0.5,
                 textAlign: 'center',
                 bgcolor: dIdx === 6 ? 'rgba(255, 69, 58, 0.1)' : 'transparent', 
               }}
@@ -119,7 +138,8 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
                 sx={{ 
                   color: dIdx === 6 ? '#ff453a' : 'rgba(255,255,255,0.6)', 
                   fontWeight: 800, 
-                  letterSpacing: '1px' 
+                  letterSpacing: '1px',
+                  fontSize: '0.75rem'
                 }}
               >
                 {day}
@@ -132,8 +152,8 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
         <Box sx={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(7, 1fr)',
-          gridTemplateRows: `repeat(${calendarMatrix.length / 7}, 1fr)`,
-          flexGrow: 1,
+          gridTemplateRows: `repeat(${calendarMatrix.length / 7}, ${cellHeight}px)`,
+          flexShrink: 0,
           minHeight: 0,
         }}>
           {calendarMatrix.map((dayNum, idx) => {
