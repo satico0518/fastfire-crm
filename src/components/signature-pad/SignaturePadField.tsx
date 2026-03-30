@@ -39,7 +39,7 @@ export const SignaturePadField = ({
   const hasSignature = !!value && !isDrawing;
 
   return (
-    <Box>
+    <Box sx={{ width: "100%" }}>
       <FormLabel
         sx={{
           fontSize: "0.78rem",
@@ -61,6 +61,7 @@ export const SignaturePadField = ({
         /* ── Confirmed signature preview ─────────────────────────────── */
         <Box
           sx={{
+            width: "100%",
             border: "1px solid",
             borderColor: "success.light",
             borderRadius: 2,
@@ -98,6 +99,7 @@ export const SignaturePadField = ({
         /* ── Signature canvas ────────────────────────────────────────── */
         <Box
           sx={{
+            width: "100%",
             border: "1.5px dashed",
             borderColor: isDrawing ? "primary.main" : "divider",
             borderRadius: 2,

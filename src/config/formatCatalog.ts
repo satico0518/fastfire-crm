@@ -21,9 +21,10 @@ export const FORMAT_CATALOG: FormatType[] = [
         required: true,
         addLabel: "+ Añadir Compra",
         subFields: [
+          { name: "fecha_compra", label: "Fecha de Compra", type: "date", required: true },
           { name: "valor", label: "Valor de Compra (COP)", type: "number", required: true, placeholder: "Ej. 150000" },
           { name: "detalle", label: "Detalle", type: "textarea", required: true, placeholder: "Ej: Materiales ferretería" },
-          { name: "foto", label: "Foto Comprobante", type: "image", required: true },
+          { name: "foto", label: "Foto Comprobante", type: "image", required: false },
         ],
       },
       {

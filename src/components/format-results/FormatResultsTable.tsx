@@ -32,6 +32,7 @@ import EngineeringIcon from "@mui/icons-material/Engineering";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DownloadIcon from "@mui/icons-material/Download";
 import { FormatService } from "../../services/format.service";
 import { useAuhtStore } from "../../stores";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -86,6 +87,36 @@ export const FormatResultsTable = () => {
       setReviewNotes("");
     } else {
       setSnackbar({ open: true, message: resp.errorMessage || "Error", severity: "error" });
+    }
+  };
+
+  const downloadImage = (imageSrc: string, fieldName: string) => {
+    try {
+      const link = document.createElement("a");
+      link.href = imageSrc;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const fileName = `${fieldName}_${timestamp}.jpg`;
+      
+      link.download = fileName;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setSnackbar({ 
+        open: true, 
+        message: "Descargando imagen...", 
+        severity: "success" 
+      });
+    } catch (error) {
+      console.error("Error descargando imagen:", error);
+      setSnackbar({ 
+        open: true, 
+        message: "Error al descargar la imagen", 
+        severity: "error" 
+      });
     }
   };
 
@@ -149,11 +180,35 @@ export const FormatResultsTable = () => {
       const isCloudinary = src.startsWith("https://");
       return (
         <Box sx={{ mt: 0.5 }}>
-          <img
-            src={src}
-            alt={fieldName}
-            style={{ maxHeight: 180, maxWidth: "100%", borderRadius: 8, border: "1px solid #e0e0e0" }}
-          />
+          <Box sx={{ position: "relative", display: "inline-block", width: "100%", maxWidth: 300 }}>
+            <img
+              src={src}
+              alt={fieldName}
+              style={{ maxHeight: 180, width: "100%", objectFit: "cover", borderRadius: 8, border: "1px solid #e0e0e0" }}
+            />
+            <Tooltip title="Descargar imagen">
+              <IconButton
+                size="small"
+                onClick={() => downloadImage(src, fieldName)}
+                sx={{
+                  position: "absolute",
+                  top: 6,
+                  right: 6,
+                  color: '#30d158',
+                  background: 'rgba(28, 28, 30, 0.95)',
+                  border: '1px solid rgba(48,209,88,0.5)',
+                  padding: '6px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
+              >
+                <DownloadIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
           {isCloudinary && (
             <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)", display: "block", mt: 0.5 }}>
               📎 Imagen alojada en Cloudinary

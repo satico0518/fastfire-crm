@@ -1074,10 +1074,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         autoPageSize
         columnHeaderHeight={36}
         rows={getTaskByRole()}
-        columns={isMobile 
-          ? columns.filter(col => ['actions', 'status', 'name', 'ownerKeys', 'dueDate'].includes(col.field))
-          : columns
-        }
+        columns={columns}
         filterModel={filterModel}
         onFilterModelChange={(newModel) => setFilterModel(newModel)}
         initialState={{ pagination: { paginationModel } }}
