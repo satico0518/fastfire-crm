@@ -21,7 +21,7 @@ import {
 import { useFormatsStore } from "../../stores/formats/formats.store";
 import { useUsersStore } from "../../stores/users/users.store";
 import { FormatSubmission, FormatStatus, FormatTypeId, FormatField } from "../../interfaces/Format";
-import { getUserNameByKey, translateTimestampToString, downloadExcelFile } from "../../utils/utils";
+import { getUserNameByKey, translateTimestampToString, downloadExcelFile, exportSubmissionToPDF } from "../../utils/utils";
 import { FORMAT_CATALOG, getFormatTypeById } from "../../config/formatCatalog";
 import { getColumnsForFormat } from "../../config/formatColumns";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -33,6 +33,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DownloadIcon from "@mui/icons-material/Download";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { FormatService } from "../../services/format.service";
 import { useAuhtStore } from "../../stores";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -88,6 +89,26 @@ export const FormatResultsTable = () => {
       setReviewNotes("");
     } else {
       setSnackbar({ open: true, message: resp.errorMessage || "Error", severity: "error" });
+    }
+  };
+
+  const handleExportPDF = async (submission: FormatSubmission) => {
+    try {
+      setSnackbar({ open: true, message: "Generando PDF...", severity: "info" });
+      
+      const formatType = getFormatTypeById(submission.formatTypeId);
+      const fields = formatType?.fields || [];
+      const userName = submission.createdByUserKey === 'PUBLIC' 
+        ? 'Usuario Público' 
+        : getUserNameByKey(submission.createdByUserKey, users || []) || 'NA';
+      const statusLabel = statusConfig[submission.status]?.label || submission.status;
+      
+      await exportSubmissionToPDF(submission, fields as FormatField[], userName, statusLabel);
+      
+      setSnackbar({ open: true, message: "PDF generado exitosamente", severity: "success" });
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+      setSnackbar({ open: true, message: "Error al generar PDF", severity: "error" });
     }
   };
 
@@ -198,15 +219,40 @@ export const FormatResultsTable = () => {
         {
           field: "actions",
           headerName: "",
-          width: 56,
+          width: 100,
           sortable: false,
           filterable: false,
           renderCell: (params: GridRenderCellParams<FormatSubmission>) => (
-            <Tooltip title="Ver detalle completo">
-              <IconButton size="small" onClick={() => setViewSubmission(params.row)}>
-                <VisibilityIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Tooltip title="Ver detalle completo">
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewSubmission(params.row);
+                  }}
+                >
+                  <VisibilityIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Exportar PDF">
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExportPDF(params.row);
+                  }}
+                  sx={{ 
+                    color: '#ff5252',
+                    '&:hover': {
+                      background: 'rgba(255, 82, 82, 0.1)',
+                    }
+                  }}
+                >
+                  <PictureAsPdfIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
           ),
         },
       ]

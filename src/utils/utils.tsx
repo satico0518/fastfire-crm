@@ -3,7 +3,10 @@ import { Status } from "../interfaces/Shared";
 import { Priority } from "../interfaces/Task";
 import { Access, User } from "../interfaces/User";
 import { Workgroup } from "../interfaces/Workgroup";
+import { FormatSubmission, FormatField } from "../interfaces/Format";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 
 export const formatToCOP = (value: number): string => {
@@ -368,4 +371,472 @@ export const compareLicitationVsStock = (
   }
 
   return { result: true, item: "" };
+};
+
+// Helper function to load image and convert to base64
+const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    // If already base64, return as is
+    if (url.startsWith('data:image/')) {
+      return url;
+    }
+    // Fetch image and convert to base64
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error loading image:', error);
+    return null;
+  }
+};
+
+// Check if value is an image
+const isImageValue = (value: unknown): boolean => {
+  if (typeof value !== "string") return false;
+  const str = value.trim();
+  const lowerStr = str.toLowerCase();
+  
+  // Check for data URL images
+  if (lowerStr.startsWith("data:image/")) return true;
+  
+  // Check for Cloudinary images
+  if (lowerStr.startsWith("https://res.cloudinary.com")) return true;
+  
+  // Check for other common image hosting services
+  if (lowerStr.startsWith("https://") && 
+      (lowerStr.includes("image") || 
+       lowerStr.includes("img") ||
+       lowerStr.includes("photo") ||
+       lowerStr.includes("upload"))) return true;
+  
+  // Check if it looks like base64 encoded image data
+  // Base64 images are typically long strings with specific patterns
+  if (str.length > 1000 && 
+      (str.match(/^[A-Za-z0-9+/=]+$/) || // Pure base64
+       lowerStr.includes("base64") ||
+       str.includes('/9j/') || // JPEG magic bytes in base64
+       str.includes('iVBORw0KGgo') || // PNG magic bytes in base64
+       str.includes('R0lGODdh') || // GIF magic bytes
+       str.includes('R0lGODlh'))) {
+    return true;
+  }
+  
+  return false;
+};
+
+// Recursively find all images in data object
+const findAllImages = (data: any, path: string = ''): { label: string; value: string }[] => {
+  const images: { label: string; value: string }[] = [];
+  
+  if (typeof data === 'string' && isImageValue(data)) {
+    images.push({ label: path || 'Imagen', value: data });
+  } else if (Array.isArray(data)) {
+    data.forEach((item, idx) => {
+      images.push(...findAllImages(item, `${path} [${idx + 1}]`));
+    });
+  } else if (typeof data === 'object' && data !== null) {
+    Object.entries(data).forEach(([key, value]) => {
+      const newPath = path ? `${path} - ${key}` : key;
+      images.push(...findAllImages(value, newPath));
+    });
+  }
+  
+  return images;
+};
+
+// Main PDF export function for format submissions
+export const exportSubmissionToPDF = async (
+  submission: FormatSubmission,
+  fields: FormatField[],
+  userName: string,
+  statusLabel: string
+) => {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
+  
+  let currentY = 20;
+  
+  // Header with company styling
+  doc.setFillColor(28, 28, 30); // Dark background like the app
+  doc.rect(0, 0, pageWidth, 35, 'F');
+  
+  // Company name
+  doc.setTextColor(48, 209, 88); // Green accent color
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('FAST FIRE DE COLOMBIA SAS', pageWidth / 2, 15, { align: 'center' });
+  
+  // System name
+  doc.setTextColor(200, 200, 200);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Sistema de Gestión CRM - Reporte de Formato', pageWidth / 2, 22, { align: 'center' });
+  
+  // Date
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(9);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-CO')} ${new Date().toLocaleTimeString('es-CO')}`, pageWidth / 2, 30, { align: 'center' });
+  
+  currentY = 45;
+  
+  // Format type title
+  doc.setTextColor(48, 209, 88);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(submission.formatTypeName.toUpperCase(), margin, currentY);
+  currentY += 8;
+  
+  // Status badge
+  doc.setFillColor(48, 209, 88);
+  doc.roundedRect(margin, currentY - 4, 40, 8, 2, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.text(statusLabel.toUpperCase(), margin + 20, currentY + 1, { align: 'center' });
+  currentY += 12;
+  
+  // Metadata section
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Creado por: ${userName}`, margin, currentY);
+  currentY += 5;
+  doc.text(`Fecha: ${new Date(submission.createdDate).toLocaleDateString('es-CO')}`, margin, currentY);
+  if (submission.reviewNotes) {
+    currentY += 5;
+    doc.setTextColor(255, 159, 10);
+    doc.text(`Notas del revisor: ${submission.reviewNotes}`, margin, currentY);
+  }
+  currentY += 10;
+  
+  // Separator line
+  doc.setDrawColor(48, 209, 88);
+  doc.setLineWidth(0.5);
+  doc.line(margin, currentY, pageWidth - margin, currentY);
+  currentY += 8;
+  
+  // Process each field
+  const data = submission.data || {};
+  const imageList: { label: string; base64: string }[] = [];
+  
+  // Get signature field names to exclude from images section
+  const signatureFieldNames = fields.filter(f => f.type === 'signature').map(f => f.name);
+  
+  // Find all images recursively in the data
+  const allImages = findAllImages(data);
+  
+  // Filter out images that are signature fields
+  const nonSignatureImages = allImages.filter(img => {
+    // Check if this image path contains any signature field name
+    return !signatureFieldNames.some(sigName => 
+      img.label.toLowerCase().includes(sigName.toLowerCase()) ||
+      img.label.toLowerCase().includes('firma') ||
+      img.label.toLowerCase().includes('signature')
+    );
+  });
+  
+  // Load all non-signature images
+  for (const img of nonSignatureImages) {
+    const base64 = await loadImageAsBase64(img.value);
+    if (base64) {
+      imageList.push({ label: img.label, base64 });
+    }
+  }
+  
+  // Now render text content
+  for (const field of fields) {
+    const value = data[field.name];
+    
+    // Skip empty values and image fields (already processed)
+    if (value === undefined || value === null || value === '') continue;
+    if (field.type === 'image' || isImageValue(value)) continue;
+    
+    // Check for calculated sum
+    if (field.type === 'calculated-sum' && field.calculateSum) {
+      const parts = field.calculateSum.split('.');
+      if (parts.length === 2) {
+        const arr = data[parts[0]] as any[];
+        if (Array.isArray(arr)) {
+          const total = arr.reduce((acc: number, curr: any) => {
+            const val = Number(curr[parts[1]]);
+            return acc + (isNaN(val) ? 0 : val);
+          }, 0);
+          
+          doc.setTextColor(48, 209, 88);
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${field.label}:`, margin, currentY);
+          doc.setFontSize(14);
+          doc.text(`$ ${total.toLocaleString('es-CO')}`, margin + 60, currentY);
+          currentY += 8;
+          continue;
+        }
+      }
+    }
+    
+    // Handle arrays (dynamic groups)
+    if (Array.isArray(value)) {
+      if (value.length === 0) continue;
+      
+      doc.setTextColor(48, 209, 88);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${field.label}:`, margin, currentY);
+      currentY += 6;
+      
+      // Create table for array data
+      if (typeof value[0] === 'object' && value[0] !== null) {
+        // Get headers from object keys
+        const keys = Object.keys(value[0]);
+        const headers = keys.map(k => k.replace(/_/g, ' ').toUpperCase());
+        
+        // Build rows, filtering out image values
+        const rows: string[][] = [];
+        
+        for (let rowIdx = 0; rowIdx < value.length; rowIdx++) {
+          const item = value[rowIdx];
+          const row: string[] = [];
+          for (const key of keys) {
+            const cellValue = item[key];
+            // Check if cell value is an image (just show placeholder, image is in images section)
+            if (isImageValue(cellValue)) {
+              row.push('[IMAGEN ADJUNTA]');
+            } else {
+              // Format currency for numeric values
+              const strValue = String(cellValue || '-');
+              // Check if it looks like a number/currency
+              if (!isNaN(Number(cellValue)) && cellValue !== '' && cellValue !== null) {
+                row.push(`$ ${Number(cellValue).toLocaleString('es-CO')}`);
+              } else {
+                row.push(strValue);
+              }
+            }
+          }
+          rows.push(row);
+        }
+        
+        // Calculate column widths
+        autoTable(doc, {
+          head: [headers],
+          body: rows,
+          startY: currentY,
+          margin: { left: margin, right: margin },
+          tableWidth: 'wrap',
+          styles: {
+            fontSize: 9,
+            cellPadding: 4,
+            textColor: 60,
+            font: 'helvetica',
+            valign: 'middle',
+            halign: 'left',
+            overflow: 'linebreak',
+            cellWidth: 'auto',
+          },
+          headStyles: {
+            fillColor: [28, 28, 30],
+            textColor: [48, 209, 88],
+            fontStyle: 'bold',
+            fontSize: 9,
+            halign: 'left',
+            valign: 'middle',
+          },
+          bodyStyles: {
+            fillColor: [255, 255, 255],
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245],
+          },
+          didParseCell: (hookData) => {
+            // Ensure header text is horizontal
+            if (hookData.cell.section === 'head') {
+              hookData.cell.styles.halign = 'left';
+              hookData.cell.styles.valign = 'middle';
+            }
+          },
+        });
+        
+        currentY = (doc as any).lastAutoTable.finalY + 8;
+      } else {
+        // Simple array
+        doc.setTextColor(80, 80, 80);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        for (let idx = 0; idx < (value as string[]).length; idx++) {
+          const item = (value as string[])[idx];
+          // Check if item is an image (just show placeholder)
+          if (isImageValue(item)) {
+            doc.setTextColor(48, 209, 88);
+            doc.text(`  ${idx + 1}. [IMAGEN ADJUNTA - Ver sección de evidencias]`, margin + 5, currentY);
+          } else {
+            doc.setTextColor(80, 80, 80);
+            const itemText = String(item);
+            const splitItem = doc.splitTextToSize(itemText, contentWidth - 20);
+            doc.text(splitItem, margin + 5, currentY);
+            currentY += (splitItem.length - 1) * 4;
+          }
+          currentY += 5;
+        }
+        currentY += 3;
+      }
+      continue;
+    }
+    
+    // Regular field - Layout with label and value on separate lines for better spacing
+    const labelText = `${field.label}:`;
+    
+    doc.setTextColor(48, 209, 88);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(labelText, margin, currentY);
+    currentY += 5;
+    
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    
+    // Format the value
+    let displayValue = String(value);
+    // Check if it's a number that should be formatted as currency
+    if (!isNaN(Number(value)) && value !== '' && (field.label.toLowerCase().includes('valor') || 
+        field.label.toLowerCase().includes('precio') || field.label.toLowerCase().includes('total') ||
+        field.label.toLowerCase().includes('monto'))) {
+      displayValue = `$ ${Number(value).toLocaleString('es-CO')}`;
+    }
+    
+    // Value on new line with proper width
+    const splitText = doc.splitTextToSize(displayValue, contentWidth);
+    doc.text(splitText, margin + 5, currentY);
+    currentY += splitText.length * 4 + 5;
+    
+    // Check for page break
+    if (currentY > 270) {
+      doc.addPage();
+      currentY = 20;
+    }
+  }
+  
+  // Add images section if there are any
+  if (imageList.length > 0) {
+    doc.addPage();
+    currentY = 20;
+    
+    // Images header
+    doc.setFillColor(28, 28, 30);
+    doc.rect(0, 0, pageWidth, 25, 'F');
+    doc.setTextColor(48, 209, 88);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EVIDENCIAS FOTOGRÁFICAS', pageWidth / 2, 15, { align: 'center' });
+    currentY = 35;
+    
+    for (const img of imageList) {
+      // Check page break
+      if (currentY > 200) {
+        doc.addPage();
+        // Add header to new page
+        doc.setFillColor(28, 28, 30);
+        doc.rect(0, 0, pageWidth, 20, 'F');
+        doc.setTextColor(48, 209, 88);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('EVIDENCIAS FOTOGRÁFICAS (CONT.)', pageWidth / 2, 13, { align: 'center' });
+        currentY = 30;
+      }
+      
+      // Image label
+      doc.setTextColor(48, 209, 88);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(img.label, margin, currentY);
+      currentY += 5;
+      
+      // Add image with proper sizing (50% of previous size to avoid pixelation)
+      try {
+        // 50% of 170mm x 100mm = 85mm x 50mm for better quality
+        const imgWidth = 85;
+        const imgHeight = 50;
+        doc.addImage(img.base64, 'JPEG', margin, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 10;
+      } catch (error) {
+        console.error('Error adding image to PDF:', error);
+        doc.setTextColor(255, 69, 58);
+        doc.setFontSize(9);
+        doc.text('Error al cargar imagen', margin, currentY);
+        currentY += 10;
+      }
+    }
+  }
+  
+  // Add signature section at the end if there are signature fields
+  const signatureFields = fields.filter(f => f.type === 'signature' && data[f.name]);
+  if (signatureFields.length > 0) {
+    doc.addPage();
+    currentY = 20;
+    
+    // Signature header
+    doc.setFillColor(28, 28, 30);
+    doc.rect(0, 0, pageWidth, 25, 'F');
+    doc.setTextColor(48, 209, 88);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FIRMAS', pageWidth / 2, 15, { align: 'center' });
+    currentY = 35;
+    
+    for (const field of signatureFields) {
+      const signatureValue = data[field.name] as string;
+      
+      // Check page break
+      if (currentY > 200) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      // Signature label
+      doc.setTextColor(48, 209, 88);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(field.label, margin, currentY);
+      currentY += 8;
+      
+      // Load and add signature image
+      try {
+        const base64 = await loadImageAsBase64(signatureValue);
+        if (base64) {
+          // Signature image - smaller size, width 100mm, height auto
+          doc.addImage(base64, 'JPEG', margin, currentY, 100, 40);
+          currentY += 50;
+        }
+      } catch (error) {
+        console.error('Error adding signature to PDF:', error);
+        doc.setTextColor(255, 69, 58);
+        doc.setFontSize(9);
+        doc.text('Error al cargar firma', margin, currentY);
+        currentY += 10;
+      }
+      
+      // Add spacing between signatures
+      currentY += 10;
+    }
+  }
+  
+  // Footer on all pages
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFillColor(28, 28, 30);
+    doc.rect(0, 287, pageWidth, 10, 'F');
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(8);
+    doc.text(`Página ${i} de ${pageCount} - Fast Fire de Colombia SAS`, pageWidth / 2, 293, { align: 'center' });
+  }
+  
+  // Save PDF
+  const fileName = `${submission.formatTypeName.replace(/\s+/g, '_').toLowerCase()}_${new Date(submission.createdDate).toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+  return fileName;
 };
