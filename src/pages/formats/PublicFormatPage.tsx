@@ -619,7 +619,7 @@ export const PublicFormatPage = () => {
   const FormatIcon = FORMAT_ICONS[format.id] || ReceiptLongIcon;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#1c1c1e', py: 4, px: { xs: 2, sm: 4 } }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#1c1c1e', py: 2, px: { xs: 2, sm: 4 }, overflowY: 'auto', height: '100vh' }}>
       <Box sx={{ maxWidth: 600, mx: 'auto' }}>
         {/* Header */}
         <Card sx={{ mb: 3, bgcolor: 'rgba(28,28,30,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3 }}>
@@ -649,7 +649,7 @@ export const PublicFormatPage = () => {
         {/* Form */}
         <Card sx={{ bgcolor: 'rgba(28,28,30,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3 }}>
           <CardContent sx={{ p: 3 }}>
-            <Stack spacing={3}>
+            <Stack spacing={1.5}>
               {format.fields.map((field) => renderField(field))}
             </Stack>
 
