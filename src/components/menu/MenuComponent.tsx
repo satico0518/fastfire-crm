@@ -10,13 +10,17 @@ import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutl
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import RequestQuoteOutlinedIcon from "@mui/icons-material/RequestQuoteOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import SecondaryActions, {
   SecondaryActionsProps,
 } from "../menu-secondary/SecondaryActions";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
-import { Button } from "@mui/material";
+import { Button, Tooltip, IconButton, Box } from "@mui/material";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { WorkgroupService } from "../../services/workgroup.service";
@@ -25,19 +29,29 @@ import { Task } from "../../interfaces/Task";
 import { useUsersStore } from "../../stores/users/users.store";
 import { User } from "../../interfaces/User";
 
-export const MenuComponent = () => {
+type MenuComponentProps = {
+  isMobileMenuOpen: boolean;
+  onCloseMobileMenu: () => void;
+};
+
+export const MenuComponent = ({
+  isMobileMenuOpen,
+  onCloseMobileMenu,
+}: MenuComponentProps) => {
   const navigate = useNavigate();
   const isAuth = useAuhtStore((state) => state.isAuth);
   const currentUser = useAuhtStore((state) => state.user);
   const hasHydrated = useAuhtStore((state) => state.hasHydrated);
   
+  const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
+  const setIsSidebarCollapsed = useUiStore((state) => state.setIsSidebarCollapsed);
+
   // No renderizar hasta que el store esté hidratado
   if (!hasHydrated) {
     return null;
   }
   
   const isAdmin = currentUser?.permissions.includes("ADMIN");
-  
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const setModal = useUiStore((state) => state.setModal);
   const modal = useUiStore((state) => state.modal);
@@ -47,9 +61,12 @@ export const MenuComponent = () => {
   const users = useUsersStore((state) => state.users);
 
   if (!isAuth) return null;
+  const closeOnMobile = () => {
+    if (isMobileMenuOpen) onCloseMobileMenu();
+  };
+
   const workgroupsByRole = (): Workgroup[] => {
     if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
-
     return workgroups
       ?.filter(
         (wg) =>
@@ -69,7 +86,7 @@ export const MenuComponent = () => {
             ...modal,
             open: true,
             title: "Nuevo Grupo",
-            text: "Un grupo repesenta a los equipos o departamentos de la empresa, cada uno con sus propias listas, flujos de trabajo y ajustes.",
+            text: "Un grupo repesenta a los equipos o departamentos de la empresa.",
             content: <WorkgroupsFormComponent />,
           });
         },
@@ -91,13 +108,6 @@ export const MenuComponent = () => {
           severity: "success",
         });
         navigate("/home");
-      } else {
-        setSnackbar({
-          open: true,
-          message: "Error eliminando grupo!",
-          severity: "error",
-        });
-        console.error("Error eliminando grupo!");
       }
     } catch (error) {
       setSnackbar({
@@ -105,7 +115,6 @@ export const MenuComponent = () => {
         message: "Error eliminando grupo!",
         severity: "error",
       });
-      console.error("Error eliminando grupo!", { error });
     } finally {
       setConfirmation({ open: false });
     }
@@ -123,7 +132,6 @@ export const MenuComponent = () => {
             ...modal,
             open: true,
             title: "Nueva Tarea",
-            text: "Ingrese los datos de la nueva tarea.",
             content: (
               <TasksFormComponent workgroupKey={workgroup.key as string} />
             ),
@@ -138,7 +146,6 @@ export const MenuComponent = () => {
             ...modal,
             open: true,
             title: "Modificar Grupo",
-            text: "Modifique los campos necesarios para editar el grupo.",
             content: <WorkgroupsFormComponent editingGroup={workgroup} />,
           });
         },
@@ -150,7 +157,7 @@ export const MenuComponent = () => {
           setConfirmation({
             open: true,
             title: "Confirmación!",
-            text: `Vas a eliminar el grupo "${workgroup.name.toUpperCase()}" y todas sus tareas.`,
+            text: `Vas a eliminar el grupo "${workgroup.name.toUpperCase()}"`,
             actions: (
               <Button onClick={() => handleDeleteGroup(workgroup)}>
                 Eliminar
@@ -162,80 +169,107 @@ export const MenuComponent = () => {
   });
 
   return (
-    <div className="menu">
+    <div className={`menu ${isMobileMenuOpen ? "menu--open" : ""} ${isSidebarCollapsed ? "menu--collapsed" : ""}`}>
+      
+      {/* Sidebar Toggle - Only on Desktop */}
+      <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: isSidebarCollapsed ? 'center' : 'flex-end', mb: 1 }}>
+        <IconButton 
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          size="small"
+          sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+        >
+          {isSidebarCollapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+        </IconButton>
+      </Box>
+
       <div className="menu__menu-items">
         <ul>
           {currentUser?.permissions.includes("ADMIN") && (
             <li>
-              <NavLink
-                to="/tasks"
-                className={({ isActive, isPending }) =>
-                  isPending ? "pending" : isActive ? "active" : ""
-                }
-              >
-                <TaskAltIcon
-                  titleAccess="Tareas y Grupos de Trabajo"
-                  sx={{ position: "relative", top: "6px" }}
-                />{" "}
-                T&G
-              </NavLink>
+              <Tooltip title={isSidebarCollapsed ? "T&G" : ""} placement="right" arrow>
+                <NavLink
+                  to="/tasks"
+                  onClick={closeOnMobile}
+                  className={({ isActive }) => isActive ? "active" : ""}
+                >
+                  <TaskAltIcon />
+                  {!isSidebarCollapsed && <span>T&G</span>}
+                </NavLink>
+              </Tooltip>
             </li>
           )}
           {(currentUser?.permissions.includes("PURCHASE") ||
             currentUser?.permissions.includes("PROVIDER")) && (
             <li>
-              <NavLink
-                to="/purchasing-manager"
-                className={({ isActive, isPending }) =>
-                  isPending ? "pending" : isActive ? "active" : ""
-                }
-              >
-                {currentUser?.permissions.includes("PROVIDER") ? (
-                  <RequestQuoteOutlinedIcon titleAccess="Órdenes de Compra" sx={{ position: "relative", top: "6px" }}/>
-                ) : (
-                  <>
-                    <ShoppingCartOutlinedIcon titleAccess="Comercial" sx={{ position: "relative", top: "6px" }}
-                    />{" "}
-                  </>
-                )}
-                {currentUser?.permissions.includes("PROVIDER")
-                  ? "Cotización"
-                  : "Comercial"}
-              </NavLink>
+              <Tooltip title={isSidebarCollapsed ? (currentUser?.permissions.includes("PROVIDER") ? "Cotización" : "Comercial") : ""} placement="right" arrow>
+                <NavLink
+                  to="/purchasing-manager"
+                  onClick={closeOnMobile}
+                  className={({ isActive }) => isActive ? "active" : ""}
+                >
+                  {currentUser?.permissions.includes("PROVIDER") ? (
+                    <RequestQuoteOutlinedIcon />
+                  ) : (
+                    <ShoppingCartOutlinedIcon />
+                  )}
+                  {!isSidebarCollapsed && (
+                    <span>
+                      {currentUser?.permissions.includes("PROVIDER") ? "Cotización" : "Comercial"}
+                    </span>
+                  )}
+                </NavLink>
+              </Tooltip>
             </li>
           )}
           {currentUser?.permissions.includes("ADMIN") && (
             <li>
-              <NavLink
-                to="/admin"
-                className={({ isActive, isPending }) =>
-                  isPending ? "pending" : isActive ? "active" : ""
-                }
-              >
-                <BuildCircleOutlinedIcon
-                  titleAccess="Administrador"
-                  sx={{ position: "relative", top: "6px" }}
-                />{" "}
-                Admin
-              </NavLink>
+              <Tooltip title={isSidebarCollapsed ? "Admin" : ""} placement="right" arrow>
+                <NavLink
+                  to="/admin"
+                  onClick={closeOnMobile}
+                  className={({ isActive }) => isActive ? "active" : ""}
+                >
+                  <BuildCircleOutlinedIcon />
+                  {!isSidebarCollapsed && <span>Admin</span>}
+                </NavLink>
+              </Tooltip>
             </li>
           )}
-          {/* <li>
-          <NavLink
-            to="/home"
-            className={({ isActive, isPending }) =>
-              isPending ? "pending" : isActive ? "active" : ""
-            }
-          >
-            Inicio
-          </NavLink>
-        </li> */}
+          {!currentUser?.permissions.includes("PROVIDER") && (
+            <li>
+              <Tooltip title={isSidebarCollapsed ? "Formatos" : ""} placement="right" arrow>
+                <NavLink
+                  to="/formats"
+                  onClick={closeOnMobile}
+                  className={({ isActive }) => isActive ? "active" : ""}
+                >
+                  <ArticleOutlinedIcon />
+                  {!isSidebarCollapsed && <span>Formatos</span>}
+                </NavLink>
+              </Tooltip>
+            </li>
+          )}
+          {(currentUser?.permissions.includes("ADMIN") || currentUser?.permissions.includes("PLANNER")) && (
+            <li>
+              <Tooltip title={isSidebarCollapsed ? "Agenda" : ""} placement="right" arrow>
+                <NavLink
+                  to="/agenda-mantenimientos"
+                  onClick={closeOnMobile}
+                  className={({ isActive }) => isActive ? "active" : ""}
+                >
+                  <CalendarMonthOutlinedIcon />
+                  {!isSidebarCollapsed && <span>Agenda Mantenimientos</span>}
+                </NavLink>
+              </Tooltip>
+            </li>
+          )}
         </ul>
       </div>
+
       <div className="menu__workgroups">
         <div className="menu__workgroups-title">
-          <span>Grupos</span>
-          {isAdmin && (
+          {!isSidebarCollapsed && <span>Grupos</span>}
+          {isAdmin && !isSidebarCollapsed && (
             <div className="menu__workgroups-title-actions">
               <SecondaryActions options={SECONDARY_ACTIONS_OPTIONS.options} />
             </div>
@@ -244,85 +278,101 @@ export const MenuComponent = () => {
         <ul>
           {isAdmin && (
             <li>
-              <Button
-                sx={{ color: "white" }}
-                title="Crear grupo"
-                startIcon={<FormatListBulletedOutlinedIcon />}
-                onClick={() => navigate("/tasks")}
-              >
-                Ver todas las tareas
-              </Button>
+              <Tooltip title={isSidebarCollapsed ? "Todas las tareas" : ""} placement="right" arrow>
+                <Button
+                  fullWidth={!isSidebarCollapsed}
+                  sx={{ color: "white", justifyContent: isSidebarCollapsed ? 'center' : 'flex-start', minWidth: 0, px: isSidebarCollapsed ? 0 : 2 }}
+                  onClick={() => {
+                    navigate("/tasks");
+                    closeOnMobile();
+                  }}
+                >
+                  <FormatListBulletedOutlinedIcon />
+                  {!isSidebarCollapsed && <Box sx={{ ml: 1, textTransform: 'none' }}>Ver todas las tareas</Box>}
+                </Button>
+              </Tooltip>
             </li>
           )}
           {!currentUser?.permissions.includes("PROVIDER") &&
           workgroupsByRole().length > 0 ? (
             workgroupsByRole().map((wg) => (
               <li key={wg.id}>
-                <div key={wg.id} className="menu__workgroup-item">
-                  <div
-                    className="menu__workgroup-item-icon"
-                    style={{ backgroundColor: wg.color ? wg.color : "#8a8282" }}
-                  >
-                    {wg.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="menu__workgroups-title">
-                    <span
-                      className="menu__workgroups-title-text"
-                      onClick={() =>
-                        navigate("/tasksbygroup", { state: { wg } })
-                      }
+                <Tooltip title={isSidebarCollapsed ? wg.name : ""} placement="right" arrow>
+                  <div className="menu__workgroup-item">
+                    <div
+                      className="menu__workgroup-item-icon"
+                      style={{ 
+                        backgroundColor: wg.color ? wg.color : "#8a8282",
+                        margin: isSidebarCollapsed ? '0 auto' : '0 10px 0 0',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        navigate("/tasksbygroup", { state: { wg } });
+                        closeOnMobile();
+                      }}
                     >
-                      {wg.name.charAt(0).toUpperCase() +
-                        wg.name.substring(1).toLowerCase()}
-                      {!wg.isPrivate && (
-                        <PublicOutlinedIcon
-                          titleAccess="Público"
-                          sx={{
-                            fontSize: "15px",
-                            marginLeft: "10px",
-                            top: "2px",
-                            color: "#b8d2e9",
+                      {wg.name.charAt(0).toUpperCase()}
+                    </div>
+                    {!isSidebarCollapsed && (
+                      <div className="menu__workgroups-title" style={{ marginTop: 0 }}>
+                        <span
+                          className="menu__workgroups-title-text"
+                          onClick={() => {
+                            navigate("/tasksbygroup", { state: { wg } });
+                            closeOnMobile();
                           }}
-                        />
-                      )}
-                    </span>
-                    <SecondaryActions
-                      options={getGroupSecondaryActions(wg).options}
-                    />
+                        >
+                          {wg.name.charAt(0).toUpperCase() + wg.name.substring(1).toLowerCase()}
+                          {!wg.isPrivate && (
+                            <PublicOutlinedIcon
+                              sx={{
+                                fontSize: "15px",
+                                marginLeft: "10px",
+                                top: "2px",
+                                color: "#b8d2e9",
+                              }}
+                            />
+                          )}
+                        </span>
+                        <SecondaryActions options={getGroupSecondaryActions(wg).options} />
+                      </div>
+                    )}
                   </div>
-                </div>
+                </Tooltip>
               </li>
             ))
-          ) : (
-            <span>Sin asignación de grupos</span>
+          ) : !isSidebarCollapsed && (
+            <li style={{ padding: '0 10px', fontSize: '0.8rem', opacity: 0.6 }}>Sin asignación</li>
           )}
-          {isAdmin && (
+          {isAdmin && !isSidebarCollapsed && (
             <>
               <li>
                 <Button
-                  sx={{ color: "white" }}
-                  title="Crear grupo"
-                  startIcon={<FormatListBulletedOutlinedIcon />}
-                  onClick={() => navigate("/tasks", { state: { goTo: "wg" } })}
+                  fullWidth
+                  sx={{ color: "white", justifyContent: 'flex-start', textTransform: 'none' }}
+                  onClick={() => {
+                    navigate("/tasks", { state: { goTo: "wg" } });
+                    closeOnMobile();
+                  }}
                 >
+                  <FormatListBulletedOutlinedIcon sx={{ mr: 1 }} />
                   Ver Grupos
                 </Button>
               </li>
               <li>
                 <Button
-                  sx={{ color: "white" }}
-                  title="Crear grupo"
-                  startIcon={<AddOutlinedIcon />}
+                  fullWidth
+                  sx={{ color: "white", justifyContent: 'flex-start', textTransform: 'none' }}
                   onClick={() =>
                     setModal({
                       ...modal,
                       open: true,
                       title: "Nuevo Grupo",
-                      text: "Un grupo repesenta a los equipos o departamentos de la empresa, cada uno con sus propias listas, flujos de trabajo y ajustes.",
                       content: <WorkgroupsFormComponent />,
                     })
                   }
                 >
+                  <AddOutlinedIcon sx={{ mr: 1 }} />
                   Crear Grupo
                 </Button>
               </li>

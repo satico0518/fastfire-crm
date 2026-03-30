@@ -46,7 +46,7 @@ export const TasksPage = () => {
         aria-labelledby={`simple-tab-${index}`}
         {...other}
       >
-        {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+        {value === index && <Box sx={{ p: { xs: 0.5, md: 1 } }}>{children}</Box>}
       </div>
     );
   };
@@ -60,9 +60,24 @@ export const TasksPage = () => {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box sx={{ borderBottom: 1, borderColor: "rgba(255,255,255,0.1)" }}>
         <Tabs
-          sx={{ backgroundColor: "white" }}
+          sx={{
+            backgroundColor: "rgba(28, 28, 30, 0.8)",
+            "& .MuiTab-root": {
+              fontSize: "0.82rem",
+              minHeight: "34px",
+              padding: "6px 8px",
+              height: "34px",
+              color: "rgba(255,255,255,0.5)",
+              fontWeight: 700
+            },
+            "& .Mui-selected": { color: "#0a84ff !important" },
+            "& .MuiTabs-indicator": {
+              height: "2px",
+              backgroundColor: "#0a84ff"
+            },
+          }}
           value={tabsValue}
           onChange={handleTabsChange}
           aria-label="basic tabs example"

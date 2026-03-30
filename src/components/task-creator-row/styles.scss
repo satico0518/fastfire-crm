@@ -1,21 +1,27 @@
 .task-creator {
-    width: 80%;
+    width: 75%; 
+    max-width: 800px;
 
     &__row {
-        background-color: #f7f7ff;
-        border-radius: 0 0 5px 5px;
-        border-top: solid 2px #f3f3f3;
-        padding: 10px 10px;
-        position: relative;
-        top: -3px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px) saturate(180%);
+        -webkit-backdrop-filter: blur(12px) saturate(180%);
+        border-radius: 0 0 12px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        padding: 6px 16px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 16px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        margin-top: -1px;
     }
 
     &__row-actions {
         display: flex;
         align-items: center;
-        justify-content: end;
+        justify-content: flex-end;
+        gap: 8px; // Space between buttons
+        flex-shrink: 0;
     }
 }

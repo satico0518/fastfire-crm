@@ -13,6 +13,8 @@ interface UiState {
   setSnackbar: (snackbar: SnackbarComponentProps) => void;
   confirmation: ConfirmationComponentProps;
   setConfirmation: (snackbar: ConfirmationComponentProps) => void;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -27,5 +29,7 @@ export const useUiStore = create<UiState>()(
     confirmation: { open: false, title: "", text: "", actions: null },
     setConfirmation: (confirmation: ConfirmationComponentProps) =>
       set(() => ({ confirmation })),
+    isSidebarCollapsed: false,
+    setIsSidebarCollapsed: (isSidebarCollapsed: boolean) => set(() => ({ isSidebarCollapsed })),
   }))
 );

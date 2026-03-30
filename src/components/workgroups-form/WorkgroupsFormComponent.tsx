@@ -6,6 +6,9 @@ import {
   Stack,
   Switch,
   TextField,
+  Box,
+  Typography,
+  Paper,
 } from "@mui/material";
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -22,6 +25,21 @@ import { ColorResult } from "react-color";
 interface WorkgroupsFormComponentProps {
   editingGroup?: Workgroup;
 }
+
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiOutlinedInput-root': {
+    color: 'white',
+    borderRadius: '12px',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+    '&.Mui-focused fieldset': { borderColor: 'white' },
+    '& .MuiInputBase-input': { color: 'white' },
+  },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+};
 
 export const WorkgroupsFormComponent = ({
   editingGroup,
@@ -158,75 +176,104 @@ export const WorkgroupsFormComponent = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"}>
-        <div className="wg-name">
-          <div className="wg-icon" style={{ backgroundColor: bgColor }}>
-            <Button
-              onClick={() => setShowColorPicker(true)}
-              sx={{ color: "white" }}
-            >
-              G
-            </Button>
+    <Box component="form" onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)} sx={{ mt: 1 }}>
+      <Stack spacing={3} width={"100%"}>
+        <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <Box 
+            sx={{ 
+              width: 80, 
+              height: 80, 
+              bgcolor: bgColor, 
+              borderRadius: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: `0 8px 24px ${bgColor}44`,
+              border: '2px solid rgba(255,255,255,0.4)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+              '&:hover': { transform: 'scale(1.05)' },
+              position: 'relative'
+            }}
+            onClick={() => setShowColorPicker(true)}
+          >
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 900 }}>G</Typography>
             <ColorPickerComponent
               visible={showColorPicker}
               handleChange={handleColorChange}
             />
-          </div>
+          </Box>
           <TextField
-            label="Nombre"
+            label="Nombre del Grupo"
             type="text"
-            {...register("name", { required: true })}
-            variant="standard"
+            {...register("name", { required: "El nombre es obligatorio" })}
+            variant="outlined"
             fullWidth
             error={!!errors.name}
             helperText={errors.name?.message as string}
-            autoCapitalize="words"
             required
             placeholder="P. ej. marketing, ingeniería, RRHH"
+            sx={darkInputFieldSx}
           />
-        </div>
+        </Box>
+
         <TextField
           label="Descripción (opcional)"
-          type="text"
+          multiline
+          rows={2}
           {...register("description")}
-          variant="standard"
+          variant="outlined"
           fullWidth
-          autoCapitalize="sentences"
+          sx={darkInputFieldSx}
         />
-        <div className="private">
-          <div className="text">
-            <div className="text__title">Hacer Privado</div>
-            <p className="text__content">
-              Solo tu y los colaboradores invitados tienen acceso
-            </p>
-          </div>
+
+        <Box sx={{ 
+          p: 2, 
+          borderRadius: 3, 
+          bgcolor: 'rgba(255,255,255,0.05)', 
+          border: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'white' }}>Hacer Privado</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+              Solo tú y los colaboradores invitados tendrán acceso
+            </Typography>
+          </Box>
           <Switch
-            defaultChecked={isPrivate}
-            value={isPrivate}
+            checked={isPrivate}
             onChange={() => setIsPrivate(!isPrivate)}
+            color="info"
           />
-        </div>
+        </Box>
+
         {isPrivate && (
-          <>
-            <div style={{ maxWidth: "500px" }}>
-              <div className="text__title">Colaboradores seleccionados:</div>
-              <br />
-              <div className="selected-colaborators">
-                {selectedMembers.map(({ key, label }) => (
-                  <div key={key} className="selected-chip">
-                    <Chip
-                      key={key}
-                      className="selected-chip"
-                      size="small"
-                      color="success"
-                      label={label}
-                      onDelete={() => handleDeleteMember(key as string)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+          <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mb: 1, display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Colaboradores Invitados
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {selectedMembers.length > 0 ? selectedMembers.map(({ key, label }) => (
+                <Chip
+                  key={key as string}
+                  size="small"
+                  label={label}
+                  onDelete={() => handleDeleteMember(key as string)}
+                  sx={{ 
+                    borderRadius: '8px', 
+                    fontWeight: 600, 
+                    background: 'rgba(255,255,255,0.1)', 
+                    color: 'white', 
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }
+                  }}
+                />
+              )) : (
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin colaboradores asignados</Typography>
+              )}
+            </Box>
             <Autocomplete
               options={availableMembers}
               includeInputInList
@@ -239,29 +286,45 @@ export const WorkgroupsFormComponent = ({
                 <TextField
                   {...params}
                   name="colaborators"
-                  label="Agrega Colaboradores"
-                  type="text"
-                  variant="standard"
+                  label="Buscar colaboradores para agregar"
+                  variant="outlined"
+                  size="small"
                   fullWidth
-                  error={!!errors.location}
-                  helperText={errors.location?.message as string}
-                  autoCapitalize="words"
+                  sx={darkInputFieldSx}
                 />
               )}
+              PaperComponent={({ children }) => (
+                <Paper sx={{ bgcolor: '#1c1c1e', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}>{children}</Paper>
+              )}
             />
-          </>
+          </Box>
         )}
 
-        <Button
-          fullWidth
-          type="submit"
-          variant="outlined"
-          size="large"
-          color="success"
-        >
-          {editingGroup ? "Modificar Grupo" : "Crear Grupo"}
-        </Button>
+        <Box sx={{ pt: 1 }}>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{ 
+              py: 1.5, 
+              borderRadius: '12px', 
+              fontWeight: 700, 
+              textTransform: 'none',
+              background: 'rgba(10,132,255,0.2)',
+              border: '1px solid rgba(10,132,255,0.5)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              '&:hover': { 
+                background: 'rgba(10,132,255,0.3)',
+                border: '1px solid rgba(10,132,255,0.8)'
+              }
+            }}
+          >
+            {editingGroup ? "Guardar Cambios" : "Crear Grupo"}
+          </Button>
+        </Box>
       </Stack>
-    </form>
+    </Box>
   );
 };

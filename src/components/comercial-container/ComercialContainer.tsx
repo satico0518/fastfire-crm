@@ -117,10 +117,19 @@ export const ComercialContainer = () => {
     <Box sx={{ width: "100%" }}>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          sx={{ backgroundColor: "white" }}
+          sx={{ 
+            backgroundColor: 'rgba(28, 28, 30, 0.8)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            "& .MuiTab-root": {
+              color: 'rgba(255, 255, 255, 0.6)',
+              "&.Mui-selected": { color: '#0a84ff' }
+            }
+          }}
           value={tabsValue}
           onChange={handleTabsChange}
           aria-label="basic tabs example"
+          variant={window.innerWidth < 1101 ? "fullWidth" : "standard"}
         >
           <Tab label="Órdenes de Compra" {...a11yProps(0)} />
           <Tab label="Licitaciones" {...a11yProps(1)} />
@@ -139,9 +148,29 @@ export const ComercialContainer = () => {
               content: <UserFormComponent />,
             })
           }
-          sx={{ color: "white", top: "10px" }}
+          variant="contained"
+          startIcon={<DescriptionOutlinedIcon />}
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            borderRadius: '10px',
+            padding: '8px 16px',
+            border: '1px solid rgba(10,132,255,0.5)',
+            background: 'rgba(10,132,255,0.15)',
+            backdropFilter: 'blur(10px)',
+            mt: 2,
+            '&:hover': {
+              background: 'rgba(10,132,255,0.25)',
+              border: '1px solid rgba(10,132,255,0.8)',
+              boxShadow: '0 0 15px rgba(10,132,255,0.3)',
+            },
+            transition: 'all 0.2s ease',
+          }}
         >
-          <DescriptionOutlinedIcon />
+          Nueva Orden de Compra
         </Button>
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={1}>
@@ -175,34 +204,73 @@ export const ComercialContainer = () => {
       </CustomTabPanel>
       <CustomTabPanel value={tabsValue} index={2}>
         <StockTableComponent />
-        <Button
-          onClick={() =>
-            setModal({
-              ...modal,
-              open: true,
-              title: "Nuevo Item",
-              text: "Ingrese los datos del item para agregar al inventario.",
-              content: <StockFormComponent />,
-            })
-          }
-          sx={{ color: "white", top: "10px" }}
-        >
-          <HandymanOutlinedIcon />
-        </Button>
-        <Button
-          className="upload-btn"
-          component="label"
-          role={undefined}
-          variant="text"
-          title="Cargar excel"
-          sx={{ color: "white", top: "10px" }}
-        >
-          <UploadFileIcon />
-          <VisuallyHiddenInput
-            type="file"
-            onChange={(e) => readExcel(e || null)}
-          />
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+          <Button
+            onClick={() =>
+              setModal({
+                ...modal,
+                open: true,
+                title: "Nuevo Item",
+                text: "Ingrese los datos del item para agregar al inventario.",
+                content: <StockFormComponent />,
+              })
+            }
+            variant="contained"
+            startIcon={<HandymanOutlinedIcon />}
+            size="small"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              padding: '8px 16px',
+              border: '1px solid rgba(255,159,10,0.5)',
+              background: 'rgba(255,159,10,0.15)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                background: 'rgba(255,159,10,0.25)',
+                border: '1px solid rgba(255,159,10,0.8)',
+                boxShadow: '0 0 15px rgba(255,159,10,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Nuevo Item
+          </Button>
+
+          <Button
+            className="upload-btn"
+            component="label"
+            role={undefined}
+            variant="contained"
+            startIcon={<UploadFileIcon />}
+            size="small"
+            sx={{ 
+              color: "white",
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              padding: '8px 16px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.15)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.25)',
+                border: '1px solid rgba(48,209,88,0.8)',
+                boxShadow: '0 0 15px rgba(48,209,88,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Cargar Excel
+            <VisuallyHiddenInput
+              type="file"
+              onChange={(e) => readExcel(e || null)}
+            />
+          </Button>
+        </Box>
       </CustomTabPanel>
       {/* <CustomTabPanel value={value} index={2}>
         Item Three

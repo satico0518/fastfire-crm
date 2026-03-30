@@ -5,6 +5,7 @@ import { TaskService } from "../../services/task.service";
 import { Dispatch, SetStateAction } from "react";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { useTagsStore } from "../../stores/tags/tags.store";
+import { useAuhtStore } from "../../stores";
 import { TagsService } from "../../services/tags.service";
 import RemoveCircleOutlinedIcon from "@mui/icons-material/RemoveCircleOutlined";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
@@ -26,6 +27,7 @@ export const TagsInput = ({
 }: TagsInputProps) => {
   const tags = useTagsStore((state) => state.tags);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
+  const currentUser = useAuhtStore((state) => state.user);
 
   const handleAddTag = (tag: string) => {
     if (!tags.some((t) => t === tag)) {
@@ -41,7 +43,7 @@ export const TagsInput = ({
     try {
       if (selectedTask) {
         selectedTask.tags = selectedTags;
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await TaskService.updateTask(selectedTask, currentUser?.key);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -74,7 +76,7 @@ export const TagsInput = ({
   const handleDeleteTag = async (task: Task, tag: string) => {
     try {
       task.tags = task.tags.filter((t) => t !== tag);
-      TaskService.updateTask(task);
+      await TaskService.updateTask(task, currentUser?.key);
       setSelectedTags(selectedTags.filter((t) => t !== tag));
     } catch (error) {
       console.error("Error eliminando etiqueta", { task }, { error });
@@ -112,14 +114,12 @@ export const TagsInput = ({
       open={openTagsDialog}
       setOpen={setOpenTagsDialog}
       content={
-        <div style={{ height: "100px" }}>
-          <div
-            style={{ maxWidth: "500px", position: "relative", top: "-35px" }}
-          >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ maxWidth: "500px" }}>
             <div className="selected-members">
-              {selectedTags.map((st: string) => (
+              {Array.from(new Set(selectedTags)).map((st: string, idx: number) => (
                 <div
-                  key={st}  // Usar el tag como key
+                  key={`${st}-${idx}`}  // Key única para evitar aviso de react
                   className="selected-chip"
                 >
                   <Chip
@@ -144,7 +144,7 @@ export const TagsInput = ({
           </div>
           <Autocomplete
             disablePortal
-            options={tags}
+            options={[...new Set(tags)]}
             includeInputInList
             fullWidth
             onChange={(_, tag) => tag && handleAddTag(tag)}

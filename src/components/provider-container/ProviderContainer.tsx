@@ -211,8 +211,24 @@ export const ProviderContainer = () => {
                 <Button
                   startIcon={<FileDownloadIcon />}
                   onClick={handleDownloadFile}
-                  sx={{ color: "white", borderColor: "white" }}
-                  variant="outlined"
+                  size="small"
+                  sx={{ 
+                    color: "white",
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    borderRadius: '10px',
+                    padding: '8px 16px',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(10px)',
+                    mb: 2,
+                    '&:hover': {
+                      background: 'rgba(255,255,255,0.15)',
+                      border: '1px solid rgba(255,255,255,0.5)',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
                 >
                   Descargar plantilla de licitación
                 </Button>
@@ -223,24 +239,28 @@ export const ProviderContainer = () => {
                 >
                   <Stack
                     spacing={3}
-                    padding={2}
-                    marginTop={5}
-                    borderRadius={2}
+                    padding={3}
+                    marginTop={2}
+                    borderRadius={3}
                     width={"450px"}
                     direction={"column"}
-                    sx={{ backgroundColor: "white" }}
+                    sx={{ 
+                      background: 'rgba(255,255,255,0.95)',
+                      backdropFilter: 'blur(20px)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    }}
                   >
                     <FormControlLabel
-                      control={<Switch {...register("freeShipping")} />}
+                      control={<Switch {...register("freeShipping")} color="info" />}
                       label="Envío Gratis"
                       labelPlacement="end"
-                      sx={{ color: "black" }}
+                      sx={{ color: "black", '& .MuiFormControlLabel-label': { fontWeight: 600 } }}
                     />
                     <FormControlLabel
-                      control={<Switch {...register("nightShipping")} />}
+                      control={<Switch {...register("nightShipping")} color="info" />}
                       label="Envío Nocturno 10:00 pm"
                       labelPlacement="end"
-                      sx={{ color: "black" }}
+                      sx={{ color: "black", '& .MuiFormControlLabel-label': { fontWeight: 600 } }}
                     />
                     <TextField
                       label="Plazo de pago en dias"
@@ -270,10 +290,23 @@ export const ProviderContainer = () => {
                     <Button
                       fullWidth
                       type="submit"
-                      variant="outlined"
+                      variant="contained"
                       size="large"
-                      color="success"
-                      title="Enviar licitación"
+                      sx={{ 
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        border: '1px solid rgba(48,209,88,0.5)',
+                        background: 'rgba(48,209,88,0.2)',
+                        backdropFilter: 'blur(10px)',
+                        color: '#1a1a1a',
+                        '&:hover': {
+                          background: 'rgba(48,209,88,0.3)',
+                          border: '1px solid rgba(48,209,88,0.8)',
+                        },
+                      }}
                     >
                       Enviar licitación
                     </Button>

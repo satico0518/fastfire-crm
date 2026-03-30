@@ -12,6 +12,7 @@ import {
   Tooltip,
   tooltipClasses,
   TooltipProps,
+  Box,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Groups2OutlinedIcon from "@mui/icons-material/Groups2Outlined";
@@ -103,99 +104,6 @@ export default function WorksgroupTable() {
     });
   };
 
-  const columns: GridColDef[] = [
-    {
-      field: "actions",
-      type: "actions",
-      maxWidth: 50,
-      resizable: false,
-      align: "right",
-      getActions: (params: GridRowParams<Workgroup>) => [
-        <GridActionsCellItem
-          icon={<AddTaskOutlinedIcon color="success" />}
-          onClick={() =>
-            setModal({
-              ...modal,
-              open: true,
-              title: "Nueva Tarea",
-              text: "Ingrese los datos de la tarea.",
-              content: (
-                <TasksFormComponent workgroupKey={params.row.key as string} />
-              ),
-            })
-          }
-          label="Nueva tarea"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          icon={<ModeEditOutlineOutlinedIcon color="info" />}
-          onClick={() => handleModifyWorkgroup(params.row)}
-          label="Modificar"
-          showInMenu
-        />,
-        <GridActionsCellItem
-          icon={<DeleteOutlineOutlinedIcon color="error" />}
-          onClick={() => handleDeleteConfirmation(params.row)}
-          label="Eliminar"
-          showInMenu
-        />,
-      ],
-    },
-    {
-      field: "name",
-      headerName: "Nombre",
-      flex: 1,
-    },
-    {
-      field: "memberKeys",
-      headerName: "Colaboradores",
-      type: "string",
-      width: 200,
-      display: "flex",
-      align: "center",
-      renderCell: (params: GridRenderCellParams<Workgroup>) => {
-        if (!params.row.memberKeys?.length)
-          return (
-            <PublicOutlinedIcon
-              titleAccess="Público"
-              fontSize="medium"
-              sx={{
-                marginLeft: "10px",
-                color: "#b8d2e9",
-              }}
-            />
-          );
-
-        return (
-          <div className="members-cell">
-            <HtmlTooltip
-              title={
-                <div className="members">
-                  {params.row.memberKeys.map((key) => (
-                    <Chip
-                      key={key}
-                      size="small"
-                      label={getUserNameByKey(key, users as User[])}
-                      color="info"
-                      onDelete={() => handleDeleteMember(params.row, key)}
-                    />
-                  ))}
-                </div>
-              }
-            >
-              <Groups2OutlinedIcon />
-            </HtmlTooltip>
-          </div>
-        );
-      },
-    },
-    {
-      field: "description",
-      headerName: "Descripción",
-      width: 450,
-    },
-  ];
-
   const handleDeleteWorkgroup = async (workgroup: Workgroup) => {
     const deleteResult = await WorkgroupService.deleteWorkgroup(
       workgroup,
@@ -225,25 +133,220 @@ export default function WorksgroupTable() {
       title: "Confirmacion!",
       text: `Vas a eliminar el grupo de trabajo "${workgroup.name.toUpperCase()}".`,
       actions: (
-        <Button onClick={() => handleDeleteWorkgroup(workgroup)}>
+        <Button 
+          onClick={() => handleDeleteWorkgroup(workgroup)}
+          variant="contained"
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            borderRadius: '10px',
+            padding: '6px 16px',
+            border: '1px solid rgba(255,69,58,0.5)',
+            background: 'rgba(255,69,58,0.15)',
+            backdropFilter: 'blur(10px)',
+            '&:hover': {
+              background: 'rgba(255,69,58,0.25)',
+              border: '1px solid rgba(255,69,58,0.8)',
+              boxShadow: '0 0 15px rgba(255,69,58,0.3)',
+            },
+          }}
+        >
           Eliminar
         </Button>
       ),
     });
   };
 
+  const columns: GridColDef[] = [
+    {
+      field: "actions",
+      type: "actions",
+      width: 120,
+      resizable: false,
+      align: "right",
+      getActions: (params: GridRowParams<Workgroup>) => [
+        <GridActionsCellItem
+          key="task"
+          icon={<AddTaskOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+          onClick={() =>
+            setModal({
+              ...modal,
+              open: true,
+              title: "Nueva Tarea",
+              text: "Ingrese los datos de la tarea.",
+              content: (
+                <TasksFormComponent workgroupKey={params.row.key as string} />
+              ),
+            })
+          }
+          label="Nueva tarea"
+          sx={{
+            color: '#30d158',
+            background: 'rgba(48,209,88,0.1)',
+            border: '1px solid rgba(48,209,88,0.2)',
+            borderRadius: '8px',
+            padding: '4px',
+            mx: 0.1,
+            '&:hover': { background: 'rgba(48,209,88,0.2)' }
+          }}
+        />,
+        <GridActionsCellItem
+          key="edit"
+          icon={<ModeEditOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+          onClick={() => handleModifyWorkgroup(params.row)}
+          label="Modificar"
+          sx={{
+            color: '#0a84ff',
+            background: 'rgba(10,132,255,0.1)',
+            border: '1px solid rgba(10,132,255,0.2)',
+            borderRadius: '8px',
+            padding: '4px',
+            mx: 0.1,
+            '&:hover': { background: 'rgba(10,132,255,0.2)' }
+          }}
+        />,
+        <GridActionsCellItem
+          key="delete"
+          icon={<DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+          onClick={() => handleDeleteConfirmation(params.row)}
+          label="Eliminar"
+          sx={{
+            color: '#ff453a',
+            background: 'rgba(255,69,58,0.1)',
+            border: '1px solid rgba(255,69,58,0.2)',
+            borderRadius: '8px',
+            padding: '4px',
+            mx: 0.1,
+            '&:hover': { background: 'rgba(255,69,58,0.2)' }
+          }}
+        />,
+      ],
+    },
+    {
+      field: "name",
+      headerName: "Nombre",
+      flex: 1,
+      renderCell: ({ value }: GridRenderCellParams<Workgroup>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', height: '100%', fontWeight: 600, color: 'white' }}>
+          {value}
+        </Box>
+      )
+    },
+    {
+      field: "memberKeys",
+      headerName: "Colaboradores",
+      type: "string",
+      width: 200,
+      renderCell: (params: GridRenderCellParams<Workgroup>) => {
+        if (!params.row.memberKeys?.length)
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', width: '100%' }}>
+              <PublicOutlinedIcon
+                titleAccess="Público"
+                fontSize="medium"
+                sx={{
+                  color: "rgba(255,255,255,0.3)",
+                }}
+              />
+            </Box>
+          );
+
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', width: '100%' }}>
+            <HtmlTooltip
+              title={
+                <div className="members">
+                  {params.row.memberKeys.map((key) => (
+                    <Chip
+                      key={key}
+                      size="small"
+                      label={getUserNameByKey(key, users as User[])}
+                      color="info"
+                      onDelete={() => handleDeleteMember(params.row, key)}
+                    />
+                  ))}
+                </div>
+              }
+            >
+              <Groups2OutlinedIcon sx={{ color: 'rgba(255,255,255,0.7)' }} />
+            </HtmlTooltip>
+          </Box>
+        );
+      },
+    },
+    {
+      field: "description",
+      headerName: "Descripción",
+      width: 450,
+      renderCell: ({ value }: GridRenderCellParams<Workgroup>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
+          {value}
+        </Box>
+      )
+    },
+  ];
+
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ 
+      height: "calc(100vh - 230px)", 
+      width: "100%", 
+      backgroundColor: 'rgba(28, 28, 30, 0.6)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+    }}>
       <DataGrid
         rows={workgroupsByRole() as Workgroup[]}
         columns={columns}
+        columnHeaderHeight={36}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
-        rowHeight={35}
+        rowHeight={60}
         localeText={{
-          MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
+          MuiTablePagination: { 
+            labelRowsPerPage: "Filas por página",
+            labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+          },
+          noRowsLabel: "Sin filas",
+          footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
         }}
-        sx={{ border: 0 }}
+        sx={{ 
+          border: 0,
+          color: 'white',
+          '& .MuiDataGrid-cell': {
+            display: 'flex',
+            alignItems: 'center',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+            color: 'white'
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 0,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiTablePagination-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          }
+        }}
       />
     </Paper>
   );

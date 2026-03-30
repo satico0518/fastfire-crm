@@ -8,6 +8,7 @@ import {
   FormLabel,
   Stack,
   TextField,
+  Box,
 } from "@mui/material";
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -22,6 +23,15 @@ interface UserFormComponentProps {
   editingUser?: User;
 }
 
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)' },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3)' },
+  '& .MuiInput-underline:after': { borderBottomColor: 'white' },
+  '& .MuiInput-input': { color: 'white' },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+};
+
 export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
@@ -35,6 +45,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
     ADMIN: false,
     PURCHASE: false,
     PROVIDER: false,
+    FORMATER: false,
+    PLANNER: false,
   });
 
   const {
@@ -50,6 +62,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         ADMIN: false,
         TYG: false,
         PURCHASE: false,
+        FORMATER: false,
+        PLANNER: false,
         PROVIDER: event.target.checked,
       });
     } else {
@@ -70,6 +84,8 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         TYG: editingUser.permissions.includes("TYG"),
         PURCHASE: editingUser.permissions.includes("PURCHASE"),
         PROVIDER: editingUser.permissions.includes("PROVIDER"),
+        FORMATER: editingUser.permissions.includes("FORMATER"),
+        PLANNER: editingUser.permissions.includes("PLANNER"),
       });
       setLabelWg(
         workgroups
@@ -159,7 +175,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"} direction={"column"}>
+      <Stack spacing={3} width={"100%"} direction={"column"} sx={{ pt: 1 }}>
         <TextField
           label="Nombre"
           type="text"
@@ -170,6 +186,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
           helperText={errors.firstName?.message as string}
           autoCapitalize="words"
           required
+          sx={darkInputFieldSx}
         />
         <TextField
           label="Apellido"
@@ -181,6 +198,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
           helperText={errors.lastName?.message as string}
           autoCapitalize="words"
           required
+          sx={darkInputFieldSx}
         />
         {!editingUser && (
           <TextField
@@ -193,15 +211,13 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
             helperText={errors.email?.message as string}
             required
             autoCapitalize="none"
+            sx={darkInputFieldSx}
           />
         )}
-        {!editingUser &&
-          !(editingUser as unknown as User)?.permissions.includes(
-            "PROVIDER"
-          ) && (
-            <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
-              <FormLabel component="legend">Permisos</FormLabel>
-              <FormGroup>
+        {!(editingUser?.permissions.includes("PROVIDER")) && (
+            <FormControl sx={{ m: 1 }} component="fieldset" variant="standard">
+              <FormLabel component="legend" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: 600 }}>Permisos</FormLabel>
+              <FormGroup sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', mt: 1 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -210,9 +226,11 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                       onChange={handleAccessChange}
                       name="TYG"
                       disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
                     />
                   }
                   label="Tareas y Grupos"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
                 />
                 <FormControlLabel
                   control={
@@ -222,9 +240,39 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                       onChange={handleAccessChange}
                       name="PURCHASE"
                       disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
                     />
                   }
                   label="Compras"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.FORMATER}
+                      onChange={handleAccessChange}
+                      name="FORMATER"
+                      disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
+                    />
+                  }
+                  label="Formatos"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.PLANNER}
+                      onChange={handleAccessChange}
+                      name="PLANNER"
+                      disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
+                    />
+                  }
+                  label="Agenda Planner"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
                 />
                 <FormControlLabel
                   control={
@@ -234,9 +282,11 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                       onChange={handleAccessChange}
                       name="ADMIN"
                       disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
                     />
                   }
                   label="Admin"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
                 />
                 <FormControlLabel
                   control={
@@ -245,9 +295,11 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                       checked={accessState.PROVIDER}
                       onChange={handleAccessChange}
                       name="PROVIDER"
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
                     />
                   }
                   label="Proveedor"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
                 />
               </FormGroup>
             </FormControl>
@@ -261,15 +313,30 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
             setValue={setLabelWg}
           />
         )}
-        <Button
-          fullWidth
-          type="submit"
-          variant="outlined"
-          size="large"
-          color="success"
-        >
-          {editingUser ? "Editar Usuario" : "Crear Usuario"}
-        </Button>
+        <Box sx={{ pt: 1 }}>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: '12px',
+              padding: '12px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.2)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.3)',
+                border: '1px solid rgba(48,209,88,0.8)',
+              },
+            }}
+          >
+            {editingUser ? "Editar Usuario" : "Crear Usuario"}
+          </Button>
+        </Box>
       </Stack>
     </form>
   );

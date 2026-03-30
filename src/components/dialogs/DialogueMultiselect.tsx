@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogTitle } from "@mui/material";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { MultiselectComponent } from "../multi-select/MultiselectComponent";
 import { Dispatch, SetStateAction } from "react";
 
@@ -24,36 +24,40 @@ export const DialogueMultiselect = ({
   okButtonAction = () => {},
 }: DialogueMultiselectProps) => (
   <Dialog
-    sx={{ top: "35%", left: "50%" }}
     onClose={() => setOpen(false)}
     open={open}
+    fullWidth
+    maxWidth="xs"
+    disableRestoreFocus
   >
     <DialogTitle>{title}</DialogTitle>
-    <div style={{ width: "300px", padding: 20 }}>
+    <DialogContent sx={{ paddingTop: '10px !important' }}>
       <MultiselectComponent
         labels={labels}
         title={title}
         value={value as string[]}
         setValue={setValue}
       />
-      <div style={{ display: "flex", justifyContent: "end", marginTop: 20 }}>
-        <Button
-          onClick={() => {
-            setValue([]);
-            setOpen(false);
-          }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={() => {
-            setOpen(false);
-            okButtonAction();
-          }}
-        >
-          {okButtonText}
-        </Button>
-      </div>
-    </div>
+    </DialogContent>
+    <DialogActions sx={{ padding: '16px 24px' }}>
+      <Button
+        onClick={() => {
+          setValue([]);
+          setOpen(false);
+        }}
+      >
+        Cancelar
+      </Button>
+      <Button
+        variant="contained"
+        disableElevation
+        onClick={() => {
+          setOpen(false);
+          okButtonAction();
+        }}
+      >
+        {okButtonText}
+      </Button>
+    </DialogActions>
   </Dialog>
 );

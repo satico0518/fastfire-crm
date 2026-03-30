@@ -10,11 +10,12 @@ import {
 } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import { Project } from "../../interfaces/Project";
-import { Button, Chip } from "@mui/material";
-import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import { Button, Chip, IconButton, Box } from "@mui/material";
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { ProjectsFormComponent } from "../projects-form/ProjectsFormComponent";
 import {
   formatToCOP,
@@ -30,164 +31,6 @@ export default function ProjectsTable() {
   const projects = useProjectsStore((state) => state.projects);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
-
-  const columns: GridColDef[] = [
-    {
-      field: "actions",
-      type: "actions",
-      headerAlign: "right",
-      align: "right",
-      maxWidth: 50,
-      resizable: false,
-      getActions: (params: GridRowParams<Project>) => {
-        if (params.row.status === "DONE")
-          return [
-            <GridActionsCellItem
-              onClick={() =>
-                handleDeleteConfirmation(
-                  params.row.key as string,
-                  params.row.name
-                )
-              }
-              label="Eliminar"
-              showInMenu
-            />,
-          ];
-        return [
-          <GridActionsCellItem
-            icon={<ModeEditOutlineOutlinedIcon color="info"/>}
-            onClick={() =>
-              setModal({
-                ...modal,
-                open: true,
-                title: "Modificar Proyecto",
-                text: "Ingrese los datos del proyecto a modificar.",
-                content: <ProjectsFormComponent editingProject={params.row} />,
-              })
-            }
-            label="Modificar"
-            showInMenu
-          />,
-          <GridActionsCellItem
-            icon={<BlockOutlinedIcon color="warning"/>}
-            onClick={() =>
-              ProjectService.updateProject({ ...params.row, status: "BLOCKED" })
-            }
-            label="Bloquear"
-            showInMenu
-          />,
-          <GridActionsCellItem
-            icon={<TaskAltOutlinedIcon color="success"/>}
-            onClick={() =>
-              ProjectService.updateProject({ ...params.row, status: "DONE" })
-            }
-            label="Finalizar"
-            showInMenu
-          />,
-        ];
-      },
-    },
-    {
-      field: "name",
-      headerName: "Nombre",
-      type: "string",
-      width: 300,
-      flex: 1,
-      renderCell: ({ row }: GridRenderCellParams<Project>) => (
-        <span
-          style={{
-            textDecoration: row.status === "DONE" ? "line-through" : "none",
-          }}
-        >
-          {row.name}
-        </span>
-      ),
-    },
-    {
-      field: "status",
-      headerName: "Estado",
-      type: "string",
-      width: 250,
-      renderCell: (params: GridRenderCellParams<Project>) => (
-        <>
-          {params.row.status === "IN_PROGRESS" && (
-            <Chip color="success" label={translateStatus(params.row.status)} />
-          )}
-          {params.row.status === "BLOCKED" && (
-            <>
-              <Chip color="error" label={translateStatus(params.row.status)} />
-              <Button
-                title="Iniciar"
-                onClick={() =>
-                  ProjectService.updateProject({
-                    ...params.row,
-                    status: "IN_PROGRESS",
-                  })
-                }
-              >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
-            </>
-          )}
-          {params.row.status === "ARCHIVED" && (
-            <Chip color="default" label={translateStatus(params.row.status)} />
-          )}
-          {params.row.status === "DONE" && (
-            <>
-              <Chip color="info" label={translateStatus(params.row.status)} />
-              <Button
-                title="Reiniciar"
-                onClick={() =>
-                  ProjectService.updateProject({
-                    ...params.row,
-                    status: "IN_PROGRESS",
-                  })
-                }
-              >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
-            </>
-          )}
-          {params.row.status === "TODO" && (
-            <>
-              <span>{translateStatus(params.row.status)}</span>
-              <Button
-                title="Iniciar"
-                onClick={() =>
-                  ProjectService.updateProject({
-                    ...params.row,
-                    status: "IN_PROGRESS",
-                  })
-                }
-              >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
-            </>
-          )}
-        </>
-      ),
-    },
-    {
-      field: "location",
-      headerName: "Ubicacion",
-      type: "string",
-      width: 250,
-    },
-    {
-      field: "createdDate",
-      headerName: "Fecha Creacion",
-      type: "string",
-      width: 250,
-      valueGetter: (value) => translateTimestampToString(value),
-    },
-    {
-      field: "budget",
-      headerName: "Presupuesto",
-      type: "number",
-      width: 200,
-      valueGetter: (value) => formatToCOP(value),
-    },
-  ];
 
   const handleDeleteProject = async (projectKey: string) => {
     const deleteResult = await ProjectService.deleteProject(projectKey);
@@ -217,25 +60,357 @@ export default function ProjectsTable() {
       title: "Confirmación!",
       text: `Vas a eliminar el proyecto "${projectName.toUpperCase()}".`,
       actions: (
-        <Button onClick={() => handleDeleteProject(projectKey)}>
+        <Button 
+          onClick={() => handleDeleteProject(projectKey)}
+          variant="contained"
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            borderRadius: '10px',
+            padding: '6px 16px',
+            border: '1px solid rgba(255,69,58,0.5)',
+            background: 'rgba(255,69,58,0.15)',
+            backdropFilter: 'blur(10px)',
+            '&:hover': {
+              background: 'rgba(255,69,58,0.25)',
+              border: '1px solid rgba(255,69,58,0.8)',
+              boxShadow: '0 0 15px rgba(255,69,58,0.3)',
+            },
+          }}
+        >
           Eliminar
         </Button>
       ),
     });
   };
 
+  const columns: GridColDef[] = [
+    {
+      field: "actions",
+      type: "actions",
+      headerAlign: "center",
+      align: "center",
+      width: 160,
+      resizable: false,
+      getActions: (params: GridRowParams<Project>) => {
+        const baseActions = [
+          <GridActionsCellItem
+            key="edit"
+            icon={<ModeEditOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+            onClick={() =>
+              setModal({
+                ...modal,
+                open: true,
+                title: "Modificar Proyecto",
+                text: "Ingrese los datos del proyecto a modificar.",
+                content: <ProjectsFormComponent editingProject={params.row} />,
+              })
+            }
+            label="Modificar"
+            sx={{
+              color: '#0a84ff',
+              background: 'rgba(10,132,255,0.1)',
+              border: '1px solid rgba(10,132,255,0.2)',
+              borderRadius: '8px',
+              padding: '4px',
+              mx: 0.1,
+              '&:hover': {
+                background: 'rgba(10,132,255,0.2)',
+                boxShadow: '0 0 10px rgba(10,132,255,0.2)',
+              }
+            }}
+          />,
+          <GridActionsCellItem
+            key="delete"
+            icon={<DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+            onClick={() =>
+              handleDeleteConfirmation(
+                params.row.key as string,
+                params.row.name
+              )
+            }
+            label="Eliminar"
+            sx={{
+              color: '#ff453a',
+              background: 'rgba(255,69,58,0.1)',
+              border: '1px solid rgba(255,69,58,0.2)',
+              borderRadius: '8px',
+              padding: '4px',
+              mx: 0.1,
+              '&:hover': {
+                background: 'rgba(255,69,58,0.2)',
+                boxShadow: '0 0 10px rgba(255,69,58,0.2)',
+              }
+            }}
+          />
+        ];
+
+        if (params.row.status === "DONE") return baseActions;
+
+        return [
+          ...baseActions,
+          <GridActionsCellItem
+            key="block"
+            icon={<BlockOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+            onClick={() =>
+              ProjectService.updateProject({ ...params.row, status: "BLOCKED" })
+            }
+            label="Bloquear"
+            sx={{
+              color: '#ff9f0a',
+              background: 'rgba(255,159,10,0.1)',
+              border: '1px solid rgba(255,159,10,0.2)',
+              borderRadius: '8px',
+              padding: '4px',
+              mx: 0.1,
+              '&:hover': {
+                background: 'rgba(255,159,10,0.2)',
+                boxShadow: '0 0 10px rgba(255,159,10,0.2)',
+              }
+            }}
+          />,
+          <GridActionsCellItem
+            key="done"
+            icon={<TaskAltOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+            onClick={() =>
+              ProjectService.updateProject({ ...params.row, status: "DONE" })
+            }
+            label="Finalizar"
+            sx={{
+              color: '#30d158',
+              background: 'rgba(48,209,88,0.1)',
+              border: '1px solid rgba(48,209,88,0.2)',
+              borderRadius: '8px',
+              padding: '4px',
+              mx: 0.1,
+              '&:hover': {
+                background: 'rgba(48,209,88,0.2)',
+                boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+              }
+            }}
+          />
+        ];
+      },
+    },
+    {
+      field: "name",
+      headerName: "Nombre",
+      type: "string",
+      width: 500,
+      flex: 2,
+      renderCell: ({ row }: GridRenderCellParams<Project>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'white', fontWeight: 500 }}>
+          <span
+            style={{
+              textDecoration: row.status === "DONE" ? "line-through" : "none",
+              opacity: row.status === "DONE" ? 0.6 : 1
+            }}
+          >
+            {row.name}
+          </span>
+        </Box>
+      ),
+    },
+    {
+      field: "status",
+      headerName: "Estado",
+      type: "string",
+      width: 250,
+      renderCell: (params: GridRenderCellParams<Project>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', gap: 1 }}>
+          {params.row.status === "IN_PROGRESS" && (
+            <Chip color="success" size="small" label={translateStatus(params.row.status)} sx={{ fontWeight: 700 }} />
+          )}
+          {params.row.status === "BLOCKED" && (
+            <>
+              <Chip color="error" size="small" label={translateStatus(params.row.status)} sx={{ fontWeight: 700 }} />
+              <IconButton
+                title="Iniciar"
+                size="small"
+                onClick={() =>
+                  ProjectService.updateProject({
+                    ...params.row,
+                    status: "IN_PROGRESS",
+                  })
+                }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
+              >
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+          {params.row.status === "ARCHIVED" && (
+            <Chip color="default" size="small" label={translateStatus(params.row.status)} sx={{ fontWeight: 700 }} />
+          )}
+          {params.row.status === "DONE" && (
+            <>
+              <Chip color="info" size="small" label={translateStatus(params.row.status)} sx={{ fontWeight: 700 }} />
+              <IconButton
+                title="Reiniciar"
+                size="small"
+                onClick={() =>
+                  ProjectService.updateProject({
+                    ...params.row,
+                    status: "IN_PROGRESS",
+                  })
+                }
+                sx={{
+                  color: '#ff9f0a',
+                  background: 'rgba(255,159,10,0.1)',
+                  border: '1px solid rgba(255,159,10,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(255,159,10,0.2)',
+                    boxShadow: '0 0 10px rgba(255,159,10,0.2)',
+                  }
+                }}
+              >
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+          {params.row.status === "TODO" && (
+            <>
+              <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>{translateStatus(params.row.status)}</span>
+              <IconButton
+                title="Iniciar"
+                size="small"
+                onClick={() =>
+                  ProjectService.updateProject({
+                    ...params.row,
+                    status: "IN_PROGRESS",
+                  })
+                }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
+              >
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+        </Box>
+      ),
+    },
+    {
+      field: "location",
+      headerName: "Ubicacion",
+      type: "string",
+      width: 250,
+      renderCell: ({ value }: GridRenderCellParams<Project>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
+          {value}
+        </Box>
+      )
+    },
+    {
+      field: "createdDate",
+      headerName: "Fecha Creacion",
+      type: "string",
+      width: 250,
+      valueGetter: (value) => translateTimestampToString(value),
+      renderCell: ({ value }: GridRenderCellParams<Project>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'rgba(255,255,255,0.7)' }}>
+          {value}
+        </Box>
+      )
+    },
+    {
+      field: "budget",
+      headerName: "Presupuesto",
+      type: "number",
+      width: 200,
+      valueGetter: (value) => formatToCOP(value),
+      renderCell: ({ value }: GridRenderCellParams<Project>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', color: 'white', fontWeight: 600 }}>
+          {value}
+        </Box>
+      )
+    },
+  ];
+
   return (
-    <Paper sx={{ height: "calc(100vh - 230px)", width: "100%" }}>
+    <Paper sx={{ 
+      height: "calc(100vh - 230px)", 
+      width: "100%", 
+      backgroundColor: 'rgba(28, 28, 30, 0.6)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+    }}>
       <DataGrid
         rows={projects as Project[]}
         columns={columns}
+        columnHeaderHeight={36}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[15, 30]}
-        rowHeight={35}
+        rowHeight={60}
         localeText={{
-          MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
+          MuiTablePagination: { 
+            labelRowsPerPage: "Filas por página",
+            labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+          },
+          noRowsLabel: "Sin filas",
+          footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
         }}
-        sx={{ border: 0 }}
+        sx={{ 
+          border: 0,
+          color: 'white',
+          '& .MuiDataGrid-cell': {
+            display: 'flex',
+            alignItems: 'center',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+            color: 'white'
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 0,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiTablePagination-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          }
+        }}
       />
     </Paper>
   );

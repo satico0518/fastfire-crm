@@ -1,4 +1,4 @@
-import { Stack, TextField, Button } from "@mui/material";
+import { Stack, TextField, Button, Box } from "@mui/material";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { Item } from "../../interfaces/Item";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -7,6 +7,15 @@ import { PurchaseService } from "../../services/purchase.service";
 interface StockFormComponentProps {
   editingItem?: Item;
 }
+
+const darkInputFieldSx = {
+  '& label': { color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
+  '& label.Mui-focused': { color: 'white' },
+  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3)' },
+  '& .MuiInput-underline:after': { borderBottomColor: 'white' },
+  '& .MuiInput-input': { color: 'white' },
+  '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.5)' },
+};
 
 export const StockFormComponent = ({
   editingItem,
@@ -21,7 +30,14 @@ export const StockFormComponent = ({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      id: editingItem?.id ?? "",
+      name: editingItem?.name ?? "",
+      count: editingItem?.count,
+      price: editingItem?.price,
+    }
+  });
 
   const onSubmit = async (data: Item) => {
     try {
@@ -30,7 +46,7 @@ export const StockFormComponent = ({
 
       let response;
       if (editingItem)
-        response = await PurchaseService.modifyItem(data);
+        response = await PurchaseService.modifyItem({ ...editingItem, ...data });
       else response = await PurchaseService.addItemToStock(data);
 
       if (response.result === "OK") {
@@ -69,7 +85,7 @@ export const StockFormComponent = ({
   };
   return (
     <form onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}>
-      <Stack spacing={2} width={"100%"} direction={"column"}>
+      <Stack spacing={3} width={"100%"} direction={"column"} sx={{ pt: 1 }}>
         <TextField
           label="Código"
           type="text"
@@ -79,6 +95,7 @@ export const StockFormComponent = ({
           error={!!errors.id}
           helperText={errors.id?.message as string}
           autoCapitalize="characters"
+          sx={darkInputFieldSx}
         />
         <TextField
           label="Item"
@@ -89,6 +106,7 @@ export const StockFormComponent = ({
           error={!!errors.name}
           helperText={errors.name?.message as string}
           autoCapitalize="words"
+          sx={darkInputFieldSx}
         />
         <TextField
           label="Cantidad"
@@ -98,6 +116,7 @@ export const StockFormComponent = ({
           fullWidth
           error={!!errors.count}
           helperText={errors.count?.message as string}
+          sx={darkInputFieldSx}
         />
         <TextField
           label="Precio"
@@ -107,18 +126,33 @@ export const StockFormComponent = ({
           fullWidth
           error={!!errors.price}
           helperText={errors.price?.message as string}
+          sx={darkInputFieldSx}
         />
 
-        <Button
-          fullWidth
-          type="submit"
-          variant="outlined"
-          size="large"
-          color="success"
-          title="Nuevo Item"
-        >
-          {editingItem ? "Editar Item" : "Crear Item"}
-        </Button>
+        <Box sx={{ pt: 1 }}>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: '12px',
+              padding: '12px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.2)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.3)',
+                border: '1px solid rgba(48,209,88,0.8)',
+              },
+            }}
+          >
+            {editingItem ? "Editar Item" : "Crear Item"}
+          </Button>
+        </Box>
       </Stack>
     </form>
   );

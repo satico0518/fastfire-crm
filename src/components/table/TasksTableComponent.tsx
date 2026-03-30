@@ -2,7 +2,6 @@ import {
   DataGrid,
   GridActionsCellItem,
   GridColDef,
-  GridColumnResizeParams,
   GridFilterModel,
   GridRenderCellParams,
   GridRenderEditCellParams,
@@ -13,13 +12,24 @@ import {
   Avatar,
   Button,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   FormControlLabel,
+  IconButton,
   Input,
+  List,
+  ListItem,
+  ListItemText,
   Switch,
   TextField,
   Tooltip,
+  Typography,
+  useMediaQuery,
+  Box,
 } from "@mui/material";
-import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
@@ -33,12 +43,15 @@ import NoteAltOutlinedIcon from "@mui/icons-material/NoteAltOutlined";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import DateRangeOutlinedIcon from "@mui/icons-material/DateRangeOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Priority, Task } from "../../interfaces/Task";
 
 import { useUiStore } from "../../stores/ui/ui.store";
 import {
   changeDateFromDMA_MDA,
+  downloadExcelFile,
   getUserKeysByNames,
   getUserNameByKey,
   getWorkgroupNameByKey,
@@ -53,6 +66,8 @@ import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
+import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
+import AddIcon from "@mui/icons-material/Add";
 import { DialogueMultiselect } from "../dialogs/DialogueMultiselect";
 import { User } from "../../interfaces/User";
 import { PriorityInput } from "../priority-input/PriorityInput";
@@ -61,6 +76,11 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { TagsInput } from "../tags-input/TagsInput";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import Popover from "@mui/material/Popover";
+import MenuList from "@mui/material/MenuList";
+import MenuItem from "@mui/material/MenuItem";
+import CheckIcon from "@mui/icons-material/Check";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -68,26 +88,22 @@ interface TasksTableProps {
   workgroup?: Workgroup;
 }
 
-interface ColumnWidhts {
-  status: number;
-  name: number;
-  ownerKeys: number;
-  dueDate: number;
-  notes: number;
-  priority: number;
-  createdDate: number;
-  workgroupKeys: number;
-}
 
 export default function TasksTable({ workgroup }: TasksTableProps) {
+  const isMobile = useMediaQuery('(max-width: 1100px)');
   const editNameRef = useRef<HTMLInputElement>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setConfirmation = useUiStore((state) => state.setConfirmation);
+  const setModal = useUiStore((state) => state.setModal);
   const tasks = useTasksStore((state) => state.tasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuhtStore((state) => state.user);
+  const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
+  const [tagAnchorEl, setTagAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [historyTask, setHistoryTask] = useState<Task | null>(null);
+  const [openHistoryDialog, setOpenHistoryDialog] = useState(false);
   const [showArchivedTasks, setShowArchivedTasks] = useState(false);
   const [filterModel, setFilterModel] = useState<GridFilterModel>({
     items: [],
@@ -111,9 +127,92 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const [openNotesDialog, setOpenNotesDialog] = useState(false);
   const [taskNotes, setTaskNotes] = useState<string | null>();
 
-  const [columWidths, setColumWidths] = useState<ColumnWidhts | null>(
-    JSON.parse(sessionStorage.getItem("columWidths") || "{}")
-  );
+
+  const translateHistoryAction = (action: string) => {
+    switch (action) {
+      case 'CREATED':
+        return 'CREADA';
+      case 'UPDATED':
+        return 'ACTUALIZADA';
+      case 'NOTE_ADDED':
+        return 'NOTA AÑADIDA';
+      case 'DELETED':
+        return 'ELIMINADA';
+      default:
+        return action;
+    }
+  };
+
+  const translateHistoryField = (field: string) => {
+    switch (field) {
+      case 'ownerKeys':
+        return 'Responsables';
+      case 'notes':
+        return 'Notas';
+      case 'dueDate':
+        return 'Fecha límite';
+      case 'priority':
+        return 'Prioridad';
+      case 'status':
+        return 'Estado';
+      case 'workgroupKeys':
+        return 'Grupos';
+      case 'tags':
+        return 'Etiquetas';
+      case 'name':
+        return 'Nombre';
+      default:
+        return field;
+    }
+  };
+
+  const translateHistoryValue = (field: string, value: unknown) => {
+    if (value === undefined || value === null) return 'N/A';
+
+    if (field === 'priority' && typeof value === 'string') {
+      switch (value) {
+        case 'LOW':
+          return 'Baja';
+        case 'NORMAL':
+          return 'Normal';
+        case 'HIGH':
+          return 'Alta';
+        case 'URGENT':
+          return 'Urgente';
+        default:
+          return value;
+      }
+    }
+
+    if (field === 'status' && typeof value === 'string') {
+      return translateStatus(value as any);
+    }
+
+    if (field === 'dueDate' && typeof value === 'string') {
+      const parsed = dayjs(value, ['DD/MM/YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']);
+      return parsed.isValid() ? parsed.format('DD/MM/YYYY') : value;
+    }
+
+    if (field === 'ownerKeys' && Array.isArray(value)) {
+      return value
+        .map((key) => getUserNameByKey(String(key), users || []))
+        .join(', ');
+    }
+
+    if (field === 'workgroupKeys' && Array.isArray(value)) {
+      return value
+        .map((key) => getWorkgroupNameByKey(String(key), workgroups || []))
+        .join(', ');
+    }
+
+    if (field === 'tags' && Array.isArray(value)) {
+      return value.join(', ');
+    }
+
+    return String(value);
+  };
+
+  const updateTaskByUser = async (task: Task) => TaskService.updateTask(task, currentUser?.key);
 
   const handleEditTask = async (
     field: string,
@@ -124,7 +223,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       if (!!inputRef.current && !!inputRef.current.value) {
         task[field] = inputRef.current?.value ?? task[field];
 
-        const resp = await TaskService.updateTask(task);
+        const resp = await updateTaskByUser(task);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -152,7 +251,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const handleDeleteTag = async (task: Task, tag: string) => {
     try {
       task.tags = task.tags.filter((t) => t !== tag);
-      TaskService.updateTask(task);
+      updateTaskByUser(task);
       setSelectedTags(selectedTags.filter((t) => t !== tag));
     } catch (error) {
       console.error("Error eliminando etiqueta", { task }, { error });
@@ -169,7 +268,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       if (selectedTask) {
         selectedTask.ownerKeys =
           getUserKeysByNames(selectedOwners, users as User[]) ?? [];
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -203,7 +302,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     try {
       if (selectedTask) {
         selectedTask.priority = priority as Priority;
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -239,7 +338,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           ? (selectedDueDate?.format("DD/MM/YYYY") as string)
           : "";
 
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -276,7 +375,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             ? `${selectedTask.notes}, `
             : ""
         }[${dayjs(Date.now()).format("DDMMMYY hh:mm")}] ${taskNotes}`;
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -314,7 +413,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             ?.filter((wg) => selectedGroups.some((sg) => sg === wg.name))
             .map((wg) => wg.key) as string[]) || [];
 
-        const resp = await TaskService.updateTask(selectedTask);
+        const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
             open: true,
@@ -371,6 +470,35 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     });
   };
 
+  const handleExport = () => {
+    const tasksToExport = getTaskByRole();
+    const data = tasksToExport.map(task => ({
+      Estado: translateStatus(task.status),
+      Nombre: task.name,
+      Responsables: task.ownerKeys?.map(k => getUserNameByKey(k, users || [])).join(', ') || 'Sin asignar',
+      'Fecha Límite': task.dueDate ? dayjs(task.dueDate, 'DD/MM/YYYY').format('DD/MM/YYYY') : 'Sin fecha límite',
+      Notas: task.notes || '',
+      Prioridad: task.priority ? ['Baja', 'Normal', 'Alta', 'Urgente'][['LOW','NORMAL','HIGH','URGENT'].indexOf(task.priority)] : '-',
+      'Fecha de Creación': translateTimestampToString(task.createdDate),
+      'Grupos de Trabajo': task.workgroupKeys?.map(k => getWorkgroupNameByKey(k, workgroups || [])).join(', ') || '',
+      'Creado por': getUserNameByKey(task.createdByUserKey, users || []) || 'NA',
+    }));
+    downloadExcelFile(data, `tareas_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+  };
+
+  const getFilteredByTags = (taskList: Task[]): Task[] => {
+    if (activeTagFilters.length === 0) return taskList;
+    return taskList.filter((t) =>
+      activeTagFilters.some((tag) => t.tags?.includes(tag))
+    );
+  };
+
+  const toggleTagFilter = (tag: string) => {
+    setActiveTagFilters((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const getTaskByRole = (): Task[] => {
     if (workgroup) {
       return tasks
@@ -378,28 +506,32 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         .filter(
           (t) =>
             t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
+            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
         ) as Task[];
     }
 
     if (!currentUser?.permissions.includes("ADMIN"))
-      return tasks
-        ?.filter((t) =>
-          currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
-        )
-        .filter(
-          (t) =>
-            t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
-        ) as Task[];
+      return getFilteredByTags(
+        tasks
+          ?.filter((t) =>
+            currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
+          )
+          .filter(
+            (t) =>
+              t.status !== "DELETED" &&
+              (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
+          ) as Task[]
+      );
 
-    return tasks !== null
-      ? tasks?.filter(
-          (t) =>
-            t.status !== "DELETED" &&
-            (showArchivedTasks || t.status !== "ARCHIVED")
-        )
-      : [];
+    return getFilteredByTags(
+      tasks !== null
+        ? tasks?.filter(
+            (t) =>
+              t.status !== "DELETED" &&
+              (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
+          )
+        : []
+    );
   };
 
   const columns: GridColDef[] = [
@@ -408,13 +540,21 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "actions",
       type: "actions",
       width: 50,
-      resizable: false,
       align: "right",
       getActions: (params: GridRowParams<Task>) => [
         <GridActionsCellItem
+          icon={<HistoryOutlinedIcon color="inherit" />}
+          onClick={() => {
+            setHistoryTask(params.row);
+            setOpenHistoryDialog(true);
+          }}
+          label="Historial"
+          showInMenu
+        />,
+        <GridActionsCellItem
           icon={<RestoreOutlinedIcon color="info" />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "TODO" })
+            updateTaskByUser({ ...params.row, status: "TODO" })
           }
           label="Volver a Iniciar"
           showInMenu
@@ -422,7 +562,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <GridActionsCellItem
           icon={<BlockOutlinedIcon color="warning" />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "BLOCKED" })
+            updateTaskByUser({ ...params.row, status: "BLOCKED" })
           }
           label="Bloquear"
           showInMenu
@@ -431,7 +571,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           hidden={params.row.status === "DONE"}
           icon={<TaskAltOutlinedIcon color="success" />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "DONE" })
+            updateTaskByUser({ ...params.row, status: "DONE" })
           }
           label="Finalizar"
           showInMenu
@@ -439,7 +579,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <GridActionsCellItem
           icon={<ArchiveOutlinedIcon />}
           onClick={() =>
-            TaskService.updateTask({ ...params.row, status: "ARCHIVED" })
+            updateTaskByUser({ ...params.row, status: "ARCHIVED" })
           }
           label="Archivar"
           showInMenu
@@ -457,7 +597,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "status",
       headerName: "Estado",
       type: "string",
-      width: columWidths?.status ?? 180,
+      width: 180,
       filterable: true,
       valueGetter: (_value: any, row: Task) => {
         // Para el filtro, devolvemos el estado traducido
@@ -474,17 +614,30 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                 color="error"
                 label={translateStatus(params.row.status).replace("/.$/", "a")}
               />
-              <Button
+              <IconButton
                 title="Reiniciar"
+                size="small"
                 onClick={() =>
-                  TaskService.updateTask({
+                  updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
                 }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
               >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
             </>
           )}
           {params.row.status === "ARCHIVED" && (
@@ -496,33 +649,59 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           {params.row.status === "DONE" && (
             <>
               <Chip color="info" label={translateStatus(params.row.status)} />
-              <Button
+              <IconButton
                 title="Reiniciar"
+                size="small"
                 onClick={() =>
-                  TaskService.updateTask({
+                  updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
                 }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
               >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
             </>
           )}
           {params.row.status === "TODO" && (
             <>
               <span>{translateStatus(params.row.status)}</span>
-              <Button
+              <IconButton
                 title="Iniciar"
+                size="small"
                 onClick={() =>
-                  TaskService.updateTask({
+                  updateTaskByUser({
                     ...params.row,
                     status: "IN_PROGRESS",
                   })
                 }
+                sx={{
+                  ml: 1,
+                  color: '#30d158',
+                  background: 'rgba(48,209,88,0.1)',
+                  border: '1px solid rgba(48,209,88,0.3)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background: 'rgba(48,209,88,0.2)',
+                    boxShadow: '0 0 10px rgba(48,209,88,0.2)',
+                  }
+                }}
               >
-                <PlayCircleFilledOutlinedIcon />
-              </Button>
+                <PlayCircleFilledIcon fontSize="small" />
+              </IconButton>
             </>
           )}
         </>
@@ -532,8 +711,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     {
       field: "name",
       headerName: "Nombre",
-      type: "string",
-      width: columWidths?.name ?? 380,
+      width: 400,
       editable: true,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -546,10 +724,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           </span>
           <div className="tags">
             {row.tags?.length &&
-              row.tags.map((tag: string) => (
+              Array.from(new Set(row.tags)).map((tag: string, idx: number) => (
                 <Chip
                   size="small"
-                  key={tag}
+                  key={`${tag}-${idx}`}
                   label={tag}
                   color="primary"
                   onDelete={() => handleDeleteTag(row, tag)}
@@ -562,7 +740,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               sx={{ fontSize: "12px", width: "30px" }}
               onClick={() => {
                 setSelectedTask(row);
-                setSelectedTags(row.tags || []);
+                setSelectedTags(Array.from(new Set(row.tags || [])));
                 setOpenTagsDialog(true);
               }}
               title="Etiquetas"
@@ -592,7 +770,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Responsables",
       sortable: false,
       filterable: true,
-      width: columWidths?.ownerKeys ?? 150,
+      width: 150,
       align: "center",
       editable: true,
       valueGetter: (_value: any, row: Task) => {
@@ -615,10 +793,22 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                   return (
                     <Avatar
                       key={k}
-                      style={{cursor: 'zoom-in'}}
                       title={(users && getUserNameByKey(k, users)) || "NA"}
                       src={userAvatar}
-                      sx={{ width: "30px", height: "30px", marginLeft: "-5px" }}
+                      sx={{ 
+                        width: "36px", 
+                        height: "36px", 
+                        marginLeft: "-10px",
+                        p: "1px",
+                        border: "1.5px solid rgba(255,255,255,0.2)",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+                        bgcolor: "white",
+                        cursor: 'zoom-in',
+                        transform: "translateZ(0)",
+                        transition: "transform 0.15s ease",
+                        "&:hover": { transform: "scale(1.2) translateZ(0)", zIndex: 10 }
+                      }}
+                      imgProps={{ style: { objectFit: 'contain' } }}
                     />
                   );
 
@@ -667,7 +857,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "dueDate",
       headerName: "Fecha Limite",
       type: "string",
-      width: columWidths?.dueDate ?? 120,
+      width: 120,
       renderCell: ({ row }: GridRenderCellParams<Task>) =>
         row?.dueDate
           ? dayjs(changeDateFromDMA_MDA(row.dueDate as string)).format(
@@ -697,7 +887,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       type: "string",
       sortable: false,
       disableColumnMenu: true,
-      width: columWidths?.notes ?? 60,
+      width: 60,
       align: "center",
       renderCell: ({ row }: GridRenderCellParams<Task>) =>
         row.notes?.length > 0 ? (
@@ -728,7 +918,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "priority",
       headerName: "Prioridad",
       type: "string",
-      width: columWidths?.priority ?? 150,
+      width: 150,
       renderCell: (params: GridRenderCellParams<Task>) =>
         params.row?.priority ? translatePriority(params.row.priority) : "-",
       editable: true,
@@ -749,7 +939,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "createdDate",
       headerName: "Fecha de Creación",
       type: "string",
-      width: columWidths?.createdDate ?? 180,
+      width: 180,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <span
           style={{ cursor: "pointer" }}
@@ -766,19 +956,45 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "workgroupKeys",
       headerName: "Grupos de Trabajo",
       type: "string",
-      width: columWidths?.workgroupKeys ?? 250,
+      width: 250,
       renderCell: ({ row }: GridRenderCellParams<Task>) => {
         const taskWorkgroups = workgroups?.filter((wg) =>
           row.workgroupKeys?.some((k) => k === (wg.key as string))
         );
-        return taskWorkgroups?.map((wg) => (
-          <Chip 
-            key={wg.key} 
-            style={{ marginLeft: "5px" }} 
-            size="small" 
-            label={wg.name} 
-          />
-        ));
+        return (
+          <div style={{ display: "flex", gap: "4px", flexWrap: "nowrap", overflow: "hidden" }}>
+            {taskWorkgroups?.map((wg) => (
+              <Chip
+                key={wg.key}
+                size="small"
+                label={wg.name}
+                sx={{
+                  fontSize: "0.65rem",
+                  fontWeight: 800,
+                  height: "18px",
+                  borderRadius: "6px",
+                  backgroundColor: `${wg.color}15`,
+                  color: wg.color,
+                  border: `1px solid ${wg.color}40`,
+                  backdropFilter: "blur(4px)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  cursor: "default",
+                  "& .MuiChip-label": {
+                    padding: "0 6px",
+                  },
+                  "&:hover": {
+                    backgroundColor: `${wg.color}25`,
+                    border: `1px solid ${wg.color}80`,
+                    transform: "translateY(-1px)",
+                    boxShadow: `0 2px 8px ${wg.color}30`,
+                  },
+                }}
+              />
+            ))}
+          </div>
+        );
       },
       editable: true,
       renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
@@ -798,13 +1014,65 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           </Button>
         </>
       ),
-    },
-  ];
+    },    // creado por
+    {
+      field: "createdByUserKey",
+      headerName: "Creado por",
+      type: "string",
+      width: 180,
+      renderCell: ({ row }: GridRenderCellParams<Task>) => (
+        <Tooltip title={`Usuario: ${(users && getUserNameByKey(row.createdByUserKey, users)) || "NA"}`}>
+          <span>{(users && getUserNameByKey(row.createdByUserKey, users)) || "NA"}</span>
+        </Tooltip>
+      ),
+      sortable: false,
+      filterable: true,
+      valueGetter: (_value: any, row: Task) =>
+        (users && getUserNameByKey(row.createdByUserKey, users)) || "NA",
+    },  ];
 
   return (
-    <Paper sx={{ height: "calc(100vh - 220px)", width: "100%" }}>
+    <>
+      <Paper 
+        sx={{ 
+          height: isMobile ? "calc(100vh - 185px)" : "calc(100vh - 245px)", 
+          width: "100%",
+          backgroundColor: 'rgba(28, 28, 30, 0.6)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease-in-out',
+          '& .MuiDataGrid-root': {
+            border: 0,
+            color: 'white',
+            '& .MuiDataGrid-cell': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            '& .MuiTablePagination-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+            }
+          }
+        }}
+      >
       <DataGrid
         autoPageSize
+        columnHeaderHeight={36}
         rows={getTaskByRole()}
         columns={columns}
         filterModel={filterModel}
@@ -812,31 +1080,294 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[20]}
         localeText={{
-          MuiTablePagination: { labelRowsPerPage: "Filas por pagina" },
+          MuiTablePagination: { 
+            labelRowsPerPage: "Filas por página",
+            labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+          },
+          noRowsLabel: "Sin filas",
+          footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
         }}
-        sx={{ border: 0 }}
-        rowHeight={35}
-        onColumnWidthChange={({ colDef, width }: GridColumnResizeParams) => {
-          const widths = { ...columWidths, [colDef.field]: width };
-          setColumWidths(widths as ColumnWidhts);
-          sessionStorage.setItem("columWidths", JSON.stringify(widths));
+        slotProps={{
+          filterPanel: {
+            sx: {
+              maxWidth: '95vw',
+              '& .MuiDataGrid-filterForm': {
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: '10px',
+                padding: '8px',
+              },
+              '& .MuiDataGrid-filterFormColumnInput': { width: '100%', m: 0 },
+              '& .MuiDataGrid-filterFormOperatorInput': { width: '100%', m: 0 },
+              '& .MuiDataGrid-filterFormValueInput': { width: '100%', m: 0 },
+            },
+          },
         }}
+        sx={{
+          border: 0,
+          fontSize: "0.75rem",
+          "& .MuiDataGrid-cell": {
+            paddingTop: "4px",
+            paddingBottom: "4px",
+            lineHeight: 1.2,
+          },
+          "& .MuiDataGrid-columnHeader": {
+            fontSize: "0.75rem",
+            minHeight: "30px",
+            lineHeight: 1.2,
+          },
+          "& .MuiDataGrid-row": {
+            maxHeight: "28px",
+            minHeight: "28px",
+          },
+          "& .MuiDataGrid-virtualScrollerContent": {
+            "& .MuiDataGrid-row": {
+              minHeight: "28px !important",
+              maxHeight: "28px !important",
+            },
+          },
+          "& .MuiDataGrid-actionsCell .MuiIconButton-root": {
+            color: "white",
+          },
+          "& .MuiChip-root": {
+            fontSize: "0.65rem",
+            height: "22px",
+            lineHeight: 1,
+            minHeight: "22px",
+            padding: "0 6px",
+          },
+          "& .MuiSvgIcon-root": {
+            fontSize: "1rem",
+          },
+          "@media (max-width: 1100px)": {
+            fontSize: "0.68rem",
+            "& .MuiChip-root": {
+              fontSize: "0.6rem",
+              height: "20px",
+              minHeight: "20px",
+              padding: "0 5px",
+            },
+            "& .MuiSvgIcon-root": {
+              fontSize: "0.9rem",
+            },
+            "& .MuiDataGrid-cell": {
+              paddingTop: "2px",
+              paddingBottom: "2px",
+            },
+            "& .MuiDataGrid-columnHeader": {
+              fontSize: "0.68rem",
+              minHeight: "28px",
+            },
+            "& .MuiDataGrid-row": {
+              minHeight: "24px",
+              maxHeight: "24px",
+            },
+            "& .MuiDataGrid-virtualScrollerContent .MuiDataGrid-row": {
+              minHeight: "24px !important",
+              maxHeight: "24px !important",
+            },
+          },
+        }}
+        rowHeight={28}
       />
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <TaskCreatorRowComponent />
-        <FormControlLabel
-          sx={{ color: "white" }}
-          control={
-            <Switch
-              color={showArchivedTasks ? "info" : "default"}
-              title="ver archivadas"
-              checked={showArchivedTasks}
-              onChange={() => setShowArchivedTasks(!showArchivedTasks)}
+      </Paper>
+      {/* Row 1: Nueva Tarea | Archivadas + Excel */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
+        <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+          <TaskCreatorRowComponent />
+        </Box>
+        
+        {/* Mobile ONLY creator button */}
+        <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => setModal({
+              open: true,
+              title: "Nueva Tarea",
+              content: <TasksFormComponent />,
+            })}
+            sx={{
+              background: 'rgba(10,132,255,0.15)',
+              border: '1px solid rgba(10,132,255,0.4)',
+              borderRadius: '10px',
+              textTransform: 'none',
+              fontWeight: 700,
+              color: '#0a84ff',
+              backdropFilter: 'blur(10px)',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                background: 'rgba(10,132,255,0.25)',
+                border: '1px solid #0a84ff'
+              }
+            }}
+          >
+            Nueva Tarea
+          </Button>
+        </Box>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
+          {/* Archivadas toggle */}
+          <FormControlLabel
+            sx={{
+              color: 'rgba(255,255,255,0.75)',
+              margin: 0,
+              background: showArchivedTasks
+                ? 'rgba(10,132,255,0.15)'
+                : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${showArchivedTasks ? 'rgba(10,132,255,0.5)' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius: '10px',
+              padding: '2px 10px 2px 4px',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s ease',
+              fontSize: '0.8rem',
+            }}
+            control={
+              <Switch
+                size="small"
+                color="info"
+                title="Archivadas"
+                checked={showArchivedTasks}
+                onChange={() => setShowArchivedTasks(!showArchivedTasks)}
+              />
+            }
+            label={
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Archivadas</span>
+            }
+            labelPlacement="end"
+          />
+
+          {/* Excel button */}
+          <Button
+            onClick={handleExport}
+            startIcon={<DownloadOutlinedIcon />}
+            size="small"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              padding: '6px 14px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.12)',
+              backdropFilter: 'blur(10px)',
+              letterSpacing: '0.3px',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.25)',
+                border: '1px solid rgba(48,209,88,0.8)',
+                boxShadow: '0 0 12px rgba(48,209,88,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Excel
+          </Button>
+        </div>
+      </Box>
+
+      {/* Row 2: Tag filter pill */}
+      <div style={{ display: "flex", alignItems: "center", marginTop: "6px" }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          flexWrap: "wrap",
+          background: activeTagFilters.length > 0 ? "rgba(255,255,255,0.08)" : "transparent",
+          borderRadius: "20px",
+          padding: activeTagFilters.length > 0 ? "4px 10px 4px 4px" : "0",
+          border: activeTagFilters.length > 0 ? "1px solid rgba(255,255,255,0.2)" : "none",
+          backdropFilter: activeTagFilters.length > 0 ? "blur(8px)" : "none",
+          transition: "all 0.25s ease",
+        }}>
+          <Button
+            variant={activeTagFilters.length > 0 ? "contained" : "outlined"}
+            color="primary"
+            size="small"
+            startIcon={<LocalOfferIcon />}
+            onClick={(e) => setTagAnchorEl(e.currentTarget)}
+            sx={{
+              color: activeTagFilters.length > 0 ? "white" : "rgba(255,255,255,0.8)",
+              borderColor: "rgba(255,255,255,0.4)",
+              fontSize: "0.75rem",
+              borderRadius: "16px",
+              flexShrink: 0,
+            }}
+          >
+            Etiquetas{activeTagFilters.length > 0 ? ` (${activeTagFilters.length})` : ""}
+          </Button>
+
+          {activeTagFilters.map((tag) => (
+            <Chip
+              key={tag}
+              label={tag}
+              size="small"
+              icon={<LocalOfferIcon style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)' }} />}
+              onDelete={() => toggleTagFilter(tag)}
+              sx={{
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                background: "linear-gradient(135deg, rgba(99,102,241,0.85) 0%, rgba(168,85,247,0.85) 100%)",
+                backdropFilter: "blur(8px)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.25)",
+                boxShadow: "0 2px 8px rgba(99,102,241,0.45)",
+                transition: "all 0.2s ease",
+                "& .MuiChip-deleteIcon": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "14px",
+                  "&:hover": { color: "white" },
+                },
+                "&:hover": {
+                  boxShadow: "0 4px 14px rgba(99,102,241,0.6)",
+                  transform: "translateY(-1px)",
+                },
+              }}
             />
-          }
-          label="ver archivadas"
-          labelPlacement="start"
-        />
+          ))}
+        </div>
+
+        <Popover
+          open={Boolean(tagAnchorEl)}
+          anchorEl={tagAnchorEl}
+          onClose={() => setTagAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        >
+          <MenuList dense sx={{ maxHeight: 300, overflowY: "auto", minWidth: 200 }}>
+            {(() => {
+              const baseTasks = (tasks ?? []).filter(t =>
+                t.status !== "DELETED" &&
+                (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
+              );
+              const tagCountMap = new Map<string, number>();
+              baseTasks.forEach(t => {
+                t.tags?.forEach(tag => {
+                  tagCountMap.set(tag, (tagCountMap.get(tag) ?? 0) + 1);
+                });
+              });
+              const availableTags = [...tagCountMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+              if (availableTags.length === 0) return (
+                <MenuItem disabled><ListItemText primary="Sin etiquetas en las tareas" /></MenuItem>
+              );
+
+              return availableTags.map(([tag, count]) => (
+                <MenuItem key={tag} onClick={() => toggleTagFilter(tag)} selected={activeTagFilters.includes(tag)}>
+                  {activeTagFilters.includes(tag) && <CheckIcon fontSize="small" sx={{ mr: 1, color: "primary.main" }} />}
+                  <ListItemText primary={`${tag} (${count})`} />
+                </MenuItem>
+              ));
+            })()}
+            {activeTagFilters.length > 0 && (
+              <MenuItem onClick={() => { setActiveTagFilters([]); setTagAnchorEl(null); }} sx={{ borderTop: "1px solid", borderColor: "divider", color: "error.main" }}>
+                <ListItemText primary="Limpiar filtros" />
+              </MenuItem>
+            )}
+          </MenuList>
+        </Popover>
       </div>
       <TagsInput
         openTagsDialog={openTagsDialog}
@@ -885,10 +1416,14 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         content={
           <TextField
             id="outlined-basic"
-            variant="standard"
+            variant="outlined"
             value={taskNotes}
             onChange={({ target }) => setTaskNotes(target.value)}
             fullWidth
+            multiline
+            minRows={3}
+            maxRows={8}
+            placeholder="Escribe aquí las notas..."
           />
         }
         okText="Guardar"
@@ -916,6 +1451,58 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         okButtonText="Guardar"
         okButtonAction={() => handleEditGroups()}
       />
-    </Paper>
+      <Dialog
+        open={openHistoryDialog}
+        onClose={() => setOpenHistoryDialog(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Historial de Tarea</DialogTitle>
+        <DialogContent>
+          {historyTask?.history && historyTask.history.length > 0 ? (
+            <List sx={{ fontSize: '0.8rem', lineHeight: 1.3 }}>
+              {historyTask.history.map((event, idx) => (
+                <ListItem key={`${event.modifiedDate}-${idx}`} alignItems="flex-start" sx={{ paddingY: 0.5 }}>
+                  <ListItemText
+                    primary={
+                      `${dayjs(event.modifiedDate).format('DD/MM/YYYY HH:mm')} - ${
+                        translateHistoryAction(event.action)
+                      } por ${
+                        (users && getUserNameByKey(event.modifierUserId, users)) ||
+                        event.modifierUserId ||
+                        'Desconocido'
+                      }`
+                    }
+                    primaryTypographyProps={{ sx: { fontSize: '0.85rem' } }}
+                    secondaryTypographyProps={{ component: 'div', sx: { marginTop: '4px' } }}
+                    secondary={
+                      <>
+                        <Typography component="div" variant="body2" color="textPrimary" sx={{ fontSize: '0.75rem' }}>
+                          {event.note ? `Nota: ${event.note}` : ''}
+                        </Typography>
+                        {event.changes?.length ? (
+                          <ul style={{ margin: '4px 0 0 0', paddingLeft: '18px', fontSize: '0.72rem' }}>
+                            {event.changes.map((change, i) => (
+                              <li key={`${event.modifiedDate}-chg-${i}`}>
+                                {translateHistoryField(change.field)}: {translateHistoryValue(change.field, change.oldValue)} → {translateHistoryValue(change.field, change.newValue)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography>No hay historial disponible para esta tarea.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenHistoryDialog(false)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

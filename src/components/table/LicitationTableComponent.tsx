@@ -188,19 +188,64 @@ export default function LicitationTableComponent({
 
   return (
     <>
-      <Paper sx={{ height: "calc(100vh - 230px)", width: "550px" }}>
+      <Paper sx={{ 
+        height: "calc(100vh - 230px)", 
+        width: "550px",
+        backgroundColor: 'rgba(28, 28, 30, 0.6)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        p: 1
+      }}>
         <DataGrid
           rows={items}
           columns={columns}
+          columnHeaderHeight={36}
           initialState={{ pagination: { paginationModel } }}
           pageSizeOptions={[50]}
           rowHeight={25}
           showColumnVerticalBorder
           density="compact"
           localeText={{
-            MuiTablePagination: { labelRowsPerPage: "Filas por página" },
+            MuiTablePagination: { 
+              labelRowsPerPage: "Filas por página",
+              labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+            },
+            noRowsLabel: "Sin filas",
+            footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
           }}
-          sx={{ border: 0 }}
+          sx={{ 
+            border: 0,
+            color: 'white',
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
+              borderColor: 'rgba(255, 255, 255, 0.1)'
+            },
+            '& .MuiDataGrid-actionsCell .MuiIconButton-root': {
+              color: 'white'
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: 0,
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            '& .MuiTablePagination-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+            }
+          }}
           loading={isLoading}
         />
         <div
@@ -214,10 +259,28 @@ export default function LicitationTableComponent({
             className="upload-btn"
             component="label"
             role={undefined}
-            variant="text"
+            variant="contained"
             title="Cargar excel"
-            sx={{ color: "white", top: "10px" }}
             startIcon={<UploadFileIcon />}
+            size="small"
+            sx={{ 
+              color: "white",
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              padding: '6px 14px',
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.15)',
+              backdropFilter: 'blur(10px)',
+              mt: 1,
+              '&:hover': {
+                background: 'rgba(48,209,88,0.25)',
+                border: '1px solid rgba(48,209,88,0.8)',
+                boxShadow: '0 0 15px rgba(48,209,88,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
           >
             Subir plantilla
             <VisuallyHiddenInput
@@ -225,8 +288,8 @@ export default function LicitationTableComponent({
               onChange={(e) => readExcel(e || null)}
             />
           </Button>
-          <span style={{ color: "white" }}>
-            Valor total licitado: <strong>{formatToCOP(totalAmount)}</strong>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: '0.9rem' }}>
+            Valor total licitado: <strong style={{ color: 'white' }}>{formatToCOP(totalAmount)}</strong>
           </span>
         </div>
       </Paper>
