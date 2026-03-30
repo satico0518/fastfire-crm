@@ -21,7 +21,7 @@ import {
 import { useFormatsStore } from "../../stores/formats/formats.store";
 import { useUsersStore } from "../../stores/users/users.store";
 import { FormatSubmission, FormatStatus, FormatTypeId, FormatField } from "../../interfaces/Format";
-import { getUserNameByKey, translateTimestampToString } from "../../utils/utils";
+import { getUserNameByKey, translateTimestampToString, downloadExcelFile } from "../../utils/utils";
 import { FORMAT_CATALOG, getFormatTypeById } from "../../config/formatCatalog";
 import { getColumnsForFormat } from "../../config/formatColumns";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -38,6 +38,8 @@ import { useAuhtStore } from "../../stores";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
+import dayjs from "dayjs";
+import logo from "../../assets/img/Logo.jpg";
 
 const FORMAT_ICONS: Record<FormatTypeId, ElementType<SvgIconProps>> = {
   LEGALIZACION_CUENTAS: ReceiptLongIcon,
@@ -88,6 +90,64 @@ export const FormatResultsTable = () => {
     } else {
       setSnackbar({ open: true, message: resp.errorMessage || "Error", severity: "error" });
     }
+  };
+
+  const handleExport = () => {
+    if (!selectedTypeId || !selectedFormat) return;
+
+    const data = filteredSubmissions.map(submission => {
+      const row: any = {
+        'Estado': statusConfig[submission.status]?.label || submission.status,
+        'Creado por': getUserNameByKey(submission.createdByUserKey, users || []) || 'NA',
+        'Fecha de Creación': translateTimestampToString(submission.createdDate),
+        'Notas del Revisor': submission.reviewNotes || '',
+      };
+
+      // Add format-specific fields
+      const flattenData = (data: any, prefix = ''): any => {
+        const result: any = {};
+        
+        if (Array.isArray(data)) {
+          data.forEach((item, index) => {
+            if (typeof item === 'object' && item !== null) {
+              Object.entries(item).forEach(([key, value]) => {
+                const fieldName = prefix ? `${prefix} ${index + 1} - ${key}` : `${key} ${index + 1}`;
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                  Object.assign(result, flattenData(value, fieldName));
+                } else {
+                  result[fieldName] = String(value || '');
+                }
+              });
+            } else {
+              result[`${prefix || 'Item'} ${index + 1}`] = String(item || '');
+            }
+          });
+        } else if (typeof data === 'object' && data !== null) {
+          Object.entries(data).forEach(([key, value]) => {
+            const fieldName = prefix ? `${prefix} - ${key}` : key;
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+              Object.assign(result, flattenData(value, fieldName));
+            } else if (Array.isArray(value)) {
+              Object.assign(result, flattenData(value, fieldName));
+            } else {
+              result[fieldName] = String(value || '');
+            }
+          });
+        } else {
+          result[prefix || 'Valor'] = String(data || '');
+        }
+        
+        return result;
+      };
+
+      const flattenedData = flattenData(submission.data);
+      Object.assign(row, flattenedData);
+
+      return row;
+    });
+
+    const formatName = selectedFormat.name.replace(/\s+/g, '_').toLowerCase();
+    downloadExcelFile(data, `${formatName}_${dayjs().format('YYYY-MM-DD')}.xlsx`, logo);
   };
 
   const downloadImage = (imageSrc: string, fieldName: string) => {
@@ -521,6 +581,31 @@ export const FormatResultsTable = () => {
             variant="filled" 
           />
         )}
+        <Button
+          onClick={handleExport}
+          startIcon={<DownloadIcon />}
+          size="small"
+          sx={{
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            borderRadius: '10px',
+            padding: '6px 14px',
+            border: '1px solid rgba(48,209,88,0.5)',
+            background: 'rgba(48,209,88,0.12)',
+            backdropFilter: 'blur(10px)',
+            letterSpacing: '0.3px',
+            '&:hover': {
+              background: 'rgba(48,209,88,0.25)',
+              border: '1px solid rgba(48,209,88,0.8)',
+              boxShadow: '0 0 12px rgba(48,209,88,0.3)',
+            },
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Excel
+        </Button>
       </Box>
 
       {/* DataGrid */}

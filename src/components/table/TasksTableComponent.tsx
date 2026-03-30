@@ -81,6 +81,7 @@ import Popover from "@mui/material/Popover";
 import MenuList from "@mui/material/MenuList";
 import MenuItem from "@mui/material/MenuItem";
 import CheckIcon from "@mui/icons-material/Check";
+import logo from "../../assets/img/Logo.jpg";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
@@ -483,7 +484,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       'Grupos de Trabajo': task.workgroupKeys?.map(k => getWorkgroupNameByKey(k, workgroups || [])).join(', ') || '',
       'Creado por': getUserNameByKey(task.createdByUserKey, users || []) || 'NA',
     }));
-    downloadExcelFile(data, `tareas_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+    downloadExcelFile(data, `tareas_${dayjs().format('YYYY-MM-DD')}.xlsx`, logo);
   };
 
   const getFilteredByTags = (taskList: Task[]): Task[] => {

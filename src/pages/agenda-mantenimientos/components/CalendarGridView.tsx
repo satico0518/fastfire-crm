@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Typography, IconButton, Button, Paper, Stack, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton, Button, Paper, Stack, Tooltip, useMediaQuery } from '@mui/material';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import dayjs from 'dayjs';
@@ -28,6 +28,7 @@ const getStatusColor = (status: string) => {
 export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, isAdmin }) => {
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf('month'));
   const [selectedSchedule, setSelectedSchedule] = useState<MaintenanceSchedule | null>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const prevMonth = () => setCurrentMonth(currentMonth.subtract(1, 'month'));
   const nextMonth = () => setCurrentMonth(currentMonth.add(1, 'month'));
@@ -231,6 +232,20 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, i
                             </Box>
                           </Tooltip>
                         ))}
+                        {isMobile && daySchedules.length === 0 && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: '#ff9f0a', 
+                              fontWeight: 600, 
+                              fontSize: '0.65rem',
+                              textAlign: 'center',
+                              opacity: 0.8
+                            }}
+                          >
+                            sin agendamiento
+                          </Typography>
+                        )}
                       </Stack>
                     </Box>
                   </>

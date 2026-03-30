@@ -191,11 +191,151 @@ export const changeDateFromDMA_MDA = (date: string): string => {
   return "";
 };
 
-export const downloadExcelFile = (jsonData: unknown[], fileName: string) => {
+export const downloadExcelFile = (jsonData: unknown[], fileName: string, logoUrl?: string) => {
   const book = XLSX.utils.book_new();
-  const sheet = XLSX.utils.json_to_sheet(jsonData);
-  XLSX.utils.book_append_sheet(book, sheet);
-  sheet['!cols'] = Object.keys((jsonData[0] as object) || {}).map(() => ({ hidden: false, wch: 20 }));
+  
+  // Create header rows with company branding
+  const headerRows = [
+    ['🏢 FAST FIRE DE COLOMBIA SAS'], // Company name with icon
+    ['📊 Sistema de Gestión CRM'], // System name with icon
+    [`📅 Reporte generado: ${new Date().toLocaleDateString('es-CO')} ${new Date().toLocaleTimeString('es-CO')}`], // Date with icon
+    [''], // Empty row for spacing
+  ];
+  
+  // Convert data to array format
+  const dataRows = XLSX.utils.json_to_sheet(jsonData);
+  const dataArray = XLSX.utils.sheet_to_json(dataRows, { header: 1 });
+  
+  // Combine header and data
+  const fullData = [...headerRows, ...dataArray];
+  
+  // Create the final sheet
+  const sheet = XLSX.utils.aoa_to_sheet(fullData);
+  
+  // Style the header rows
+  // Company name (row 0)
+  const companyCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
+  sheet[companyCell] = { 
+    t: 's', 
+    v: '🏢 FAST FIRE DE COLOMBIA SAS',
+    s: {
+      font: { 
+        sz: 18, 
+        bold: true, 
+        color: { rgb: "FF1C1C1E" } // Dark color like app theme
+      },
+      alignment: { horizontal: 'center' }
+    }
+  };
+  
+  // System name (row 1)
+  const systemCell = XLSX.utils.encode_cell({ r: 1, c: 0 });
+  sheet[systemCell] = { 
+    t: 's', 
+    v: '📊 Sistema de Gestión CRM',
+    s: {
+      font: { 
+        sz: 14, 
+        bold: true,
+        color: { rgb: "FF666666" } // Gray color
+      },
+      alignment: { horizontal: 'center' }
+    }
+  };
+  
+  // Date (row 2)
+  const dateCell = XLSX.utils.encode_cell({ r: 2, c: 0 });
+  sheet[dateCell] = { 
+    t: 's', 
+    v: `📅 Reporte generado: ${new Date().toLocaleDateString('es-CO')} ${new Date().toLocaleTimeString('es-CO')}`,
+    s: {
+      font: { 
+        sz: 11, 
+        color: { rgb: "FF888888" } // Light gray
+      },
+      alignment: { horizontal: 'center' }
+    }
+  };
+  
+  // Merge header cells across all columns
+  const numCols = Object.keys(jsonData[0] || {}).length;
+  if (!sheet['!merges']) sheet['!merges'] = [];
+  sheet['!merges'].push(
+    { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }, // Company name
+    { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } }, // System name
+    { s: { r: 2, c: 0 }, e: { r: 2, c: numCols - 1 } }  // Date
+  );
+  
+  // Style the header row (row 4, after the 3 header rows + 1 empty row)
+  const headerRow = 4;
+  for (let col = 0; col < numCols; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: headerRow, c: col });
+    if (sheet[cellRef]) {
+      sheet[cellRef].s = {
+        fill: { 
+          fgColor: { rgb: "FF1C1C1E" }, // Dark background like the app
+          patternType: 'solid'
+        },
+        font: { 
+          color: { rgb: "FFFFFFFF" }, // White text
+          bold: true,
+          sz: 11
+        },
+        border: {
+          top: { style: 'medium', color: { rgb: "FF333333" } },
+          bottom: { style: 'medium', color: { rgb: "FF333333" } },
+          left: { style: 'thin', color: { rgb: "FF333333" } },
+          right: { style: 'thin', color: { rgb: "FF333333" } }
+        },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+    }
+  }
+  
+  // Style data rows with alternating colors and borders
+  for (let row = 5; row < fullData.length; row++) {
+    for (let col = 0; col < numCols; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      if (sheet[cellRef]) {
+        const isEvenRow = (row - 5) % 2 === 0; // -5 because we start from row 5
+        sheet[cellRef].s = {
+          fill: { 
+            fgColor: { rgb: isEvenRow ? "FFFAFAFA" : "FFFFFFFF" }, // Light alternating rows
+            patternType: 'solid'
+          },
+          font: { 
+            sz: 10,
+            color: { rgb: "FF333333" }
+          },
+          border: {
+            top: { style: 'thin', color: { rgb: "FFE0E0E0" } },
+            bottom: { style: 'thin', color: { rgb: "FFE0E0E0" } },
+            left: { style: 'thin', color: { rgb: "FFE0E0E0" } },
+            right: { style: 'thin', color: { rgb: "FFE0E0E0" } }
+          },
+          alignment: { vertical: 'center' }
+        };
+      }
+    }
+  }
+  
+  // Set column widths
+  sheet['!cols'] = Object.keys((jsonData[0] as object) || {}).map(() => ({ 
+    hidden: false, 
+    wch: 20,
+    wpx: 120 
+  }));
+  
+  // Set row heights
+  sheet['!rows'] = [
+    { hpt: 30 }, // Company name
+    { hpt: 25 }, // System name
+    { hpt: 20 }, // Date
+    { hpt: 10 }, // Empty row
+    { hpt: 25 }, // Headers
+  ];
+  
+  XLSX.utils.book_append_sheet(book, sheet, 'Datos');
   
   const wbout = XLSX.write(book, { bookType: "xlsx", type: "array" });
   const blob = new Blob([new Uint8Array(wbout)], {

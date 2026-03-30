@@ -9,6 +9,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import dayjs from 'dayjs';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { downloadExcelFile } from '../../../utils/utils';
+import logo from '../../../assets/img/Logo.jpg';
 
 interface Props {
   schedules: MaintenanceSchedule[];
@@ -100,7 +101,7 @@ export const MaintenanceExportControls: React.FC<Props> = ({ schedules, setSnack
       'Fecha Creación': dayjs(s.createdAt).format('DD/MM/YYYY HH:mm')
     }));
 
-    downloadExcelFile(excelData, `Reporte_Mantenimientos_${dayjs().format('YYYYMMDD')}.xlsx`);
+    downloadExcelFile(excelData, `Reporte_Mantenimientos_${dayjs().format('YYYYMMDD')}.xlsx`, logo);
     handleClose();
     setSnackbar({ open: true, message: "Excel generado exitosamente", severity: "success" });
   };
