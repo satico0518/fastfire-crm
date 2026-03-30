@@ -219,23 +219,38 @@ export const FormatResultsTable = () => {
         {
           field: "actions",
           headerName: "",
-          width: 100,
+          width: 80,
+          minWidth: 70,
+          maxWidth: 90,
+          flex: 0,
           sortable: false,
           filterable: false,
+          disableColumnMenu: true,
           renderCell: (params: GridRenderCellParams<FormatSubmission>) => (
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <Tooltip title="Ver detalle completo">
+            <Box sx={{ 
+              display: 'flex', 
+              gap: { xs: 0.3, sm: 0.5 },
+              justifyContent: 'center',
+              width: '100%'
+            }}>
+              <Tooltip title="Ver detalle">
                 <IconButton 
                   size="small" 
                   onClick={(e) => {
                     e.stopPropagation();
                     setViewSubmission(params.row);
                   }}
+                  sx={{ 
+                    p: { xs: 0.3, sm: 0.5 },
+                    '& .MuiSvgIcon-root': {
+                      fontSize: { xs: '1rem', sm: '1.25rem' }
+                    }
+                  }}
                 >
-                  <VisibilityIcon fontSize="small" />
+                  <VisibilityIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Exportar PDF">
+              <Tooltip title="PDF">
                 <IconButton 
                   size="small" 
                   onClick={(e) => {
@@ -243,13 +258,17 @@ export const FormatResultsTable = () => {
                     handleExportPDF(params.row);
                   }}
                   sx={{ 
+                    p: { xs: 0.3, sm: 0.5 },
                     color: '#ff5252',
+                    '& .MuiSvgIcon-root': {
+                      fontSize: { xs: '1rem', sm: '1.25rem' }
+                    },
                     '&:hover': {
                       background: 'rgba(255, 82, 82, 0.1)',
                     }
                   }}
                 >
-                  <PictureAsPdfIcon fontSize="small" />
+                  <PictureAsPdfIcon />
                 </IconButton>
               </Tooltip>
             </Box>
@@ -607,62 +626,87 @@ export const FormatResultsTable = () => {
   // ─── Results table for selected format ────────────────────────────────────
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-      {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
-        <Tooltip title="Volver al selector">
-          <IconButton size="small" onClick={() => setSelectedTypeId(null)} sx={{ color: "white" }}>
-            <ArrowBackIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {(() => {
-            const Icon = FORMAT_ICONS[selectedTypeId];
-            return <Icon sx={{ fontSize: 24, color: "white", opacity: 0.9 }} />;
-          })()}
-          <Typography fontWeight={700} sx={{ fontSize: "1.15rem", color: "white" }}>
-            {selectedFormat?.name}
-          </Typography>
+      {/* Header - Responsive: title on first line, chips/buttons on second line in mobile */}
+      <Box sx={{ 
+        display: "flex", 
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: "flex-start", sm: "center" }, 
+        gap: 1.5, 
+        mb: 0.5 
+      }}>
+        {/* Left side: Back button + Title */}
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 1.5,
+          width: { xs: "100%", sm: "auto" }
+        }}>
+          <Tooltip title="Volver al selector">
+            <IconButton size="small" onClick={() => setSelectedTypeId(null)} sx={{ color: "white" }}>
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {(() => {
+              const Icon = FORMAT_ICONS[selectedTypeId];
+              return <Icon sx={{ fontSize: 24, color: "white", opacity: 0.9 }} />;
+            })()}
+            <Typography fontWeight={700} sx={{ fontSize: { xs: "1rem", sm: "1.15rem" }, color: "white" }}>
+              {selectedFormat?.name}
+            </Typography>
+          </Box>
         </Box>
-        <Chip
-          label={`${filteredSubmissions.length} registro${filteredSubmissions.length !== 1 ? "s" : ""}`}
-          size="small"
-          variant="outlined"
-          sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)" }}
-        />
-        {pendingCount(selectedTypeId) > 0 && (
+        
+        {/* Right side: Chips and Excel button - goes to second line in mobile */}
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 1,
+          flexWrap: "wrap",
+          width: { xs: "100%", sm: "auto" },
+          pl: { xs: 5, sm: 0 }
+        }}>
           <Chip
-            label={`${pendingCount(selectedTypeId)} pendiente${pendingCount(selectedTypeId) !== 1 ? "s" : ""}`}
+            label={`${filteredSubmissions.length} registro${filteredSubmissions.length !== 1 ? "s" : ""}`}
             size="small"
-            color="error"
-            // Filled variation to stand out more against the dark background
-            variant="filled" 
+            variant="outlined"
+            sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)", fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
           />
-        )}
-        <Button
-          onClick={handleExport}
-          startIcon={<DownloadIcon />}
-          size="small"
-          sx={{
-            color: 'white',
-            textTransform: 'none',
-            fontWeight: 700,
-            fontSize: '0.82rem',
-            borderRadius: '10px',
-            padding: '6px 14px',
-            border: '1px solid rgba(48,209,88,0.5)',
-            background: 'rgba(48,209,88,0.12)',
-            backdropFilter: 'blur(10px)',
-            letterSpacing: '0.3px',
-            '&:hover': {
-              background: 'rgba(48,209,88,0.25)',
-              border: '1px solid rgba(48,209,88,0.8)',
-              boxShadow: '0 0 12px rgba(48,209,88,0.3)',
-            },
-            transition: 'all 0.2s ease',
-          }}
-        >
-          Excel
-        </Button>
+          {pendingCount(selectedTypeId) > 0 && (
+            <Chip
+              label={`${pendingCount(selectedTypeId)} pendiente${pendingCount(selectedTypeId) !== 1 ? "s" : ""}`}
+              size="small"
+              color="error"
+              variant="filled"
+              sx={{ fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
+            />
+          )}
+          <Button
+            onClick={handleExport}
+            startIcon={<DownloadIcon />}
+            size="small"
+            sx={{
+              color: 'white',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: { xs: '0.75rem', sm: '0.82rem' },
+              borderRadius: '10px',
+              padding: { xs: '4px 10px', sm: '6px 14px' },
+              border: '1px solid rgba(48,209,88,0.5)',
+              background: 'rgba(48,209,88,0.12)',
+              backdropFilter: 'blur(10px)',
+              letterSpacing: '0.3px',
+              '&:hover': {
+                background: 'rgba(48,209,88,0.25)',
+                border: '1px solid rgba(48,209,88,0.8)',
+                boxShadow: '0 0 12px rgba(48,209,88,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Excel
+          </Button>
+        </Box>
       </Box>
 
       {/* DataGrid */}
@@ -680,7 +724,7 @@ export const FormatResultsTable = () => {
           columns={columns}
           columnHeaderHeight={36}
           getRowId={(row) => row.key || row.createdDate}
-          rowHeight={56}
+          rowHeight={28}
           pageSizeOptions={[10, 20, 50]}
           initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
           onRowClick={(params) => setViewSubmission(params.row as FormatSubmission)}
