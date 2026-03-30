@@ -33,6 +33,7 @@ export const AgendaMantenimientosPage = () => {
   const [isCreationOpen, setIsCreationOpen] = useState(false);
   const [creationDate, setCreationDate] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState<MaintenanceSchedule | null>(null);
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
   const scheduleListRef = useRef<HTMLDivElement | null>(null);
   
   const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
@@ -172,6 +173,41 @@ export const AgendaMantenimientosPage = () => {
     return orderedResult;
   }, [schedulesData]);
 
+  const displayedSchedules = useMemo(() => {
+    if (viewMode === 'month') {
+      return groupedSchedules;
+    }
+
+    const today = dayjs().startOf('day');
+    const endDate = viewMode === 'week' ? today.add(6, 'day') : today;
+    const result: Record<string, MaintenanceSchedule[]> = {};
+
+    Object.entries(groupedSchedules).forEach(([label, schedules]) => {
+      const datePart = label.split('•')[1]?.trim() || '';
+      const parsedDate = dayjs(datePart, 'MMM D', 'es').year(today.year());
+
+      if (viewMode === 'day' && label.startsWith('HOY')) {
+        result[label] = schedules;
+        return;
+      }
+
+      if (!parsedDate.isValid()) {
+        return;
+      }
+
+      if (!parsedDate.isBefore(today, 'day') && !parsedDate.isAfter(endDate, 'day')) {
+        result[label] = schedules;
+      }
+    });
+
+    if (viewMode === 'day' && Object.keys(result).length === 0) {
+      const todayLabel = `HOY • ${today.format('MMM D').toUpperCase()}`.replace('.', '');
+      result[todayLabel] = [];
+    }
+
+    return result;
+  }, [groupedSchedules, viewMode]);
+
   useEffect(() => {
     const todayEntry = Object.keys(groupedSchedules).find(label => label.startsWith('HOY'));
     if (!todayEntry) return;
@@ -217,32 +253,60 @@ export const AgendaMantenimientosPage = () => {
       overflow: 'hidden', 
     }}>
       {/* Header */}
-      <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', mb: 1, pt: 1 }}>
-        <IconButton onClick={() => navigate('/home')} sx={{ color: '#2b90ff', p: 0, mr: 1 }}>
-          <ArrowBackIosNewIcon sx={{ fontSize: 24, strokeWidth: 2 }} />
-        </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#2b90ff', flexGrow: 1 }}>
-          Calendario
-        </Typography>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
-          {isPlanner && (
-            <IconButton size="small" onClick={() => handleOpenCreation()} sx={{ color: 'white', bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0070e0' } }}>
-              <AddIcon />
-            </IconButton>
-          )}
+      <Box sx={{ display: { xs: 'flex', lg: 'none' }, flexDirection: 'column', gap: 1, mb: 1, pt: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton onClick={() => navigate('/home')} sx={{ color: '#2b90ff', p: 0, mr: 1 }}>
+            <ArrowBackIosNewIcon sx={{ fontSize: 24, strokeWidth: 2 }} />
+          </IconButton>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#2b90ff', flexGrow: 1 }}>
+            Calendario
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
+            {isPlanner && (
+              <IconButton size="small" onClick={() => handleOpenCreation()} sx={{ color: 'white', bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0070e0' } }}>
+                <AddIcon />
+              </IconButton>
+            )}
+          </Stack>
+        </Box>
+
+        <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between' }}>
+          {[
+            { id: 'day', label: 'Día' },
+            { id: 'week', label: 'Semana' },
+            { id: 'month', label: 'Mes' }
+          ].map(view => (
+            <Button
+              key={view.id}
+              size="small"
+              variant={viewMode === view.id ? 'contained' : 'outlined'}
+              onClick={() => setViewMode(view.id as 'day' | 'week' | 'month')}
+              sx={{
+                textTransform: 'none',
+                flex: 1,
+                fontWeight: 600,
+                color: viewMode === view.id ? 'white' : 'rgba(255,255,255,0.8)',
+                bgcolor: viewMode === view.id ? 'rgba(10,132,255,0.9)' : 'rgba(255,255,255,0.05)',
+                border: viewMode === view.id ? '1px solid rgba(10,132,255,0.9)' : '1px solid rgba(255,255,255,0.2)',
+              }}
+            >
+              {view.label}
+            </Button>
+          ))}
         </Stack>
       </Box>
 
       {/* DESKTOP HEADER */}
-      <Box sx={{ display: { xs: 'none', lg: 'flex' }, justifyContent: 'space-between', alignItems: 'center', mb: 1, mt: 1 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px' }}>
-          Agenda de Mantenimientos
-        </Typography>
-        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
-          {isPlanner && (
-            <Button
+      <Box sx={{ display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', gap: 1, mb: 1, mt: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px' }}>
+            Agenda de Mantenimientos
+          </Typography>
+          <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+            <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
+            {isPlanner && (
+              <Button
               variant="contained"
               size="small"
               startIcon={<AddIcon />}
@@ -269,46 +333,94 @@ export const AgendaMantenimientosPage = () => {
         </Stack>
       </Box>
 
+      <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', lg: 'flex' }, mb: 1 }}>
+        {[
+          { id: 'day', label: 'Día' },
+          { id: 'week', label: 'Semana' },
+          { id: 'month', label: 'Mes' }
+        ].map(view => (
+          <Button
+            key={view.id}
+            size="small"
+            variant={viewMode === view.id ? 'contained' : 'outlined'}
+            onClick={() => setViewMode(view.id as 'day' | 'week' | 'month')}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              color: viewMode === view.id ? 'white' : 'rgba(255,255,255,0.8)',
+              bgcolor: viewMode === view.id ? 'rgba(10,132,255,0.9)' : 'rgba(255,255,255,0.05)',
+              border: viewMode === view.id ? '1px solid rgba(10,132,255,0.9)' : '1px solid rgba(255,255,255,0.2)'
+            }}
+          >
+            {view.label}
+          </Button>
+        ))}
+      </Stack>
+
       {/* MOBILE LIST VIEW */}
-      <Box
-        ref={scheduleListRef}
-        sx={{
-          display: { xs: 'flex', lg: 'none' },
-          flexDirection: 'column',
-          gap: 1.5,
-          flex: 1,
-          overflowY: 'auto',
-          pb: 12, // More padding to avoid collision with nav / FAB
-          px: 0.5,
-          scrollbarWidth: 'none', // Hide scrollbar for cleaner look
-          '&::-webkit-scrollbar': { display: 'none' }
-        }}
-      >
-         {Object.entries(groupedSchedules).map(([dateLabel, schedules]) => (
-           <ScheduleDayBlock
-             key={dateLabel}
-             dateLabel={dateLabel}
-             schedules={schedules}
-             isTodayGroup={dateLabel.startsWith('HOY')}
-           />
-         ))}
-         
-         {Object.keys(groupedSchedules).length === 0 && (
+      {(viewMode === 'day' || viewMode === 'week') && (
+        <Box
+          ref={scheduleListRef}
+          sx={{
+            display: { xs: 'flex', lg: 'none' },
+            flexDirection: 'column',
+            gap: 1.5,
+            flex: 1,
+            overflowY: 'auto',
+            pb: 12, // More padding to avoid collision with nav / FAB
+            px: 0.5,
+            scrollbarWidth: 'none', // Hide scrollbar for cleaner look
+            '&::-webkit-scrollbar': { display: 'none' }
+          }}
+        >
+           {Object.entries(displayedSchedules).map(([dateLabel, schedules]) => (
+             <ScheduleDayBlock
+               key={dateLabel}
+               dateLabel={dateLabel}
+               schedules={schedules}
+               isTodayGroup={dateLabel.startsWith('HOY')}
+             />
+           ))}
+           
+           {Object.keys(displayedSchedules).length === 0 && (
+              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
+                No hay programaciones en los últimos 3 meses.
+              </Typography>
+           )}
+        </Box>
+      )}
+
+      {/* DESKTOP LIST VIEW (día/semana) */}
+      {(viewMode === 'day' || viewMode === 'week') && (
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', pt: 2, flexGrow: 1, minHeight: 0, overflowY: 'auto', gap: 1.5 }}>
+          {Object.entries(displayedSchedules).map(([dateLabel, schedules]) => (
+            <ScheduleDayBlock
+              key={dateLabel}
+              dateLabel={dateLabel}
+              schedules={schedules}
+              isTodayGroup={dateLabel.startsWith('HOY')}
+            />
+          ))}
+
+          {Object.keys(displayedSchedules).length === 0 && (
             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mt: 10 }}>
               No hay programaciones en los últimos 3 meses.
             </Typography>
-         )}
-      </Box>
+          )}
+        </Box>
+      )}
 
-      {/* DESKTOP GRID VIEW */}
-      <Box sx={{ display: { xs: 'none', lg: 'flex' }, pt: 2, flexGrow: 1, minHeight: 0 }}>
-        <CalendarGridView 
-          schedules={schedulesData} 
-          onOpenCreation={handleOpenCreation}
-          onEdit={handleEditSchedule}
-          isAdmin={isPlanner}
-        />
-      </Box>
+      {/* DESKTOP GRID VIEW (mes) */}
+      {viewMode === 'month' && (
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, pt: 2, flexGrow: 1, minHeight: 0 }}>
+          <CalendarGridView 
+            schedules={schedulesData} 
+            onOpenCreation={handleOpenCreation}
+            onEdit={handleEditSchedule}
+            isAdmin={isPlanner}
+          />
+        </Box>
+      )}
 
       <ScheduleCreationModal 
         open={isCreationOpen} 
