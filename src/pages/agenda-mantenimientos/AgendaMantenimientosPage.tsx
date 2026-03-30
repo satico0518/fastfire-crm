@@ -361,7 +361,7 @@ export const AgendaMantenimientosPage = () => {
         </Box>
       </Box>
 
-      <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', lg: 'flex' }, mb: 1 }}>
+      <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', lg: 'flex' }, mb: 0.5, transform: 'scale(0.5)', transformOrigin: 'left center' }}>
         {[
           { id: 'day', label: 'Día' },
           { id: 'week', label: 'Semana' },

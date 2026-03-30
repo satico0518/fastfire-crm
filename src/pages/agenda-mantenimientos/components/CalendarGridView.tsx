@@ -87,7 +87,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
       
       {/* Calendar Header */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2, px: 1 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px', textTransform: 'capitalize' }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px', textTransform: 'capitalize', fontSize: '1.3rem' }}>
           {currentMonth.format('MMMM YYYY')}
         </Typography>
         <Stack direction="row" spacing={1}>
