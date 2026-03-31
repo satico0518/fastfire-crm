@@ -252,26 +252,6 @@ export const TaskCreatorRowComponent = () => {
               startIcon={<GroupAddOutlinedIcon />}
               sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
-            {selectedOwners.length > 0 && (
-              <div className="selected-owners" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginLeft: '4px' }}>
-                {selectedOwners.map((owner) => (
-                  <Chip
-                    key={owner}
-                    size="small"
-                    label={owner}
-                    onDelete={() => setSelectedOwners(selectedOwners.filter(o => o !== owner))}
-                    sx={{ 
-                      bgcolor: 'rgba(10,132,255,0.2)', 
-                      color: '#0a84ff', 
-                      border: '1px solid rgba(10,132,255,0.4)',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      height: '22px'
-                    }}
-                  />
-                ))}
-              </div>
-            )}
             <DialogueMultiselect
               title="Responsables"
               open={openOwnersDialog}
