@@ -1380,7 +1380,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         title="Responsables"
         open={openOwnersDialog}
         labels={
-          users?.filter(u => u.isActive && !u.permissions.includes('PROVIDER')).map((u) =>
+          users?.filter(u => u.isActive && !u.permissions?.includes('PROVIDER')).map((u) =>
             getUserNameByKey(u.key as string, users)
           ) as unknown as string[]
         }
