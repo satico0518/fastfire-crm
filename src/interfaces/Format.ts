@@ -23,7 +23,9 @@ export type FormatTypeId =
   | "LEGALIZACION_CUENTAS"
   | "AVANCE_OBRA"
   | "ADICIONALES"
-  | "ACTA_ENTREGA";
+  | "ACTA_ENTREGA"
+  | "REPORTE_MANTENIMIENTO"
+  | "ACTA_VISITA_MANTENIMIENTO";
 
 export interface FormatType {
   id: FormatTypeId;

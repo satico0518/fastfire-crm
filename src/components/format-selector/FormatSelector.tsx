@@ -41,6 +41,7 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import BuildIcon from "@mui/icons-material/Build";
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
 
@@ -49,6 +50,8 @@ const FORMAT_ICONS: Record<FormatTypeId, ElementType<SvgIconProps>> = {
   AVANCE_OBRA: EngineeringIcon,
   ADICIONALES: AddCircleOutlineIcon,
   ACTA_ENTREGA: AssignmentTurnedInIcon,
+  REPORTE_MANTENIMIENTO: BuildIcon,
+  ACTA_VISITA_MANTENIMIENTO: AssignmentTurnedInIcon,
 };
 
 export const FormatSelector = () => {

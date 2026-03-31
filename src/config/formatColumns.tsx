@@ -229,6 +229,67 @@ export const getColumnsForFormat = (
         ...shared,
       ];
 
+    case "REPORTE_MANTENIMIENTO":
+      return [
+        { field: dataField("proyecto"), headerName: "Proyecto", width: 160, valueGetter: dataGetter("proyecto") },
+        { field: dataField("fecha_mantenimiento"), headerName: "Fecha Mantenimiento", width: 140, valueGetter: dataGetter("fecha_mantenimiento") },
+        { field: dataField("tecnico_responsable"), headerName: "Técnico Responsable", width: 160, valueGetter: dataGetter("tecnico_responsable") },
+        { field: dataField("tipo_mantenimiento"), headerName: "Tipo Mantenimiento", width: 140, valueGetter: dataGetter("tipo_mantenimiento") },
+        { field: dataField("tiempo_ejecucion"), headerName: "Tiempo (horas)", width: 120, valueGetter: dataGetter("tiempo_ejecucion") },
+        {
+          field: dataField("firma_tecnico"),
+          headerName: "Firma Técnico",
+          width: 140,
+          sortable: false,
+          valueGetter: dataGetter("firma_tecnico"),
+          renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
+            <ImageCell value={p.row.data?.firma_tecnico} label="Firma Técnico" />
+          ),
+        },
+        {
+          field: dataField("firma_supervisor"),
+          headerName: "Firma Supervisor",
+          width: 140,
+          sortable: false,
+          valueGetter: dataGetter("firma_supervisor"),
+          renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
+            <ImageCell value={p.row.data?.firma_supervisor} label="Firma Supervisor" />
+          ),
+        },
+        ...shared,
+      ];
+
+    case "ACTA_VISITA_MANTENIMIENTO":
+      return [
+        { field: dataField("numero_acta"), headerName: "N° Acta", width: 120, valueGetter: dataGetter("numero_acta") },
+        { field: dataField("fecha_visita"), headerName: "Fecha Visita", width: 120, valueGetter: dataGetter("fecha_visita") },
+        { field: dataField("proyecto"), headerName: "Proyecto/Cliente", width: 160, valueGetter: dataGetter("proyecto") },
+        { field: dataField("tecnico_responsable"), headerName: "Técnico", width: 140, valueGetter: dataGetter("tecnico_responsable") },
+        { field: dataField("tipo_visita"), headerName: "Tipo Visita", width: 120, valueGetter: dataGetter("tipo_visita") },
+        { field: dataField("contacto_cliente"), headerName: "Contacto", width: 140, valueGetter: dataGetter("contacto_cliente") },
+        {
+          field: dataField("firma_tecnico"),
+          headerName: "Firma Técnico",
+          width: 120,
+          sortable: false,
+          valueGetter: dataGetter("firma_tecnico"),
+          renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
+            <ImageCell value={p.row.data?.firma_tecnico} label="Firma Técnico" />
+          ),
+        },
+        {
+          field: dataField("firma_cliente"),
+          headerName: "Firma Cliente",
+          width: 120,
+          sortable: false,
+          valueGetter: dataGetter("firma_cliente"),
+          renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
+            <ImageCell value={p.row.data?.firma_cliente} label="Firma Cliente" />
+          ),
+        },
+        ...shared,
+      ];
+
     default:
       return shared;
   }

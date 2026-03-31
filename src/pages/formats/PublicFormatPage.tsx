@@ -23,6 +23,7 @@ import { getFormatTypeById } from "../../config/formatCatalog";
 import { FormatField, FormatSubmission } from "../../interfaces/Format";
 import { FormatService } from "../../services/format.service";
 import { useUiStore } from "../../stores/ui/ui.store";
+import { exportSubmissionToPDF } from "../../utils/utils";
 import { DatePicker, DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
@@ -38,6 +39,15 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import BuildIcon from "@mui/icons-material/Build";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+
+const statusConfig: Record<string, { label: string; color: "default" | "warning" | "info" | "success" | "error" }> = {
+  DRAFT: { label: "Borrador", color: "default" },
+  SUBMITTED: { label: "Enviado", color: "info" },
+  REVIEWED: { label: "Aprobado", color: "success" },
+  REJECTED: { label: "Rechazado", color: "error" },
+};
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
 
@@ -46,6 +56,8 @@ const FORMAT_ICONS: Record<string, ElementType<SvgIconProps>> = {
   AVANCE_OBRA: EngineeringIcon,
   ADICIONALES: AddCircleOutline,
   ACTA_ENTREGA: AssignmentTurnedInIcon,
+  REPORTE_MANTENIMIENTO: BuildIcon,
+  ACTA_VISITA_MANTENIMIENTO: AssignmentTurnedInIcon,
 };
 
 export const PublicFormatPage = () => {
@@ -55,6 +67,7 @@ export const PublicFormatPage = () => {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
+  const [submittedSubmission, setSubmittedSubmission] = useState<FormatSubmission | null>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
 
@@ -147,6 +160,11 @@ export const PublicFormatPage = () => {
     setIsLoading(false);
 
     if (resp.result === "OK") {
+      const fullSubmission: FormatSubmission = {
+        ...submission,
+        key: resp.key!,
+      };
+      setSubmittedSubmission(fullSubmission);
       setSubmitted(true);
     } else {
       setSnackbar({
@@ -598,7 +616,7 @@ export const PublicFormatPage = () => {
   }
 
   // Success state
-  if (submitted) {
+  if (submitted && submittedSubmission) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: '#1c1c1e', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
         <Card sx={{ maxWidth: 500, width: '100%', bgcolor: 'rgba(28,28,30,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -607,9 +625,26 @@ export const PublicFormatPage = () => {
             <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>
               ¡Formato enviado exitosamente!
             </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3 }}>
               Gracias por completar el formato de <strong>{format.name}</strong>.
             </Typography>
+            <Stack spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<PictureAsPdfIcon />}
+                onClick={() => exportSubmissionToPDF(submittedSubmission, format.fields, "Usuario Público", statusConfig[submittedSubmission.status].label)}
+                sx={{ bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0a84ffdd' } }}
+              >
+                Descargar PDF
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => window.open(`/public-format-results/${format.id}`, '_blank')}
+                sx={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', '&:hover': { borderColor: 'rgba(255,255,255,0.5)', bgcolor: 'rgba(255,255,255,0.05)' } }}
+              >
+                Ver Lista de Resultados
+              </Button>
+            </Stack>
           </CardContent>
         </Card>
       </Box>
