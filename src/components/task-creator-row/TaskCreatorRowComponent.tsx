@@ -172,6 +172,8 @@ export const TaskCreatorRowComponent = () => {
             onChange={({ target }) => setTaskName(target.value)}
             fullWidth
             sx={{
+              flex: 1, // Para que ocupe todo el espacio disponible en el flex container
+              minWidth: '200px', // Ancho mínimo para que sea visible
               '& .MuiInput-root': {
                 color: 'white',
                 '&:before': { borderColor: 'rgba(255,255,255,0.3)' },
