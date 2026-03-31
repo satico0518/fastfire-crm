@@ -33,6 +33,36 @@ const ImageCell = ({ value, label }: { value: unknown; label: string }) => {
   );
 };
 
+const ImageArrayCell = ({ value }: { value: unknown }) => {
+  if (!Array.isArray(value) || value.length === 0) {
+    return <Typography variant="caption" color="text.secondary">Sin imagen</Typography>;
+  }
+
+  const images = value
+    .map((item) => (item && typeof item === "object" && "foto" in item ? (item as any).foto : null))
+    .filter(Boolean) as string[];
+
+  if (images.length === 0) {
+    return <Typography variant="caption" color="text.secondary">Sin imagen</Typography>;
+  }
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
+      {images.slice(0, 3).map((img, idx) => (
+        <img
+          key={idx}
+          src={img}
+          alt={`Foto comprobante ${idx + 1}`}
+          style={{ height: 32, width: 42, objectFit: "cover", borderRadius: 4, border: "1px solid #e0e0e0" }}
+        />
+      ))}
+      {images.length > 3 && (
+        <Typography variant="caption">+{images.length - 3} más</Typography>
+      )}
+    </Box>
+  );
+};
+
 /** Common columns shared by all format tables */
 const commonColumns = (users: Users): GridColDef[] => [
   {
@@ -136,6 +166,15 @@ export const getColumnsForFormat = (
             return 0;
           },
           valueFormatter: (value: number) => `$ ${Number(value).toLocaleString()}`,
+        },
+        {
+          field: "compras_fotos",
+          headerName: "Fotos Comprobante",
+          width: 200,
+          sortable: false,
+          renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
+            <ImageArrayCell value={p.row.data?.compras} />
+          ),
         },
         ...shared,
       ];

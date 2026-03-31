@@ -12,9 +12,38 @@ import {
   changeDateFromDMA_MDA,
   compareLicitationVsStock
 } from '../utils';
+import { jsPDF } from 'jspdf';
 import { User } from '../../interfaces/User';
 import { Workgroup } from '../../interfaces/Workgroup';
 import { Project } from '../../interfaces/Project';
+
+jest.mock('jspdf', () => {
+  const jsPDF = jest.fn().mockImplementation(() => ({
+    internal: { pageSize: { getWidth: () => 210 } },
+    setFillColor: jest.fn(),
+    rect: jest.fn(),
+    setTextColor: jest.fn(),
+    setFontSize: jest.fn(),
+    setFont: jest.fn(),
+    text: jest.fn(),
+    roundedRect: jest.fn(),
+    setDrawColor: jest.fn(),
+    setLineWidth: jest.fn(),
+    line: jest.fn(),
+    addPage: jest.fn(),
+    addImage: jest.fn(),
+    getNumberOfPages: jest.fn().mockReturnValue(1),
+    setPage: jest.fn(),
+    save: jest.fn(),
+  }));
+  return { jsPDF };
+});
+
+jest.mock('jspdf-autotable', () => {
+  return jest.fn((doc, opts) => {
+    doc.lastAutoTable = { finalY: opts.startY || 0 };
+  });
+});
 
 describe('Utils', () => {
   describe('formatToCOP', () => {
@@ -232,6 +261,35 @@ describe('Utils', () => {
     test('debe retornar secondary si no existe', () => {
       const result = getWorkgroupColorByKey('wg999', mockWorkgroups);
       expect(result).toBe('secondary');
+    });
+  });
+
+  describe('exportSubmissionToPDF', () => {
+    test('debe renderizar imagen inline y firma al final', async () => {
+      const { exportSubmissionToPDF } = await import('../utils');
+      const doc = ((jsPDF as unknown) as jest.Mock).mock.results[0].value;
+
+      const submission: any = {
+        formatTypeName: 'Formato Test',
+        createdDate: new Date().toISOString(),
+        data: {
+          nombre: 'Test',
+          foto: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA',
+          firma: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA',
+        },
+      };
+
+      const fields: any[] = [
+        { name: 'nombre', label: 'Nombre', type: 'text' },
+        { name: 'foto', label: 'Foto', type: 'image' },
+        { name: 'firma', label: 'Firma', type: 'signature' },
+      ];
+
+      await exportSubmissionToPDF(submission, fields, 'Usuario', 'APROBADO');
+
+      expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), 85, 50);
+      expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), 100, 40);
+      expect(doc.text).toHaveBeenCalledWith('FIRMAS', expect.any(Number), expect.any(Number), { align: 'center' });
     });
   });
 
