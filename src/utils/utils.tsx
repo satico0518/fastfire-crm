@@ -448,6 +448,117 @@ const findAllImages = (data: any, path: string = ''): { label: string; value: st
   return images;
 };
 
+const getImageFormat = (base64: string): 'JPEG' | 'PNG' | 'GIF' => {
+  const lower = base64.toLowerCase();
+  if (lower.startsWith('data:image/png')) return 'PNG';
+  if (lower.startsWith('data:image/gif')) return 'GIF';
+  // Fallback JPEG
+  return 'JPEG';
+};
+
+// Render a single image inline in the PDF, con manejo de saltos de página
+const getImageDimensions = (base64: string): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+    };
+    img.onerror = (err) => reject(err);
+    img.src = base64;
+  });
+};
+
+const renderImageInline = async (
+  doc: any,
+  imageLabel: string,
+  imageValue: string,
+  currentYRef: { value: number },
+  margin: number
+) => {
+  try {
+    const base64 = await loadImageAsBase64(imageValue);
+    if (!base64) {
+      doc.setTextColor(255, 69, 58);
+      doc.setFontSize(9);
+      doc.text(`${imageLabel}: Error cargando imagen`, margin, currentYRef.value);
+      currentYRef.value += 10;
+      return;
+    }
+
+    const imgFormat = getImageFormat(base64);
+
+    if (currentYRef.value > 200) {
+      doc.addPage();
+      currentYRef.value = 20;
+    }
+
+    doc.setTextColor(48, 209, 88);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(imageLabel, margin, currentYRef.value);
+    currentYRef.value += 5;
+
+    const targetWidth = 170; // mm available
+    const maxWidth = 150; // leave margins
+    const maxHeight = 80; // avoid taking too much page
+
+    let imgWidth = 85;
+    let imgHeight = 50;
+
+    try {
+      const dims = await getImageDimensions(base64);
+      const ratio = dims.width / dims.height;
+      imgWidth = Math.min(maxWidth, targetWidth);
+      imgHeight = imgWidth / ratio;
+
+      if (imgHeight > maxHeight) {
+        imgHeight = maxHeight;
+        imgWidth = imgHeight * ratio;
+      }
+    } catch (err) {
+      // Fallback fixed dimensions
+      imgWidth = 85;
+      imgHeight = 50;
+    }
+
+    // Ensure image does not overflow on current page; move to next page if needed
+    if (currentYRef.value + imgHeight + 15 > 280) {
+      doc.addPage();
+      currentYRef.value = 20;
+    }
+
+    doc.addImage(base64, imgFormat, margin, currentYRef.value, imgWidth, imgHeight);
+    currentYRef.value += imgHeight + 10;
+  } catch (error) {
+    console.error('Error adding image to PDF:', error);
+    doc.setTextColor(255, 69, 58);
+    doc.setFontSize(9);
+    doc.text(`${imageLabel}: Error al renderizar imagen`, margin, currentYRef.value);
+    currentYRef.value += 10;
+  }
+};
+
+const renderImagesFromValue = async (
+  doc: any,
+  value: any,
+  baseLabel: string,
+  currentYRef: { value: number },
+  margin: number,
+  signatureFieldNames: string[]
+) => {
+  const images = findAllImages(value, baseLabel).filter(img =>
+    !signatureFieldNames.some(sigName =>
+      img.label.toLowerCase().includes(sigName.toLowerCase()) ||
+      img.label.toLowerCase().includes('firma') ||
+      img.label.toLowerCase().includes('signature')
+    )
+  );
+
+  for (const img of images) {
+    await renderImageInline(doc, img.label, img.value, currentYRef, margin);
+  }
+};
+
 // Main PDF export function for format submissions
 export const exportSubmissionToPDF = async (
   submission: FormatSubmission,
@@ -493,7 +604,16 @@ export const exportSubmissionToPDF = async (
   currentY += 8;
   
   // Status badge
-  doc.setFillColor(48, 209, 88);
+  const badgeColor = (() => {
+    const status = statusLabel?.toLowerCase?.() || '';
+    if (status.includes('rechaz')) return { r: 220, g: 53, b: 69 }; // rojo
+    if (status.includes('aprobad')) return { r: 48, g: 209, b: 88 }; // verde
+    if (status.includes('enviad') || status.includes('submitted')) return { r: 0, g: 123, b: 255 }; // azul
+    if (status.includes('borrad') || status.includes('draft')) return { r: 108, g: 117, b: 125 }; // gris
+    return { r: 48, g: 209, b: 88 }; // default verde
+  })();
+
+  doc.setFillColor(badgeColor.r, badgeColor.g, badgeColor.b);
   doc.roundedRect(margin, currentY - 4, 40, 8, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
@@ -522,41 +642,27 @@ export const exportSubmissionToPDF = async (
   
   // Process each field
   const data = submission.data || {};
-  const imageList: { label: string; base64: string }[] = [];
-  
-  // Get signature field names to exclude from images section
   const signatureFieldNames = fields.filter(f => f.type === 'signature').map(f => f.name);
-  
-  // Find all images recursively in the data
-  const allImages = findAllImages(data);
-  
-  // Filter out images that are signature fields
-  const nonSignatureImages = allImages.filter(img => {
-    // Check if this image path contains any signature field name
-    return !signatureFieldNames.some(sigName => 
-      img.label.toLowerCase().includes(sigName.toLowerCase()) ||
-      img.label.toLowerCase().includes('firma') ||
-      img.label.toLowerCase().includes('signature')
-    );
-  });
-  
-  // Load all non-signature images
-  for (const img of nonSignatureImages) {
-    const base64 = await loadImageAsBase64(img.value);
-    if (base64) {
-      imageList.push({ label: img.label, base64 });
-    }
-  }
+  const currentYRef = { value: currentY };
+
   
   // Now render text content
   for (const field of fields) {
     const value = data[field.name];
-    
-    // Skip empty values and image fields (already processed)
     if (value === undefined || value === null || value === '') continue;
-    if (field.type === 'image' || isImageValue(value)) continue;
-    
-    // Check for calculated sum
+    if (field.type === 'signature') continue;
+
+    // Inicia sincronización de posición con helper de imagenes
+    currentYRef.value = currentY;
+
+    // Campo de imagen o valor tipo imagen
+    if (field.type === 'image' || isImageValue(value)) {
+      await renderImageInline(doc, field.label, String(value), currentYRef, margin);
+      currentY = currentYRef.value;
+      continue;
+    }
+
+    // Calculated sum
     if (field.type === 'calculated-sum' && field.calculateSum) {
       const parts = field.calculateSum.split('.');
       if (parts.length === 2) {
@@ -566,50 +672,46 @@ export const exportSubmissionToPDF = async (
             const val = Number(curr[parts[1]]);
             return acc + (isNaN(val) ? 0 : val);
           }, 0);
-          
+
           doc.setTextColor(48, 209, 88);
           doc.setFontSize(11);
           doc.setFont('helvetica', 'bold');
-          doc.text(`${field.label}:`, margin, currentY);
+          doc.text(`${field.label}:`, margin, currentYRef.value);
           doc.setFontSize(14);
-          doc.text(`$ ${total.toLocaleString('es-CO')}`, margin + 60, currentY);
-          currentY += 8;
+          doc.text(`$ ${total.toLocaleString('es-CO')}`, margin + 60, currentYRef.value);
+          currentYRef.value += 8;
+          currentY = currentYRef.value;
           continue;
         }
       }
     }
-    
+
     // Handle arrays (dynamic groups)
     if (Array.isArray(value)) {
       if (value.length === 0) continue;
-      
+
       doc.setTextColor(48, 209, 88);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.text(`${field.label}:`, margin, currentY);
-      currentY += 6;
-      
-      // Create table for array data
+      doc.text(`${field.label}:`, margin, currentYRef.value);
+      currentYRef.value += 6;
+
+      // Create table or simple list
       if (typeof value[0] === 'object' && value[0] !== null) {
-        // Get headers from object keys
         const keys = Object.keys(value[0]);
         const headers = keys.map(k => k.replace(/_/g, ' ').toUpperCase());
-        
-        // Build rows, filtering out image values
+
         const rows: string[][] = [];
-        
+
         for (let rowIdx = 0; rowIdx < value.length; rowIdx++) {
           const item = value[rowIdx];
           const row: string[] = [];
           for (const key of keys) {
             const cellValue = item[key];
-            // Check if cell value is an image (just show placeholder, image is in images section)
             if (isImageValue(cellValue)) {
-              row.push('[IMAGEN ADJUNTA]');
+              row.push('[IMAGEN]');
             } else {
-              // Format currency for numeric values
               const strValue = String(cellValue || '-');
-              // Check if it looks like a number/currency
               if (!isNaN(Number(cellValue)) && cellValue !== '' && cellValue !== null) {
                 row.push(`$ ${Number(cellValue).toLocaleString('es-CO')}`);
               } else {
@@ -619,12 +721,11 @@ export const exportSubmissionToPDF = async (
           }
           rows.push(row);
         }
-        
-        // Calculate column widths
+
         autoTable(doc, {
           head: [headers],
           body: rows,
-          startY: currentY,
+          startY: currentYRef.value,
           margin: { left: margin, right: margin },
           tableWidth: 'wrap',
           styles: {
@@ -652,163 +753,113 @@ export const exportSubmissionToPDF = async (
             fillColor: [245, 245, 245],
           },
           didParseCell: (hookData) => {
-            // Ensure header text is horizontal
             if (hookData.cell.section === 'head') {
               hookData.cell.styles.halign = 'left';
               hookData.cell.styles.valign = 'middle';
             }
           },
         });
-        
-        currentY = (doc as any).lastAutoTable.finalY + 8;
-      } else {
-        // Simple array
-        doc.setTextColor(80, 80, 80);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        for (let idx = 0; idx < (value as string[]).length; idx++) {
-          const item = (value as string[])[idx];
-          // Check if item is an image (just show placeholder)
-          if (isImageValue(item)) {
-            doc.setTextColor(48, 209, 88);
-            doc.text(`  ${idx + 1}. [IMAGEN ADJUNTA - Ver sección de evidencias]`, margin + 5, currentY);
-          } else {
-            doc.setTextColor(80, 80, 80);
-            const itemText = String(item);
-            const splitItem = doc.splitTextToSize(itemText, contentWidth - 20);
-            doc.text(splitItem, margin + 5, currentY);
-            currentY += (splitItem.length - 1) * 4;
-          }
-          currentY += 5;
-        }
-        currentY += 3;
+
+        currentYRef.value = (doc as any).lastAutoTable.finalY + 8;
+
+        // Render images found inside array objects inline
+        await renderImagesFromValue(doc, value, field.label, currentYRef, margin, signatureFieldNames);
+        currentY = currentYRef.value;
+        continue;
       }
+
+      // Simple array
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      for (let idx = 0; idx < (value as string[]).length; idx++) {
+        const item = (value as string[])[idx];
+        if (isImageValue(item)) {
+          await renderImageInline(doc, `${field.label} [${idx + 1}]`, item, currentYRef, margin);
+          currentY = currentYRef.value;
+        } else {
+          const itemText = String(item);
+          const splitItem = doc.splitTextToSize(itemText, contentWidth - 20);
+          doc.text(splitItem, margin + 5, currentYRef.value);
+          currentYRef.value += (splitItem.length - 1) * 4;
+        }
+        currentYRef.value += 5;
+      }
+      currentYRef.value += 3;
+      currentY = currentYRef.value;
       continue;
     }
-    
-    // Regular field - Layout with label and value on separate lines for better spacing
-    const labelText = `${field.label}:`;
-    
+
+    // Regular field - Layout with label y value
     doc.setTextColor(48, 209, 88);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(labelText, margin, currentY);
-    currentY += 5;
-    
+    doc.text(`${field.label}:`, margin, currentYRef.value);
+    currentYRef.value += 5;
+
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    
-    // Format the value
-    let displayValue = String(value);
-    // Check if it's a number that should be formatted as currency
-    if (!isNaN(Number(value)) && value !== '' && (field.label.toLowerCase().includes('valor') || 
+
+    let displayValue = '';
+    if (typeof value === 'object') {
+      displayValue = JSON.stringify(value, null, 2);
+    } else {
+      displayValue = String(value);
+    }
+
+    if (!isNaN(Number(value)) && value !== '' && (field.label.toLowerCase().includes('valor') ||
         field.label.toLowerCase().includes('precio') || field.label.toLowerCase().includes('total') ||
         field.label.toLowerCase().includes('monto'))) {
       displayValue = `$ ${Number(value).toLocaleString('es-CO')}`;
     }
-    
-    // Value on new line with proper width
+
     const splitText = doc.splitTextToSize(displayValue, contentWidth);
-    doc.text(splitText, margin + 5, currentY);
-    currentY += splitText.length * 4 + 5;
-    
-    // Check for page break
+    doc.text(splitText, margin + 5, currentYRef.value);
+    currentYRef.value += splitText.length * 4 + 5;
+
+    // Insert images from nested objects in the regular field value (no image-type value)
+    await renderImagesFromValue(doc, value, field.label, currentYRef, margin, signatureFieldNames);
+    currentY = currentYRef.value;
+
     if (currentY > 270) {
       doc.addPage();
       currentY = 20;
     }
   }
-  
-  // Add images section if there are any
-  if (imageList.length > 0) {
-    doc.addPage();
-    currentY = 20;
-    
-    // Images header
-    doc.setFillColor(28, 28, 30);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    doc.setTextColor(48, 209, 88);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('EVIDENCIAS FOTOGRÁFICAS', pageWidth / 2, 15, { align: 'center' });
-    currentY = 35;
-    
-    for (const img of imageList) {
-      // Check page break
-      if (currentY > 200) {
-        doc.addPage();
-        // Add header to new page
-        doc.setFillColor(28, 28, 30);
-        doc.rect(0, 0, pageWidth, 20, 'F');
-        doc.setTextColor(48, 209, 88);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('EVIDENCIAS FOTOGRÁFICAS (CONT.)', pageWidth / 2, 13, { align: 'center' });
-        currentY = 30;
-      }
-      
-      // Image label
-      doc.setTextColor(48, 209, 88);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(img.label, margin, currentY);
-      currentY += 5;
-      
-      // Add image with proper sizing (50% of previous size to avoid pixelation)
-      try {
-        // 50% of 170mm x 100mm = 85mm x 50mm for better quality
-        const imgWidth = 85;
-        const imgHeight = 50;
-        doc.addImage(img.base64, 'JPEG', margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight + 10;
-      } catch (error) {
-        console.error('Error adding image to PDF:', error);
-        doc.setTextColor(255, 69, 58);
-        doc.setFontSize(9);
-        doc.text('Error al cargar imagen', margin, currentY);
-        currentY += 10;
-      }
-    }
-  }
-  
+
   // Add signature section at the end if there are signature fields
   const signatureFields = fields.filter(f => f.type === 'signature' && data[f.name]);
   if (signatureFields.length > 0) {
-    doc.addPage();
-    currentY = 20;
-    
-    // Signature header
-    doc.setFillColor(28, 28, 30);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    doc.setTextColor(48, 209, 88);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FIRMAS', pageWidth / 2, 15, { align: 'center' });
-    currentY = 35;
-    
+    // Estimate required space and move to new page only if absolutely necessary
+    const estimatedSignatureHeight = signatureFields.length * 60 + 20;
+    if (currentY + estimatedSignatureHeight > 280) {
+      doc.addPage();
+      currentY = 20;
+    }
+
     for (const field of signatureFields) {
       const signatureValue = data[field.name] as string;
-      
-      // Check page break
-      if (currentY > 200) {
+
+      // Check page break for each signature block
+      if (currentY + 60 > 280) {
         doc.addPage();
         currentY = 20;
       }
-      
-      // Signature label
+
+      // Signature label (single line)
       doc.setTextColor(48, 209, 88);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.text(field.label, margin, currentY);
       currentY += 8;
-      
+
       // Load and add signature image
       try {
         const base64 = await loadImageAsBase64(signatureValue);
         if (base64) {
-          // Signature image - smaller size, width 100mm, height auto
-          doc.addImage(base64, 'JPEG', margin, currentY, 100, 40);
+          const imgFormat = getImageFormat(base64);
+          doc.addImage(base64, imgFormat, margin, currentY, 100, 40);
           currentY += 50;
         }
       } catch (error) {
@@ -818,7 +869,7 @@ export const exportSubmissionToPDF = async (
         doc.text('Error al cargar firma', margin, currentY);
         currentY += 10;
       }
-      
+
       // Add spacing between signatures
       currentY += 10;
     }
