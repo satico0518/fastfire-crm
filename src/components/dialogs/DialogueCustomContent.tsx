@@ -18,11 +18,12 @@ export const DialogueCustomContent = ({width = '300px', title, open, setOpen, co
       fullWidth
       maxWidth="sm"
       disableRestoreFocus
+      disableScrollLock
       PaperProps={{
         sx: {
           height: 'auto',
           maxHeight: '90vh',
-          overflow: 'auto'
+          overflow: 'visible'
         }
       }}
     >
