@@ -51,9 +51,9 @@ export const HomePage = () => {
   const hasPermission = (permission: string | null) => {
     if (!permission) return true;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return currentUser?.permissions.includes(permission as any) ||
+    return currentUser?.permissions?.includes(permission as any) ||
            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-           currentUser?.permissions.includes('ADMIN' as any);
+           currentUser?.permissions?.includes('ADMIN' as any);
   };
 
   const visibleLinks = quickLinks.filter((l) => hasPermission(l.permission));
@@ -180,7 +180,7 @@ export const HomePage = () => {
                   {currentUser.firstName} {currentUser.lastName}
                 </p>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-                  {currentUser.permissions.includes('ADMIN') ? '⚡ Administrador' : '👤 Usuario'}
+                  {currentUser.permissions?.includes('ADMIN') ? '⚡ Administrador' : '👤 Usuario'}
                 </p>
               </div>
             </div>

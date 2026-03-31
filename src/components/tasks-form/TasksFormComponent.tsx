@@ -240,7 +240,7 @@ export const TasksFormComponent = ({
         <MultiselectComponent
           labels={
             users
-              ?.filter((u) => u.isActive && !u.permissions.includes('PROVIDER'))
+              ?.filter((u) => u.isActive && !u.permissions?.includes('PROVIDER'))
               .map((u) => getUserNameByKey(u.key as string, users)) as string[]
           }
           title="Responsables Asignados"

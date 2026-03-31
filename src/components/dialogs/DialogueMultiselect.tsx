@@ -31,7 +31,7 @@ export const DialogueMultiselect = ({
     disableRestoreFocus
   >
     <DialogTitle>{title}</DialogTitle>
-    <DialogContent sx={{ paddingTop: '10px !important' }}>
+    <DialogContent sx={{ paddingTop: '10px !important', overflow: 'visible' }}>
       <MultiselectComponent
         labels={labels}
         title={title}
