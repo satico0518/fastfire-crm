@@ -70,9 +70,9 @@ export class AuthService {
     pass: string
   ): Promise<FirebaseSignInOrCreateResponse> {
     try {
-      const userLoggedIn = await signInWithEmailAndPassword(auth, email, pass);
+      const userLoggedIn = await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), pass);
       const users: User[] =  Object.values((await get(ref(db, 'users'))).val());
-      const userDB = users?.filter((u) => u.email === email)[0];
+      const userDB = users?.filter((u) => u.email.toLowerCase() === email.toLowerCase().trim())[0];
       
       if (!userDB) {
         const msg = `El usuario "${email}" no está registrado.`;
@@ -95,11 +95,14 @@ export class AuthService {
         firebaseUser: userLoggedIn.user,
         user: userDB,
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error(error);
+      // Pasar el código de error original de Firebase para que el componente pueda traducirlo
+      const errorCode = error?.code || "";
+      const errorMessage = error?.message || "";
       return {
         result: "ERROR",
-        error: "Error al intentar iniciar sesión, revise sus credenciales.",
+        error: errorCode || errorMessage || "auth/unknown-error",
       };
     }
   }
