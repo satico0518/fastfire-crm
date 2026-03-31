@@ -22,12 +22,13 @@ export const PriorityInput = ({
   okAction,
 }: PriorityInputProps) => (
   <DialogueCustomContent
-    width="150px"
+    width="200px"
+    maxWidth="xs"
     title="Prioridad"
     open={open}
     setOpen={setOpen}
     content={
-      <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+      <FormControl fullWidth size="small">
         <InputLabel id="demo-select-small-label">Prioridad</InputLabel>
         <Select
           labelId="demo-select-small-label"

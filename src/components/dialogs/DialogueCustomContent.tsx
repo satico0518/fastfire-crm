@@ -2,6 +2,7 @@ import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/
 
 interface DialogueCustomContentProps {
   width?: string;
+  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   title: string;
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -10,13 +11,13 @@ interface DialogueCustomContentProps {
   okAction?: () => void;
 }
 
-export const DialogueCustomContent = ({width = '300px', title, open, setOpen, content, okText = 'Ok', okAction}: DialogueCustomContentProps) => {
+export const DialogueCustomContent = ({width = '300px', maxWidth = 'sm', title, open, setOpen, content, okText = 'Ok', okAction}: DialogueCustomContentProps) => {
   return (
     <Dialog
       onClose={() => setOpen(false)}
       open={open}
       fullWidth
-      maxWidth="sm"
+      maxWidth={maxWidth}
       disableRestoreFocus
       disableScrollLock
       PaperProps={{

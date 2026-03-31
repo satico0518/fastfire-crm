@@ -268,6 +268,7 @@ export const TaskCreatorRowComponent = () => {
               title="Fecha Límite"
               open={openDueDateDialog}
               setOpen={setOpenDueDateDialog}
+              maxWidth="xs"
               content={
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
@@ -291,13 +292,17 @@ export const TaskCreatorRowComponent = () => {
               title="Notas"
               open={openNotesDialog}
               setOpen={setOpenNotesDialog}
+              width="500px"
               content={
                 <TextField
                   id="outlined-basic"
-                  variant="standard"
+                  variant="outlined"
                   value={taskNotes}
                   onChange={({ target }) => setTaskNotes(target.value || "")}
                   fullWidth
+                  multiline
+                  rows={4}
+                  placeholder="Escribe las notas aquí..."
                 />
               }
             />
