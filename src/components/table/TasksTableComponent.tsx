@@ -585,6 +585,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           showInMenu
         />,
         <GridActionsCellItem
+          hidden={!currentUser?.permissions?.includes("ADMIN")}
           icon={<DeleteOutlineOutlinedIcon color="error" />}
           onClick={() => handleDeleteConfirmation(params.row)}
           label="Eliminar"
