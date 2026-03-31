@@ -141,7 +141,7 @@ export default function ProfileMenu() {
                         border: "solid #FFF 2px",
                       }}
                     />
-                  ) : currentUser?.permissions.includes("PROVIDER") ? (
+                  ) : currentUser?.permissions?.includes("PROVIDER") ? (
                     <StoreOutlinedIcon sx={{ color: "white" }} />
                   ) : (
                     <Avatar

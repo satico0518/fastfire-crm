@@ -80,12 +80,12 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       setValue("lastName", editingUser.lastName || "");
       setValue("email", editingUser.email);
       setAccessState({
-        ADMIN: editingUser.permissions.includes("ADMIN"),
-        TYG: editingUser.permissions.includes("TYG"),
-        PURCHASE: editingUser.permissions.includes("PURCHASE"),
-        PROVIDER: editingUser.permissions.includes("PROVIDER"),
-        FORMATER: editingUser.permissions.includes("FORMATER"),
-        PLANNER: editingUser.permissions.includes("PLANNER"),
+        ADMIN: editingUser.permissions?.includes("ADMIN"),
+        TYG: editingUser.permissions?.includes("TYG"),
+        PURCHASE: editingUser.permissions?.includes("PURCHASE"),
+        PROVIDER: editingUser.permissions?.includes("PROVIDER"),
+        FORMATER: editingUser.permissions?.includes("FORMATER"),
+        PLANNER: editingUser.permissions?.includes("PLANNER"),
       });
       setLabelWg(
         workgroups
@@ -214,7 +214,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
             sx={darkInputFieldSx}
           />
         )}
-        {!(editingUser?.permissions.includes("PROVIDER")) && (
+        {!(editingUser?.permissions?.includes("PROVIDER")) && (
             <FormControl sx={{ m: 1 }} component="fieldset" variant="standard">
               <FormLabel component="legend" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: 600 }}>Permisos</FormLabel>
               <FormGroup sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', mt: 1 }}>

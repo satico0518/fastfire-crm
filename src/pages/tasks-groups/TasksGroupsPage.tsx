@@ -36,7 +36,7 @@ export const TasksPage = () => {
   const CustomTabPanel = (props: TabPanelProps) => {
     const { children, value, index, ...other } = props;
 
-    if (!user?.permissions.includes("TYG")) return <UnauthorizedPage />;
+    if (!user?.permissions?.includes("TYG")) return <UnauthorizedPage />;
 
     return (
       <div

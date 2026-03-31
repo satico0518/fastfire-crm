@@ -23,10 +23,10 @@ const MenuProps = {
 };
 
 const darkSelectSx = {
-  color: 'white',
-  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3)' },
-  '& .MuiInput-underline:after': { borderBottomColor: 'white' },
-  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+  color: '#1c1c1e',
+  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(0,0,0,0.3)' },
+  '& .MuiInput-underline:after': { borderBottomColor: '#1c1c1e' },
+  '& .MuiSvgIcon-root': { color: 'rgba(0,0,0,0.5)' },
 };
 
 function getStyles(name: string, personName: readonly string[], theme: Theme) {
@@ -84,9 +84,9 @@ export const MultiselectComponent = ({
                   label={val} 
                   size="small"
                   sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.1)', 
-                    color: 'white', 
-                    border: '1px solid rgba(255,255,255,0.2)',
+                    bgcolor: 'rgba(10,132,255,0.15)', 
+                    color: '#0a84ff', 
+                    border: '1px solid rgba(10,132,255,0.3)',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                     borderRadius: '6px'

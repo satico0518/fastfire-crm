@@ -246,23 +246,43 @@ export const TaskCreatorRowComponent = () => {
               startIcon={<LocalOfferOutlinedIcon />}
               sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
-            <DialogueMultiselect
-              title="Responsables"
-              open={openOwnersDialog}
-              labels={
-                users?.filter(u => u.isActive && !u.permissions.includes('PROVIDER')).map((u) =>
-                  getUserNameByKey(u.key as string, users)
-                ) as unknown as string[]
-              }
-              setOpen={setOpenOwnersDialog}
-              value={selectedOwners}
-              setValue={setSelectedOwners}
-            />
             <Button
               size="small"
               onClick={() => setOpenOwnersDialog(!openOwnersDialog)}
               startIcon={<GroupAddOutlinedIcon />}
               sx={{ color: "white", minWidth: 40, p: '4px' }}
+            />
+            {selectedOwners.length > 0 && (
+              <div className="selected-owners" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginLeft: '4px' }}>
+                {selectedOwners.map((owner) => (
+                  <Chip
+                    key={owner}
+                    size="small"
+                    label={owner}
+                    onDelete={() => setSelectedOwners(selectedOwners.filter(o => o !== owner))}
+                    sx={{ 
+                      bgcolor: 'rgba(10,132,255,0.2)', 
+                      color: '#0a84ff', 
+                      border: '1px solid rgba(10,132,255,0.4)',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      height: '22px'
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+            <DialogueMultiselect
+              title="Responsables"
+              open={openOwnersDialog}
+              setOpen={setOpenOwnersDialog}
+              value={selectedOwners}
+              setValue={setSelectedOwners}
+              labels={
+                users?.filter(u => u.isActive && !u.permissions?.includes('PROVIDER')).map((u) =>
+                  getUserNameByKey(u.key as string, users)
+                ) as unknown as string[]
+              }
             />
             <DialogueCustomContent
               title="Fecha Límite"
