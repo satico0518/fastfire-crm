@@ -13,15 +13,15 @@ interface AuthState {
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
-const customSessionStorage: StateStorage = {
+const customStorage: StateStorage = {
   getItem: function (name: string): string | null | Promise<string | null> {
-    return sessionStorage.getItem(name);
+    return localStorage.getItem(name);
   },
   setItem: function (name: string, value: string): void {
-    sessionStorage.setItem(name, value);
+    localStorage.setItem(name, value);
   },
   removeItem: function (name: string): void {
-    sessionStorage.removeItem(name);
+    localStorage.removeItem(name);
   }
 }
 
@@ -40,7 +40,7 @@ export const useAuhtStore = create<AuthState>()(
       setHasHydrated: (hasHydrated: boolean) => set(() => ({ hasHydrated })),
     })), {
       name: 'auth-storage',
-      storage: createJSONStorage(() => customSessionStorage),
+      storage: createJSONStorage(() => customStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
