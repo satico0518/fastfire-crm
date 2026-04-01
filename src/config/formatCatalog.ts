@@ -860,6 +860,27 @@ export const FORMAT_CATALOG: FormatType[] = [
           },
         ],
       },
+
+      // Sección de Firmas
+      {
+        name: "seccion_firmas",
+        label: "REGISTRO DE FIRMAS",
+        type: "section",
+        required: false,
+        subFields: [
+          { name: "header_firma_cliente", label: "FIRMA FUNCIONARIO CLIENTE", type: "header", required: false },
+          { name: "firma_cliente_nombre", label: "Nombre", type: "text", required: true },
+          { name: "firma_cliente_cedula", label: "Cédula", type: "text", required: true },
+          { name: "firma_cliente_cargo", label: "Cargo", type: "text", required: true },
+          { name: "firma_cliente_digital", label: "Firma", type: "signature", required: true },
+
+          { name: "header_firma_fastfire", label: "FIRMA FUNCIONARIO FAST FIRE DE COLOMBIA", type: "header", required: false },
+          { name: "firma_fastfire_nombre", label: "Nombre", type: "text", required: true },
+          { name: "firma_fastfire_cedula", label: "Cédula", type: "text", required: true },
+          { name: "firma_fastfire_cargo", label: "Cargo", type: "text", required: true },
+          { name: "firma_fastfire_digital", label: "Firma", type: "signature", required: true },
+        ],
+      },
     ],
   },
 ];

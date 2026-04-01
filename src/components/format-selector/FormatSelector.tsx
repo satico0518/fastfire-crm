@@ -627,13 +627,14 @@ export const FormatSelector = () => {
       }
       case "signature":
         return (
-          <SignaturePadField
-            key={field.name}
-            label={field.label}
-            required={field.required}
-            value={(getValue(field.name) as string) || ""}
-            onChange={(val) => setValue(field.name, val)}
-          />
+          <Box key={field.name} sx={{ gridColumn: "1 / -1" }}>
+            <SignaturePadField
+              label={field.label}
+              value={(getValue(field.name) as string) || ""}
+              onChange={(val) => setValue(field.name, val)}
+              required={field.required}
+            />
+          </Box>
         );
       case "dynamic-group": {
         const items = (getValue(field.name) as Record<string, unknown>[]) || [];
