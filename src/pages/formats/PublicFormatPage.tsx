@@ -259,7 +259,7 @@ export const PublicFormatPage = () => {
               },
               '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
               '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
-              gridColumn: isObservationField ? { sm: "1 / -1" } : undefined
+              gridColumn: { sm: "1 / -1" }
             }}
           />
         );

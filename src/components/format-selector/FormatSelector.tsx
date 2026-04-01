@@ -256,7 +256,7 @@ export const FormatSelector = () => {
               },
               '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
               '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 },
-              gridColumn: isObservationField ? { sm: "1 / -1" } : undefined
+              gridColumn: { sm: "1 / -1" }
             }}
           />
         );
@@ -722,7 +722,6 @@ export const FormatSelector = () => {
                 mb: 2,
                 pb: 1,
                 borderBottom: '2px solid rgba(10,132,255,0.5)',
-                textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}
             >
