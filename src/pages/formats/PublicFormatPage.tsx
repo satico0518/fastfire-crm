@@ -22,6 +22,7 @@ import { SignaturePadField } from "../../components/signature-pad/SignaturePadFi
 import { getFormatTypeById } from "../../config/formatCatalog";
 import { FormatField, FormatSubmission } from "../../interfaces/Format";
 import { FormatService } from "../../services/format.service";
+import { AuthService } from "../../services/auth.service";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { DatePicker, DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -55,8 +56,25 @@ export const PublicFormatPage = () => {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
+
+  // Authenticate anonymously on load
+  useState(() => {
+    AuthService.signInAnonymously().then(resp => {
+      if (resp.result === "OK") {
+        console.log("Authenticated anonymously with UID:", resp.user?.uid);
+        setIsAuthed(true);
+        setAuthError(null);
+      } else {
+        console.error("Failed to authenticate anonymously", resp.errorMessage);
+        setAuthError(resp.errorMessage || "Error de autenticación");
+        setIsAuthed(false);
+      }
+    });
+  });
 
   // Initialize form data
   useState(() => {
@@ -649,6 +667,13 @@ export const PublicFormatPage = () => {
         {/* Form */}
         <Card sx={{ bgcolor: 'rgba(28,28,30,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3 }}>
           <CardContent sx={{ p: 3 }}>
+            {authError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                Error de Acceso: No se pudo establecer una conexión segura. 
+                Por favor, contacte al administrador si el problema persiste.
+              </Alert>
+            )}
+
             <Stack spacing={1.5}>
               {format.fields.map((field) => renderField(field))}
             </Stack>
@@ -656,6 +681,7 @@ export const PublicFormatPage = () => {
             <Button
               variant="contained"
               fullWidth
+              disabled={!isAuthed && !authError} // Disable if still loading auth (no error yet)
               size="large"
               startIcon={<SendIcon />}
               onClick={handleSubmit}
