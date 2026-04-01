@@ -157,20 +157,40 @@ export class TaskService {
 
   static async deleteTask(task: Task): Promise<ServiceResponse> {
     try {
-      const tasksRef = ref(db, `tasks/${task.key}`);
-      await remove(tasksRef);
+      const taskRef = ref(db, `tasks/${task.key}`);
+      await update(taskRef, { 
+        status: "DELETED", 
+        deletedDate: Date.now() 
+      });
 
       return {
         result: "OK",
         message: "Tarea eliminada exitosamente!",
       };
     } catch (error) {
-      console.error(`Error al intentar eliminar la tarea [key:${task.id}]`, {error});
+      console.error("Error eliminando tarea lógicamente", { task }, error);
       return {
-        result: 'ERROR',
-        message: null,
-        errorMessage: 'Error al intentar eliminar la tarea.'
-      }
+        result: "ERROR",
+        errorMessage: "Error al eliminar tarea.",
+      };
+    }
+  }
+
+  static async physicalDeleteTask(task: Task): Promise<ServiceResponse> {
+    try {
+      const taskRef = ref(db, `tasks/${task.key}`);
+      await remove(taskRef);
+
+      return {
+        result: "OK",
+        message: "Tarea borrada permanentemente de la base de datos!",
+      };
+    } catch (error) {
+      console.error("Error eliminando tarea físicamente", { task }, error);
+      return {
+        result: "ERROR",
+        errorMessage: "Error al borrar tarea físicamente.",
+      };
     }
   }
 
@@ -192,6 +212,46 @@ export class TaskService {
         message: null,
         errorMessage: 'Error al intentar eliminar las tareas del grupo.'
       }
+    }
+  }
+
+  static async cleanupDeletedTasks(): Promise<ServiceResponse> {
+    try {
+      const tasksRef = ref(db, 'tasks');
+      const snapshot = await get(tasksRef);
+      const tasksData = snapshot.val();
+
+      if (!tasksData) return { result: "OK", message: "No tasks to cleanup" };
+
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const deletions: Promise<void>[] = [];
+
+      Object.keys(tasksData).forEach((key) => {
+        const task = tasksData[key] as Task;
+        if (task.status === 'DELETED' && task.deletedDate) {
+          if (now - task.deletedDate > thirtyDaysMs) {
+            deletions.push(remove(ref(db, `tasks/${key}`)));
+          }
+        }
+      });
+
+      if (deletions.length > 0) {
+        await Promise.all(deletions);
+        console.log(`Cleanup: Physically deleted ${deletions.length} tasks older than 30 days.`);
+      }
+
+      return {
+        result: "OK",
+        message: `Se eliminaron físicamente ${deletions.length} tareas.`,
+      };
+    } catch (error) {
+      console.error("Error cleaning up deleted tasks", error);
+      return {
+        result: "ERROR",
+        errorMessage: "Error en la limpieza de tareas.",
+      };
     }
   }
 }
