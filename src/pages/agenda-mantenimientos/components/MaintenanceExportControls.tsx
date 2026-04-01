@@ -83,7 +83,8 @@ export const MaintenanceExportControls: React.FC<Props> = ({ schedules, setSnack
     const sortedData = [...filtered].sort((a, b) => dayjs(a.dateStr).diff(dayjs(b.dateStr)));
 
     const excelData = sortedData.map(s => ({
-      'Título': s.title,
+      'Proyecto': s.projectName || '-',
+      'Actividad': s.title,
       'Fecha': dayjs(s.dateStr).format('DD/MM/YYYY'),
       'Hora': dayjs(s.dateStr).format('HH:mm'),
       'Dirección': s.address,
