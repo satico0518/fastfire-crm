@@ -45,7 +45,6 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import BuildIcon from "@mui/icons-material/Build";
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
 
@@ -256,7 +255,8 @@ export const FormatSelector = () => {
                 '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
               },
               '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 },
+              gridColumn: isObservationField ? { sm: "1 / -1" } : undefined
             }}
           />
         );
@@ -391,12 +391,22 @@ export const FormatSelector = () => {
         const options = field.options || ["SI", "NO", "NA"];
         const currentValue = (getValue(field.name) as string) || "";
         return (
-          <Box key={field.name} sx={{ mb: 2 }}>
-            <FormLabel component="legend" sx={{ fontSize: "0.85rem", mb: 1, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
-              {field.label}
-              {field.required && <span style={{ color: '#ff453a', marginLeft: 4 }}>*</span>}
-            </FormLabel>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box 
+            key={field.name} 
+            sx={{ 
+              display: 'contents',
+            }}
+          >
+            {/* Label spans both columns */}
+            <Box sx={{ gridColumn: '1 / -1', mt: 1 }}>
+              <FormLabel component="legend" sx={{ fontSize: "0.85rem", mb: 0.5, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                {field.label}
+                {field.required && <span style={{ color: '#ff453a', marginLeft: 4 }}>*</span>}
+              </FormLabel>
+            </Box>
+            
+            {/* Buttons occupy only the first column */}
+            <Box sx={{ gridColumn: '1', display: 'flex', gap: 1, mb: 2 }}>
               {options.map((option: string) => (
                 <Button
                   key={option}
@@ -433,11 +443,8 @@ export const FormatSelector = () => {
           setValue(field.name, updated);
         };
         return (
-          <Box key={field.name} sx={{ border: "1px solid", borderColor: "rgba(255,255,255,0.1)", borderRadius: 3, p: 2, mb: 1, bgcolor: "rgba(255,255,255,0.02)" }}>
-            <FormLabel component="legend" sx={{ fontSize: "0.78rem", mb: 0.5, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
-              {field.label}
-            </FormLabel>
-            <FormGroup>
+          <Box key={field.name} sx={{ alignSelf: 'end', mb: 1, ml: 0.5, transform: 'translateY(-6px)' }}>
+            <FormGroup row>
               {(field.options || []).map((option) => (
                 <FormControlLabel
                   key={option}
@@ -446,9 +453,18 @@ export const FormatSelector = () => {
                       size="small"
                       checked={selectedOptions.includes(option)}
                       onChange={() => toggle(option)}
+                      sx={{ 
+                        color: 'rgba(255,255,255,0.5)',
+                        '&.Mui-checked': { color: '#0a84ff' },
+                        py: 0
+                      }}
                     />
                   }
-                  label={<Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>{option}</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
+                      {field.options?.length === 1 ? field.label : option}
+                    </Typography>
+                  }
                 />
               ))}
             </FormGroup>

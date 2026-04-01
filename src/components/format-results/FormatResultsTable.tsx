@@ -31,7 +31,6 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import BuildIcon from "@mui/icons-material/Build";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -47,7 +46,6 @@ const FORMAT_ICONS: Record<FormatTypeId, ElementType<SvgIconProps>> = {
   AVANCE_OBRA: EngineeringIcon,
   ADICIONALES: AddCircleOutlineIcon,
   ACTA_ENTREGA: AssignmentTurnedInIcon,
-  REPORTE_MANTENIMIENTO: BuildIcon,
   ACTA_VISITA_MANTENIMIENTO: AssignmentTurnedInIcon,
 };
 
@@ -56,7 +54,6 @@ const cardGradients: Record<FormatTypeId, string> = {
   AVANCE_OBRA: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
   ADICIONALES: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
   ACTA_ENTREGA: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  REPORTE_MANTENIMIENTO: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
   ACTA_VISITA_MANTENIMIENTO: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
 };
 
