@@ -61,7 +61,7 @@ import {
 } from "../../utils/utils";
 import { useUsersStore } from "../../stores/users/users.store";
 import { TaskService } from "../../services/task.service";
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { useAuhtStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
@@ -105,6 +105,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const [historyTask, setHistoryTask] = useState<Task | null>(null);
   const [openHistoryDialog, setOpenHistoryDialog] = useState(false);
   const [showArchivedTasks, setShowArchivedTasks] = useState(false);
+  const [showDeletedTasks, setShowDeletedTasks] = useState(false);
   const [filterModel, setFilterModel] = useState<GridFilterModel>({
     items: [],
   });
@@ -126,6 +127,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
 
   const [openNotesDialog, setOpenNotesDialog] = useState(false);
   const [taskNotes, setTaskNotes] = useState<string | null>();
+
+  useEffect(() => {
+    TaskService.cleanupDeletedTasks();
+  }, []);
 
 
   const translateHistoryAction = (action: string) => {
@@ -443,18 +448,26 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   };
 
   const handleDeleteTask = async (task: Task) => {
-    const deleteResult = await TaskService.deleteTask(task);
+    const isAdmin = currentUser?.permissions?.includes("ADMIN");
+    const isAlreadyDeleted = task.status === "DELETED";
+    
+    let deleteResult;
+    if (isAlreadyDeleted && isAdmin) {
+      deleteResult = await TaskService.physicalDeleteTask(task);
+    } else {
+      deleteResult = await TaskService.deleteTask(task);
+    }
 
-    if (deleteResult)
+    if (deleteResult.result === "OK")
       setSnackbar({
         open: true,
-        message: "Tarea eliminada exitosamente!",
+        message: (deleteResult.message as string) || "Operación exitosa!",
         severity: "success",
       });
     else
       setSnackbar({
         open: true,
-        message: "Error al eliminar tarea.",
+        message: (deleteResult.errorMessage as string) || "Error al eliminar tarea.",
         severity: "error",
       });
 
@@ -462,11 +475,16 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   };
 
   const handleDeleteConfirmation = (task: Task) => {
+    const isDeleted = task.status === "DELETED";
     setConfirmation({
       open: true,
       title: "Confirmación!",
-      text: `Vas a eliminar la tarea "${task.name.toUpperCase()}", no podrás volver a verla ni revisar su historial.`,
-      actions: <Button onClick={() => handleDeleteTask(task)}>Eliminar</Button>,
+      text: isDeleted 
+        ? `¿Estás seguro de borrar físicamente de la BASE DE DATOS la tarea "${task.name.toUpperCase()}"? Esta acción no se puede deshacer.`
+        : `Vas a eliminar la tarea "${task.name.toUpperCase()}". Podrás recuperarla desde la pestaña de "Eliminadas" durante los próximos 30 días.`,
+      actions: <Button color={isDeleted ? "error" : "primary"} onClick={() => handleDeleteTask(task)}>
+        {isDeleted ? "Borrar BD" : "Eliminar"}
+      </Button>,
     });
   };
 
@@ -503,33 +521,31 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     if (workgroup) {
       return tasks
         ?.filter((t) => t.workgroupKeys?.some((k) => workgroup.key === k))
-        .filter(
-          (t) =>
-            t.status !== "DELETED" &&
-            (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
-        ) as Task[];
+        .filter((t) => {
+          if (showDeletedTasks) return t.status === "DELETED";
+          if (t.status === "DELETED") return false;
+          return showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED";
+        }) as Task[];
     }
 
     if (!currentUser?.permissions.includes("ADMIN"))
       return getFilteredByTags(
         tasks
-          ?.filter((t) =>
-            currentUser?.workgroupKeys.some((k) => t.workgroupKey === k)
-          )
-          .filter(
-            (t) =>
-              t.status !== "DELETED" &&
-              (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
-          ) as Task[]
+          ?.filter((t) => currentUser?.workgroupKeys.some((k) => t.workgroupKey === k))
+          .filter((t) => {
+            if (showDeletedTasks) return t.status === "DELETED";
+            if (t.status === "DELETED") return false;
+            return showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED";
+          }) as Task[]
       );
 
     return getFilteredByTags(
       tasks !== null
-        ? tasks?.filter(
-            (t) =>
-              t.status !== "DELETED" &&
-              (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
-          )
+        ? tasks?.filter((t) => {
+            if (showDeletedTasks) return t.status === "DELETED";
+            if (t.status === "DELETED") return false;
+            return showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED";
+          })
         : []
     );
   };
@@ -588,7 +604,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           hidden={!currentUser?.permissions?.includes("ADMIN")}
           icon={<DeleteOutlineOutlinedIcon color="error" />}
           onClick={() => handleDeleteConfirmation(params.row)}
-          label="Eliminar"
+          label={params.row.status === "DELETED" ? "Borrar BD" : "Eliminar"}
+          sx={params.row.status === "DELETED" ? { 
+            color: '#ff453a !important', 
+            fontWeight: 'bold',
+            '& .MuiTypography-root': { fontWeight: 'bold' } 
+          } : {}}
           showInMenu
         />,
       ],
@@ -1240,6 +1261,39 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             labelPlacement="end"
           />
 
+          {/* Eliminadas toggle */}
+          <FormControlLabel
+            sx={{
+              color: 'rgba(255,255,255,0.75)',
+              margin: 0,
+              background: showDeletedTasks
+                ? 'rgba(255,69,58,0.15)'
+                : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${showDeletedTasks ? 'rgba(255,69,58,0.5)' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius: '10px',
+              padding: '2px 10px 2px 4px',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s ease',
+              fontSize: '0.8rem',
+            }}
+            control={
+              <Switch
+                size="small"
+                color="error"
+                title="Eliminadas"
+                checked={showDeletedTasks}
+                onChange={() => {
+                  setShowDeletedTasks(!showDeletedTasks);
+                  if (!showDeletedTasks) setShowArchivedTasks(false);
+                }}
+              />
+            }
+            label={
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Eliminadas</span>
+            }
+            labelPlacement="end"
+          />
+
           {/* Excel button */}
           <Button
             onClick={handleExport}
@@ -1339,10 +1393,11 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         >
           <MenuList dense sx={{ maxHeight: 300, overflowY: "auto", minWidth: 200 }}>
             {(() => {
-              const baseTasks = (tasks ?? []).filter(t =>
-                t.status !== "DELETED" &&
-                (showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED")
-              );
+              const baseTasks = (tasks ?? []).filter(t => {
+                if (showDeletedTasks) return t.status === "DELETED";
+                if (t.status === "DELETED") return false;
+                return showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED";
+              });
               const tagCountMap = new Map<string, number>();
               baseTasks.forEach(t => {
                 t.tags?.forEach(tag => {
