@@ -23,6 +23,9 @@ import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlin
 import dayjs from 'dayjs';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 
 interface Props {
   open: boolean;
@@ -56,11 +59,15 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   const [ubication, setUbication] = useState('');
   const [activity, setActivity] = useState('');
   const [obs, setObs] = useState('');
+  const [projectName, setProjectName] = useState('');
   const [dateVal, setDateVal] = useState(selectedDateStr || '');
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   
   const [hasQuotation, setHasQuotation] = useState<'SI' | 'NO' | 'NA'>('NO');
   const [quotationNumber, setQuotationNumber] = useState('');
   const [hasReport, setHasReport] = useState<'SI' | 'NO' | 'NA'>('NO');
+  const [reportNumber, setReportNumber] = useState('');
 
   const isEditMode = !!editingSchedule;
 
@@ -70,24 +77,41 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       setUbication(editingSchedule.address || '');
       setActivity(editingSchedule.title || '');
       setObs(editingSchedule.observations || '');
+      setProjectName(editingSchedule.projectName || '');
       setDateVal(editingSchedule.dateStr ? dayjs(editingSchedule.dateStr).format('YYYY-MM-DDTHH:mm') : '');
       setHasQuotation(editingSchedule.hasQuotation || 'NO');
       setQuotationNumber(editingSchedule.quotationNumber || '');
       setHasReport(editingSchedule.hasReport || 'NO');
+      setReportNumber(editingSchedule.reportNumber || '');
+      setContactName(editingSchedule.contactName || '');
+      setContactPhone(editingSchedule.contactPhone || '');
     } else if (open && selectedDateStr) {
       {/* Modo creación: inicializar con fecha seleccionada */}
       setDateVal(selectedDateStr + 'T08:00');
       setUbication('');
       setActivity('');
+      setProjectName('');
       setObs('');
       setHasQuotation('NO');
       setQuotationNumber('');
       setHasReport('NO');
+      setReportNumber('');
+      setContactName('');
+      setContactPhone('');
     }
   }, [open, selectedDateStr, editingSchedule]);
 
   const handleSave = async () => {
-    if (!ubication || !activity || !dateVal) return;
+    if (!projectName || !ubication || !activity || !dateVal) return;
+    
+    if (projectName.length > 50) {
+      setSnackbar({
+        open: true,
+        message: 'El nombre del proyecto no puede superar los 50 caracteres',
+        severity: 'warning'
+      });
+      return;
+    }
 
     if (dayjs(dateVal).isBefore(dayjs().startOf('day'))) {
       setSnackbar({
@@ -107,20 +131,31 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       return;
     }
 
+    if (hasReport === 'SI' && !reportNumber.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Debes completar el número de informe',
+        severity: 'warning'
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (isEditMode && editingSchedule) {
         {/* Modo actualización */}
         const updates: Partial<MaintenanceSchedule> = {
+          projectName,
           title: activity,
           dateStr: new Date(dateVal).toISOString(),
           address: ubication,
-          description: activity,
           observations: obs,
           hasQuotation,
           quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
-          hasReport,
+          reportNumber: hasReport === 'SI' ? reportNumber : '',
+          contactName,
+          contactPhone,
         };
 
         const resp = await MaintenanceService.updateSchedule(
@@ -139,10 +174,14 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           {/* Reset y cierre */}
           setUbication('');
           setActivity('');
+          setProjectName('');
           setObs('');
           setHasQuotation('NO');
           setQuotationNumber('');
           setHasReport('NO');
+          setReportNumber('');
+          setContactName('');
+          setContactPhone('');
           onClose();
         } else {
           setSnackbar({
@@ -154,14 +193,17 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       } else {
         {/* Modo creación */}
         const newSched: Omit<MaintenanceSchedule, 'id'> = {
+          projectName,
           title: activity,
           dateStr: new Date(dateVal).toISOString(),
           address: ubication,
-          description: activity,
           observations: obs,
           hasQuotation,
           quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
           hasReport,
+          reportNumber: hasReport === 'SI' ? reportNumber : '',
+          contactName,
+          contactPhone,
           status: 'SCHEDULED',
           priority: 'NORMAL',
           createdAt: new Date().toISOString(),
@@ -173,10 +215,14 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
         {/* Reset y cierre */}
         setUbication('');
         setActivity('');
+        setProjectName('');
         setObs('');
         setHasQuotation('NO');
         setQuotationNumber('');
         setHasReport('NO');
+        setReportNumber('');
+        setContactName('');
+        setContactPhone('');
         onClose();
       }
     } finally {
@@ -215,6 +261,23 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       
       <DialogContent sx={{ px: 3, pt: 1 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          
+          <Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
+              <BusinessOutlinedIcon fontSize="small" /> Nombre del Proyecto *
+            </Typography>
+            <TextField 
+              fullWidth
+              placeholder="Ej: Mantenimiento Preventivo Q1"
+              variant="outlined"
+              size="small"
+              required
+              inputProps={{ maxLength: 50 }}
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              sx={darkInputFieldSx}
+            />
+          </Box>
           
           <Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
@@ -266,6 +329,37 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
               onChange={(e) => setActivity(e.target.value)}
               sx={darkInputFieldSx}
             />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
+                <PersonOutlinedIcon fontSize="small" /> Nombre de Contacto
+              </Typography>
+              <TextField 
+                fullWidth
+                placeholder="Nombre de quien recibe"
+                variant="outlined"
+                size="small"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                sx={darkInputFieldSx}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
+                <PhoneOutlinedIcon fontSize="small" /> Teléfono
+              </Typography>
+              <TextField 
+                fullWidth
+                placeholder="Celular / Fijo"
+                variant="outlined"
+                size="small"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                sx={darkInputFieldSx}
+              />
+            </Box>
           </Box>
 
            <Box>
@@ -334,6 +428,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                size="small"
                fullWidth
                sx={{ 
+                 mb: hasReport === 'SI' ? 1.5 : 0,
                  bgcolor: 'rgba(255,255,255,0.05)',
                  borderRadius: '12px',
                  overflow: 'hidden',
@@ -355,6 +450,26 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                <ToggleButton value="NO">NO</ToggleButton>
                <ToggleButton value="NA">NA</ToggleButton>
              </ToggleButtonGroup>
+
+             {hasReport === 'SI' && (
+               <TextField 
+                 fullWidth
+                 placeholder="Escribe el Nº de Informe..."
+                 variant="outlined"
+                 size="small"
+                 required
+                 value={reportNumber}
+                 onChange={(e) => setReportNumber(e.target.value)}
+                 sx={{ 
+                   mt: 1,
+                   ...darkInputFieldSx,
+                   '& .MuiOutlinedInput-root': {
+                     ...darkInputFieldSx['& .MuiOutlinedInput-root'],
+                     '&.Mui-focused fieldset': { borderColor: '#0a84ff' }
+                   }
+                 }}
+               />
+             )}
            </Box>
 
            <Box>
@@ -391,7 +506,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
         <Button 
           variant="contained" 
           onClick={handleSave}
-          disabled={!activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim()) || isLoading}
+          disabled={!projectName || !activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim()) || (hasReport === 'SI' && !reportNumber.trim()) || isLoading}
           sx={{ 
             bgcolor: 'rgba(10,132,255,0.2)', 
             border: '1px solid rgba(10,132,255,0.5)',

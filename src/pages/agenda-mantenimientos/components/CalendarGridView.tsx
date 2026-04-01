@@ -248,7 +248,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
                                 lineHeight: 1.2,
                                 fontSize: '0.7rem'
                               }}>
-                                {dayjs(sch.dateStr).format('HH:mm')} {sch.title}
+                                {dayjs(sch.dateStr).format('HH:mm')} {sch.projectName}
                               </Typography>
                             </Box>
                           </Tooltip>

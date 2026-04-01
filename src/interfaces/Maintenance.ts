@@ -6,6 +6,7 @@ export interface MaintenanceAuditEntry {
 
 export interface MaintenanceSchedule {
   id: string;
+  projectName: string;
   title: string; 
   dateStr: string; 
   address: string; 
@@ -18,6 +19,7 @@ export interface MaintenanceSchedule {
   hasQuotation?: 'SI' | 'NO' | 'NA';
   quotationNumber?: string;
   hasReport?: 'SI' | 'NO' | 'NA';
+  reportNumber?: string;
   createdAt: string;
   createdBy: string;
   updatedAt?: string;

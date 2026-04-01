@@ -55,7 +55,7 @@ export const ScheduleCard: React.FC<Props> = ({ schedule }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
             <Box sx={{ maxWidth: '75%' }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, color: 'white', fontSize: '1rem' }}>
-                {schedule.title}
+                {schedule.projectName}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
