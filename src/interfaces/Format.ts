@@ -10,6 +10,7 @@ export interface FormatField {
   options?: string[]; // for select and checkbox-group types
   placeholder?: string;
   minDateFromField?: string; // Name of another date/datetime field that acts as minimum date
+  minRows?: number;
   
   // Specific properties for "dynamic-group"
   subFields?: FormatField[]; 

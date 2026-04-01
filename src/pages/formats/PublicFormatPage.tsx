@@ -250,8 +250,8 @@ export const PublicFormatPage = () => {
             fullWidth
             size="small"
             multiline
-            minRows={3}
-            maxRows={6}
+            minRows={field.minRows || 3}
+            maxRows={field.minRows ? field.minRows + 3 : 6}
             sx={{
               '& .MuiOutlinedInput-root': {
                 color: 'white',

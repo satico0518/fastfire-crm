@@ -671,6 +671,195 @@ export const FORMAT_CATALOG: FormatType[] = [
           { name: "extintores_vencimiento", label: "Fecha de vencimiento de los extintores", type: "date", required: true },
         ],
       },
+
+      // Inspección Detección
+      {
+        name: "inspeccion_deteccion",
+        label: "INSPECCIÓN DETECCIÓN",
+        type: "section",
+        required: false,
+        subFields: [
+          {
+            name: "deteccion_cuenta_sistema",
+            label: "Cuentan con sistema de detección",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_cuenta_sistema_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_cuenta_sistema_obs",
+            label: "Detalle de la observación",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese el detalle...",
+          },
+
+          {
+            name: "deteccion_panel_propio",
+            label: "Cuentan con panel de control propio",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_panel_propio_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_panel_propio_obs",
+            label: "Detalle de la observación",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese el detalle...",
+          },
+
+          {
+            name: "deteccion_voltaje_baterias",
+            label: "Voltaje de baterías del panel",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_voltaje_baterias_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_voltaje_baterias_obs",
+            label: "Voltaje / Detalle de la observación",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese el voltaje u observación...",
+          },
+
+          {
+            name: "deteccion_cuantos_detectores",
+            label: "Cuántos detectores instalados",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_cuantos_detectores_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_cuantos_detectores_obs",
+            label: "Cantidad / Detalle de la observación",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese cantidad u observación...",
+          },
+
+          {
+            name: "deteccion_tipo_marca",
+            label: "Tipo de detectores y marca",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_tipo_marca_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_tipo_marca_obs",
+            label: "Detalle (tipo/marca)",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese tipo, marca u observación...",
+          },
+
+          {
+            name: "deteccion_estaciones_manuales",
+            label: "Tiene estaciones manuales y cuantas",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_estaciones_manuales_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_estaciones_manuales_obs",
+            label: "Cantidad / Detalle de la observación",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese cantidad u observación...",
+          },
+
+          {
+            name: "deteccion_luces_estrobo",
+            label: "Tiene luces de estrobo y cuántas",
+            type: "switch",
+            required: true,
+            options: ["SI", "NO", "NA"],
+          },
+          {
+            name: "deteccion_luces_estrobo_obs_check",
+            label: "Observación",
+            type: "checkbox-group",
+            required: false,
+            options: ["observacion"],
+          },
+          {
+            name: "deteccion_luces_estrobo_obs",
+            label: "Cantidad / Detalle de la observación",
+            type: "textarea",
+            required: false,
+            placeholder: "Ingrese cantidad u observación...",
+          },
+        ],
+      },
+
+      // Descripción Final
+      {
+        name: "seccion_final",
+        label: "REPORTE FINAL",
+        type: "section",
+        required: false,
+        subFields: [
+          {
+            name: "reporte_descripcion_general",
+            label: "DESCRIPCIÓN GENERAL DE LA INSPECCIÓN",
+            type: "textarea",
+            required: false,
+            minRows: 5,
+            placeholder: "Escriba aquí la descripción detallada...",
+          },
+          {
+            name: "reporte_recomendaciones",
+            label: "RECOMENDACIONES",
+            type: "textarea",
+            required: false,
+            minRows: 5,
+            placeholder: "Escriba aquí las recomendaciones...",
+          },
+        ],
+      },
     ],
   },
 ];
