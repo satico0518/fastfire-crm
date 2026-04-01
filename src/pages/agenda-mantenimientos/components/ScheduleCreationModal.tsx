@@ -61,6 +61,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   const [hasQuotation, setHasQuotation] = useState<'SI' | 'NO' | 'NA'>('NO');
   const [quotationNumber, setQuotationNumber] = useState('');
   const [hasReport, setHasReport] = useState<'SI' | 'NO' | 'NA'>('NO');
+  const [reportNumber, setReportNumber] = useState('');
 
   const isEditMode = !!editingSchedule;
 
@@ -74,6 +75,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       setHasQuotation(editingSchedule.hasQuotation || 'NO');
       setQuotationNumber(editingSchedule.quotationNumber || '');
       setHasReport(editingSchedule.hasReport || 'NO');
+      setReportNumber(editingSchedule.reportNumber || '');
     } else if (open && selectedDateStr) {
       {/* Modo creación: inicializar con fecha seleccionada */}
       setDateVal(selectedDateStr + 'T08:00');
@@ -83,6 +85,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       setHasQuotation('NO');
       setQuotationNumber('');
       setHasReport('NO');
+      setReportNumber('');
     }
   }, [open, selectedDateStr, editingSchedule]);
 
@@ -107,6 +110,15 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       return;
     }
 
+    if (hasReport === 'SI' && !reportNumber.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Debes completar el número de informe',
+        severity: 'warning'
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -121,6 +133,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           hasQuotation,
           quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
           hasReport,
+          reportNumber: hasReport === 'SI' ? reportNumber : '',
         };
 
         const resp = await MaintenanceService.updateSchedule(
@@ -143,6 +156,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           setHasQuotation('NO');
           setQuotationNumber('');
           setHasReport('NO');
+          setReportNumber('');
           onClose();
         } else {
           setSnackbar({
@@ -162,6 +176,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           hasQuotation,
           quotationNumber: hasQuotation === 'SI' ? quotationNumber : '',
           hasReport,
+          reportNumber: hasReport === 'SI' ? reportNumber : '',
           status: 'SCHEDULED',
           priority: 'NORMAL',
           createdAt: new Date().toISOString(),
@@ -177,6 +192,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
         setHasQuotation('NO');
         setQuotationNumber('');
         setHasReport('NO');
+        setReportNumber('');
         onClose();
       }
     } finally {
@@ -334,6 +350,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                size="small"
                fullWidth
                sx={{ 
+                 mb: hasReport === 'SI' ? 1.5 : 0,
                  bgcolor: 'rgba(255,255,255,0.05)',
                  borderRadius: '12px',
                  overflow: 'hidden',
@@ -355,6 +372,26 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
                <ToggleButton value="NO">NO</ToggleButton>
                <ToggleButton value="NA">NA</ToggleButton>
              </ToggleButtonGroup>
+
+             {hasReport === 'SI' && (
+               <TextField 
+                 fullWidth
+                 placeholder="Escribe el Nº de Informe..."
+                 variant="outlined"
+                 size="small"
+                 required
+                 value={reportNumber}
+                 onChange={(e) => setReportNumber(e.target.value)}
+                 sx={{ 
+                   mt: 1,
+                   ...darkInputFieldSx,
+                   '& .MuiOutlinedInput-root': {
+                     ...darkInputFieldSx['& .MuiOutlinedInput-root'],
+                     '&.Mui-focused fieldset': { borderColor: '#0a84ff' }
+                   }
+                 }}
+               />
+             )}
            </Box>
 
            <Box>
@@ -391,7 +428,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
         <Button 
           variant="contained" 
           onClick={handleSave}
-          disabled={!activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim()) || isLoading}
+          disabled={!activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim()) || (hasReport === 'SI' && !reportNumber.trim()) || isLoading}
           sx={{ 
             bgcolor: 'rgba(10,132,255,0.2)', 
             border: '1px solid rgba(10,132,255,0.5)',

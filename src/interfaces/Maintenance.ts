@@ -18,6 +18,7 @@ export interface MaintenanceSchedule {
   hasQuotation?: 'SI' | 'NO' | 'NA';
   quotationNumber?: string;
   hasReport?: 'SI' | 'NO' | 'NA';
+  reportNumber?: string;
   createdAt: string;
   createdBy: string;
   updatedAt?: string;

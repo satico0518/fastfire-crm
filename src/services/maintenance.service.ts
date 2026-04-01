@@ -93,7 +93,7 @@ export class MaintenanceService {
 
       // Detecta qué cambió
       const changes: Record<string, { old: any; new: any }> = {};
-      const fieldsToTrack = ['title', 'dateStr', 'address', 'status', 'description', 'observations', 'contactName', 'contactPhone', 'priority', 'hasQuotation', 'quotationNumber', 'hasReport'];
+      const fieldsToTrack = ['title', 'dateStr', 'address', 'status', 'description', 'observations', 'contactName', 'contactPhone', 'priority', 'hasQuotation', 'quotationNumber', 'hasReport', 'reportNumber'];
       
       fieldsToTrack.forEach(field => {
         const fieldKey = field as keyof MaintenanceSchedule;
