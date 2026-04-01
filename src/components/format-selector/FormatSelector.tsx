@@ -108,7 +108,9 @@ export const FormatSelector = () => {
       const missingRequired: string[] = [];
       const validateFields = (fields: any[], data: Record<string, unknown>, parentContext = "") => {
         fields.forEach(f => {
-          if (f.type === "dynamic-group") {
+          if (f.type === "section" && f.subFields) {
+            validateFields(f.subFields, data, parentContext);
+          } else if (f.type === "dynamic-group") {
             const arr = data[f.name] as Record<string, unknown>[];
             if (f.required && (!arr || arr.length === 0)) {
                missingRequired.push(`${parentContext}${f.label}`);
@@ -135,6 +137,27 @@ export const FormatSelector = () => {
           severity: "warning",
         });
         return;
+      }
+
+      // Validación especial para Acta de Visita Mantenimiento (Extintores)
+      if (selectedFormat.id === "ACTA_VISITA_MANTENIMIENTO") {
+        const extOtros = String(formData.ext_otros || "").trim();
+        // Solo validar suma si "Otros" está vacío
+        if (!extOtros) {
+          const totalDeclared = Number(formData.extintores_total || 0);
+          const capacitySum = Object.keys(formData)
+            .filter(key => key.startsWith("ext_a_") || key.startsWith("ext_b_") || key.startsWith("ext_multi_"))
+            .reduce((acc, key) => acc + Number(formData[key] || 0), 0);
+
+          if (totalDeclared !== capacitySum) {
+            setSnackbar({
+              open: true,
+              message: `La suma de extintores por capacidad (${capacitySum}) no coincide con el total declarado (${totalDeclared}). Revise los valores o detalle en el campo 'Otros'.`,
+              severity: "error",
+            });
+            return;
+          }
+        }
       }
     }
 
@@ -419,29 +442,40 @@ export const FormatSelector = () => {
             
             {/* Buttons occupy only the first column */}
             <Box sx={{ gridColumn: '1', display: 'flex', gap: 1, mb: 2 }}>
-              {options.map((option: string) => (
-                <Button
-                  key={option}
-                  variant={currentValue === option ? "contained" : "outlined"}
-                  size="small"
-                  onClick={() => setValue(field.name, option)}
-                  sx={{
-                    flex: 1,
-                    borderRadius: 2,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    bgcolor: currentValue === option ? 'rgba(10,132,255,0.9)' : 'transparent',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    color: currentValue === option ? 'white' : 'rgba(255,255,255,0.7)',
-                    '&:hover': {
-                      bgcolor: currentValue === option ? 'rgba(10,132,255,1)' : 'rgba(255,255,255,0.1)',
-                      borderColor: 'rgba(255,255,255,0.5)',
-                    },
-                  }}
-                >
-                  {option}
-                </Button>
-              ))}
+              {options.map((option: string) => {
+                const isSelected = currentValue === option;
+                let activeColor = '#0a84ff'; // Default blue
+                if (option.toUpperCase() === 'SI') activeColor = '#34c759'; // Success green
+                if (option.toUpperCase() === 'NO') activeColor = '#ff453a'; // Error red
+                if (option.toUpperCase() === 'NA') activeColor = '#0a84ff'; // Info blue
+
+                return (
+                  <Button
+                    key={option}
+                    variant={isSelected ? "contained" : "outlined"}
+                    size="small"
+                    onClick={() => setValue(field.name, option)}
+                    sx={{
+                      flex: 1,
+                      borderRadius: 2,
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      bgcolor: isSelected ? activeColor : 'transparent',
+                      borderColor: isSelected ? activeColor : 'rgba(255,255,255,0.2)',
+                      color: isSelected ? 'white' : 'rgba(255,255,255,0.6)',
+                      '&:hover': {
+                        bgcolor: isSelected ? activeColor : 'rgba(255,255,255,0.05)',
+                        borderColor: isSelected ? activeColor : 'rgba(255,255,255,0.4)',
+                        opacity: 0.9
+                      },
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? `0 0 12px ${activeColor}44` : 'none',
+                    }}
+                  >
+                    {option}
+                  </Button>
+                );
+              })}
             </Box>
           </Box>
         );
