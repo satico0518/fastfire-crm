@@ -233,30 +233,30 @@ export const getColumnsForFormat = (
 
     case "ACTA_VISITA_MANTENIMIENTO":
       return [
-        { field: dataField("numero_acta"), headerName: "N° Acta", width: 120, valueGetter: dataGetter("numero_acta") },
-        { field: dataField("fecha_visita"), headerName: "Fecha Visita", width: 120, valueGetter: dataGetter("fecha_visita") },
-        { field: dataField("proyecto"), headerName: "Proyecto/Cliente", width: 160, valueGetter: dataGetter("proyecto") },
-        { field: dataField("tecnico_responsable"), headerName: "Técnico", width: 140, valueGetter: dataGetter("tecnico_responsable") },
-        { field: dataField("tipo_visita"), headerName: "Tipo Visita", width: 120, valueGetter: dataGetter("tipo_visita") },
-        { field: dataField("contacto_cliente"), headerName: "Contacto", width: 140, valueGetter: dataGetter("contacto_cliente") },
+        { field: dataField("fecha"), headerName: "Fecha", width: 120, valueGetter: dataGetter("fecha") },
+        { field: dataField("cliente"), headerName: "Cliente", width: 160, valueGetter: dataGetter("cliente") },
+        { field: dataField("proyecto_tienda"), headerName: "Proyecto / Tienda", width: 180, valueGetter: dataGetter("proyecto_tienda") },
+        { field: dataField("direccion"), headerName: "Dirección", width: 180, valueGetter: dataGetter("direccion") },
+        { field: dataField("extintores_total"), headerName: "Total Ext.", width: 100, valueGetter: dataGetter("extintores_total") },
+        { field: dataField("ciudad"), headerName: "Ciudad", width: 130, valueGetter: dataGetter("ciudad") },
         {
-          field: dataField("firma_tecnico"),
+          field: dataField("firma_fastfire_digital"),
           headerName: "Firma Técnico",
-          width: 120,
+          width: 140,
           sortable: false,
-          valueGetter: dataGetter("firma_tecnico"),
+          valueGetter: dataGetter("firma_fastfire_digital"),
           renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
-            <ImageCell value={p.row.data?.firma_tecnico} label="Firma Técnico" />
+            <ImageCell value={p.row.data?.firma_fastfire_digital} label="Firma Técnico" />
           ),
         },
         {
-          field: dataField("firma_cliente"),
+          field: dataField("firma_cliente_digital"),
           headerName: "Firma Cliente",
-          width: 120,
+          width: 140,
           sortable: false,
-          valueGetter: dataGetter("firma_cliente"),
+          valueGetter: dataGetter("firma_cliente_digital"),
           renderCell: (p: GridRenderCellParams<FormatSubmission>) => (
-            <ImageCell value={p.row.data?.firma_cliente} label="Firma Cliente" />
+            <ImageCell value={p.row.data?.firma_cliente_digital} label="Firma Cliente" />
           ),
         },
         ...shared,

@@ -381,9 +381,107 @@ export const FormatResultsTable = () => {
     if (!viewSubmission) return null;
     const formatType = getFormatTypeById(viewSubmission.formatTypeId);
     const data = viewSubmission.data || {};
-    const fields: { name: string; label: string; type?: string; calculateSum?: string }[] = formatType
+    const fields = formatType
       ? (formatType.fields as any[])
       : Object.keys(data).map((k) => ({ name: k, label: k }));
+
+    const renderFields = (fieldsArray: any[], currentData: Record<string, any>) => {
+      return fieldsArray.map((f) => {
+        // Handle Section type
+        if (f.type === "section" && f.subFields) {
+          const hasDataInSection = f.subFields.some((sub: any) => {
+            const v = currentData[sub.name];
+            return v !== undefined && v !== null && v !== "";
+          });
+
+          return (
+            <Box key={f.name} sx={{ mb: 4 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ 
+                  color: "#0a84ff", 
+                  fontWeight: 900, 
+                  mb: 1.5, 
+                  borderBottom: '1px solid rgba(10,132,255,0.2)', 
+                  pb: 1,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}
+              >
+                {f.label}
+              </Typography>
+              <Box sx={{ pl: 1, borderLeft: '2px solid rgba(255,255,255,0.05)' }}>
+                {hasDataInSection ? (
+                  renderFields(f.subFields, currentData)
+                ) : (
+                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.4)", fontStyle: "italic", py: 1 }}>
+                    — Sin información registrada
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          );
+        }
+
+        // Handle Header type (Internal titles)
+        if (f.type === "header") {
+          return (
+            <Typography 
+              key={f.name} 
+              variant="caption" 
+              sx={{ 
+                color: "white", 
+                mt: 3, 
+                mb: 1, 
+                fontWeight: 800, 
+                display: "block",
+                opacity: 0.9,
+                fontSize: '0.7rem',
+                textTransform: 'uppercase',
+                bgcolor: 'rgba(255,255,255,0.05)',
+                p: '4px 8px',
+                borderRadius: '4px',
+                width: 'fit-content'
+              }}
+            >
+              • {f.label}
+            </Typography>
+          );
+        }
+
+        // Normal Field rendering
+        const val = currentData[f.name];
+        const isObservation = f.name.endsWith("_obs");
+        
+        // Skip technical observation trigger fields (those ending with _obs_check)
+        if (f.name.endsWith("_obs_check")) return null;
+
+        // If it's a switch and it's SI/NO/NA, or has a value
+        if (val !== undefined && val !== null && val !== "") {
+          return (
+            <Box key={f.name} sx={{ mb: 2, ml: isObservation ? 3 : 0 }}>
+              <Typography
+                variant="caption"
+                sx={{ 
+                  color: isObservation ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.5)", 
+                  fontWeight: 700, 
+                  textTransform: "uppercase", 
+                  letterSpacing: "0.1em", 
+                  display: "block",
+                  fontStyle: isObservation ? "italic" : "normal",
+                  "&::before": isObservation ? { content: '"└─"', mr: 1, opacity: 0.5 } : {}
+                }}
+              >
+                {f.label}
+              </Typography>
+              {renderFieldValue(f.name, val, f as any, currentData)}
+            </Box>
+          );
+        }
+
+        return null;
+      });
+    };
 
     return (
       <Dialog
@@ -436,17 +534,7 @@ export const FormatResultsTable = () => {
         </DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <Box sx={{ mt: 1 }}>
-            {fields.map((f) => (
-              <Box key={f.name} sx={{ mb: 2 }}>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}
-                >
-                  {f.label}
-                </Typography>
-                {renderFieldValue(f.name, data[f.name], f as any, data)}
-              </Box>
-            ))}
+            {renderFields(fields, data)}
             {viewSubmission.reviewNotes && (
               <Box sx={{ mt: 2, p: 1.5, bgcolor: "rgba(255,159,10,0.1)", borderRadius: 2, border: '1px solid rgba(255,159,10,0.2)' }}>
                 <Typography variant="caption" fontWeight={700} color="#ff9f0a" display="block">
