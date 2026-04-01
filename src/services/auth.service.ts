@@ -2,6 +2,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  signInAnonymously,
 } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
 import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCreateResponse";
@@ -136,6 +137,22 @@ export class AuthService {
       return {
         result: "ERROR",
         errorMessage: "Error cerrando sesión",
+      };
+    }
+  }
+
+  static async signInAnonymously(): Promise<ServiceResponse & { user?: any }> {
+    try {
+      const response = await signInAnonymously(auth);
+      return {
+        result: "OK",
+        user: response.user
+      };
+    } catch (error) {
+      console.error("Error en autenticación anónima", error);
+      return {
+        result: "ERROR",
+        errorMessage: "Error en autenticación anónima"
       };
     }
   }
