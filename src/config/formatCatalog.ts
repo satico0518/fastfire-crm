@@ -668,7 +668,8 @@ export const FORMAT_CATALOG: FormatType[] = [
             placeholder: "Describa otros tipos y sus capacidades..."
           },
           
-          { name: "extintores_vencimiento", label: "Fecha de vencimiento de los extintores", type: "date", required: true },
+          { name: "header_vencimiento", label: "Vencimiento y Control", type: "header", required: false },
+          { name: "ext_vencimiento", label: "Fecha de vencimiento de los extintores", type: "date", required: true },
         ],
       },
 

@@ -423,25 +423,38 @@ export const FormatResultsTable = () => {
           );
         }
 
-        // Handle Header type (Internal titles)
+        // Handle Header (Sub-titles)
         if (f.type === "header") {
+          const currentIdx = fieldsArray.indexOf(f);
+          let hasDataBelow = false;
+          
+          for (let j = currentIdx + 1; j < fieldsArray.length; j++) {
+            const nextF = fieldsArray[j];
+            if (nextF.type === "header") break;
+            const val = currentData[nextF.name];
+            // Safe check: exists, not null, and string version is not empty when trimmed
+            if (val !== undefined && val !== null && String(val).trim() !== "" && !nextF.name.endsWith("_obs_check")) {
+              hasDataBelow = true;
+              break;
+            }
+          }
+
+          if (!hasDataBelow) return null;
+
           return (
-            <Typography 
-              key={f.name} 
-              variant="caption" 
+            <Typography
+              key={f.name}
+              variant="subtitle2"
               sx={{ 
-                color: "white", 
-                mt: 3, 
-                mb: 1, 
-                fontWeight: 800, 
-                display: "block",
-                opacity: 0.9,
-                fontSize: '0.7rem',
-                textTransform: 'uppercase',
-                bgcolor: 'rgba(255,255,255,0.05)',
-                p: '4px 8px',
-                borderRadius: '4px',
-                width: 'fit-content'
+                color: "rgba(255,255,255,0.7)", 
+                fontWeight: 700, 
+                backgroundColor: "rgba(255,255,255,0.05)", 
+                p: 0.8, 
+                borderRadius: 1, 
+                mb: 1.5,
+                fontSize: '0.75rem',
+                display: 'inline-block',
+                width: '100%'
               }}
             >
               • {f.label}

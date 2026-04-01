@@ -104,7 +104,7 @@ export const SignaturePadField = ({
             borderColor: isDrawing ? "primary.main" : "divider",
             borderRadius: 2,
             overflow: "hidden",
-            bgcolor: "rgba(255,255,255,0.03)",
+            bgcolor: "#f9f9f9",
             transition: "border-color 0.2s",
             position: "relative",
           }}
@@ -124,14 +124,14 @@ export const SignaturePadField = ({
                 opacity: 0.4,
               }}
             >
-              <BrushIcon sx={{ fontSize: 28 }} />
-              <Typography variant="caption" sx={{ color: 'white' }}>Firma aquí con el dedo</Typography>
+              <BrushIcon sx={{ fontSize: 28, color: 'gray' }} />
+              <Typography variant="caption" sx={{ color: 'gray' }}>Firma aquí con el dedo</Typography>
             </Box>
           )}
 
           <SignatureCanvas
             ref={sigRef}
-            penColor="white"
+            penColor="black"
             minWidth={1.5}
             maxWidth={3}
             velocityFilterWeight={0.7}
