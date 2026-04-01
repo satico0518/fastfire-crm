@@ -46,6 +46,7 @@ const FORMAT_ICONS: Record<FormatTypeId, ElementType<SvgIconProps>> = {
   AVANCE_OBRA: EngineeringIcon,
   ADICIONALES: AddCircleOutlineIcon,
   ACTA_ENTREGA: AssignmentTurnedInIcon,
+  ACTA_VISITA_MANTENIMIENTO: AssignmentTurnedInIcon,
 };
 
 const cardGradients: Record<FormatTypeId, string> = {
@@ -53,6 +54,7 @@ const cardGradients: Record<FormatTypeId, string> = {
   AVANCE_OBRA: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
   ADICIONALES: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
   ACTA_ENTREGA: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+  ACTA_VISITA_MANTENIMIENTO: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
 };
 
 const statusConfig: Record<
@@ -379,9 +381,120 @@ export const FormatResultsTable = () => {
     if (!viewSubmission) return null;
     const formatType = getFormatTypeById(viewSubmission.formatTypeId);
     const data = viewSubmission.data || {};
-    const fields: { name: string; label: string; type?: string; calculateSum?: string }[] = formatType
+    const fields = formatType
       ? (formatType.fields as any[])
       : Object.keys(data).map((k) => ({ name: k, label: k }));
+
+    const renderFields = (fieldsArray: any[], currentData: Record<string, any>) => {
+      return fieldsArray.map((f) => {
+        // Handle Section type
+        if (f.type === "section" && f.subFields) {
+          const hasDataInSection = f.subFields.some((sub: any) => {
+            const v = currentData[sub.name];
+            return v !== undefined && v !== null && v !== "";
+          });
+
+          return (
+            <Box key={f.name} sx={{ mb: 4 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ 
+                  color: "#0a84ff", 
+                  fontWeight: 900, 
+                  mb: 1.5, 
+                  borderBottom: '1px solid rgba(10,132,255,0.2)', 
+                  pb: 1,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}
+              >
+                {f.label}
+              </Typography>
+              <Box sx={{ pl: 1, borderLeft: '2px solid rgba(255,255,255,0.05)' }}>
+                {hasDataInSection ? (
+                  renderFields(f.subFields, currentData)
+                ) : (
+                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.4)", fontStyle: "italic", py: 1 }}>
+                    — Sin información registrada
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          );
+        }
+
+        // Handle Header (Sub-titles)
+        if (f.type === "header") {
+          const currentIdx = fieldsArray.indexOf(f);
+          let hasDataBelow = false;
+          
+          for (let j = currentIdx + 1; j < fieldsArray.length; j++) {
+            const nextF = fieldsArray[j];
+            if (nextF.type === "header") break;
+            const val = currentData[nextF.name];
+            // Safe check: exists, not null, and string version is not empty when trimmed
+            if (val !== undefined && val !== null && String(val).trim() !== "" && !nextF.name.endsWith("_obs_check")) {
+              hasDataBelow = true;
+              break;
+            }
+          }
+
+          if (!hasDataBelow) return null;
+
+          return (
+            <Typography
+              key={f.name}
+              variant="subtitle2"
+              sx={{ 
+                color: "rgba(255,255,255,0.7)", 
+                fontWeight: 700, 
+                backgroundColor: "rgba(255,255,255,0.05)", 
+                p: 0.8, 
+                borderRadius: 1, 
+                mb: 1.5,
+                fontSize: '0.75rem',
+                display: 'inline-block',
+                width: '100%'
+              }}
+            >
+              • {f.label}
+            </Typography>
+          );
+        }
+
+        // Normal Field rendering
+        const val = currentData[f.name];
+        const isObservation = f.name.endsWith("_obs");
+        
+        // Skip technical observation trigger fields (those ending with _obs_check)
+        if (f.name.endsWith("_obs_check")) return null;
+
+        // If it's a switch and it's SI/NO/NA, or has a value
+        if (val !== undefined && val !== null && val !== "") {
+          return (
+            <Box key={f.name} sx={{ mb: 2, ml: isObservation ? 3 : 0 }}>
+              <Typography
+                variant="caption"
+                sx={{ 
+                  color: isObservation ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.5)", 
+                  fontWeight: 700, 
+                  textTransform: "uppercase", 
+                  letterSpacing: "0.1em", 
+                  display: "block",
+                  fontStyle: isObservation ? "italic" : "normal",
+                  "&::before": isObservation ? { content: '"└─"', mr: 1, opacity: 0.5 } : {}
+                }}
+              >
+                {f.label}
+              </Typography>
+              {renderFieldValue(f.name, val, f as any, currentData)}
+            </Box>
+          );
+        }
+
+        return null;
+      });
+    };
 
     return (
       <Dialog
@@ -434,17 +547,7 @@ export const FormatResultsTable = () => {
         </DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <Box sx={{ mt: 1 }}>
-            {fields.map((f) => (
-              <Box key={f.name} sx={{ mb: 2 }}>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}
-                >
-                  {f.label}
-                </Typography>
-                {renderFieldValue(f.name, data[f.name], f as any, data)}
-              </Box>
-            ))}
+            {renderFields(fields, data)}
             {viewSubmission.reviewNotes && (
               <Box sx={{ mt: 2, p: 1.5, bgcolor: "rgba(255,159,10,0.1)", borderRadius: 2, border: '1px solid rgba(255,159,10,0.2)' }}>
                 <Typography variant="caption" fontWeight={700} color="#ff9f0a" display="block">
