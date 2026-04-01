@@ -102,7 +102,10 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
            {schedule.priority === 'URGENT' && (
              <Chip label="URGENTE" size="small" sx={{ mb: 1.5, ml: 1, fontWeight: 800, bgcolor: 'rgba(255,69,58,0.2)', color: '#ff453a' }} />
            )}
-           <Typography variant="h5" component="div" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.2, color: 'white' }}>
+           <Typography variant="h5" component="div" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.2, color: '#0a84ff' }}>
+             {schedule.projectName}
+           </Typography>
+           <Typography variant="subtitle2" sx={{ fontWeight: 600, mt: 0.5, color: 'rgba(255,255,255,0.7)' }}>
              {schedule.title}
            </Typography>
         </Box>
@@ -209,13 +212,10 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
                   fontWeight: 700, 
                   color: schedule.hasQuotation === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
                 }}>
-                  {schedule.hasQuotation === 'SI' ? 'SÍ TIENE' : (schedule.hasQuotation === 'NO' ? 'PENDIENTE' : 'N/A')}
+                  {schedule.hasQuotation === 'SI' 
+                    ? (schedule.quotationNumber ? `Nº ${schedule.quotationNumber}` : 'SÍ TIENE') 
+                    : (schedule.hasQuotation === 'NO' ? 'PENDIENTE' : 'N/A')}
                 </Typography>
-                {schedule.hasQuotation === 'SI' && schedule.quotationNumber && (
-                   <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block' }}>
-                     Nº {schedule.quotationNumber}
-                   </Typography>
-                )}
               </Box>
             </Stack>
           </Grid>
@@ -239,18 +239,20 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
                   fontWeight: 700, 
                   color: schedule.hasReport === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
                 }}>
-                  {schedule.hasReport === 'SI' ? 'ENTREGADO' : (schedule.hasReport === 'NO' ? 'PENDIENTE' : 'N/A')}
+                  {schedule.hasReport === 'SI' 
+                    ? (schedule.reportNumber ? `Nº ${schedule.reportNumber}` : 'SÍ TIENE') 
+                    : (schedule.hasReport === 'NO' ? 'PENDIENTE' : 'N/A')}
                 </Typography>
               </Box>
             </Stack>
           </Grid>
         </Grid>
 
-        {schedule.description && (
+        {schedule.observations && (
           <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, color: 'rgba(255,255,255,0.5)' }}>Detalle del mantenimiento</Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, color: 'rgba(255,255,255,0.5)' }}>Observaciones</Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'rgba(255,255,255,0.8)' }}>
-              {schedule.description}
+              {schedule.observations}
             </Typography>
           </Box>
         )}

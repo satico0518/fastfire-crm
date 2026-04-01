@@ -6,6 +6,7 @@ export interface MaintenanceAuditEntry {
 
 export interface MaintenanceSchedule {
   id: string;
+  projectName: string;
   title: string; 
   dateStr: string; 
   address: string; 
