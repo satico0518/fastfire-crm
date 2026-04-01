@@ -17,6 +17,10 @@ import {
   Card,
   CardContent,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { SignaturePadField } from "../../components/signature-pad/SignaturePadField";
 import { getFormatTypeById } from "../../config/formatCatalog";
@@ -206,7 +210,18 @@ export const PublicFormatPage = () => {
             }}
           />
         );
-      case "textarea":
+      case "textarea": {
+        // Check if this is an observation textarea (ends with _obs)
+        const isObservationField = field.name.endsWith('_obs');
+        const checkFieldName = field.name.replace('_obs', '_obs_check');
+        const checkValue = (getValue(checkFieldName) as string[]) || [];
+        const hasObservationChecked = checkValue.includes('observacion');
+        
+        // If it's an observation field but checkbox is not checked, don't render
+        if (isObservationField && !hasObservationChecked) {
+          return null;
+        }
+        
         return (
           <TextField
             key={field.name}
@@ -231,6 +246,7 @@ export const PublicFormatPage = () => {
             }}
           />
         );
+      }
       case "number":
         return (
           <TextField
@@ -326,6 +342,69 @@ export const PublicFormatPage = () => {
               }}
             />
           </LocalizationProvider>
+        );
+      }
+      case "select": {
+        const currentValue = (getValue(field.name) as string) || "";
+        return (
+          <FormControl fullWidth size="small" key={field.name} required={field.required}>
+            <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>{field.label}</InputLabel>
+            <Select
+              value={currentValue}
+              onChange={(e) => setValue(field.name, e.target.value)}
+              label={field.label}
+              sx={{
+                color: 'white',
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(10,132,255,0.5)' },
+                '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+              }}
+            >
+              {(field.options || []).map((option: string) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      }
+      case "switch": {
+        const options = field.options || ["SI", "NO", "NA"];
+        const currentValue = (getValue(field.name) as string) || "";
+        return (
+          <Box key={field.name} sx={{ mb: 2 }}>
+            <FormLabel component="legend" sx={{ fontSize: "0.85rem", mb: 1, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+              {field.label}
+              {field.required && <span style={{ color: '#ff453a', marginLeft: 4 }}>*</span>}
+            </FormLabel>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {options.map((option: string) => (
+                <Button
+                  key={option}
+                  variant={currentValue === option ? "contained" : "outlined"}
+                  size="small"
+                  onClick={() => setValue(field.name, option)}
+                  sx={{
+                    flex: 1,
+                    borderRadius: 2,
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    bgcolor: currentValue === option ? 'rgba(10,132,255,0.9)' : 'transparent',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    color: currentValue === option ? 'white' : 'rgba(255,255,255,0.7)',
+                    '&:hover': {
+                      bgcolor: currentValue === option ? 'rgba(10,132,255,1)' : 'rgba(255,255,255,0.1)',
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                  }}
+                >
+                  {option}
+                </Button>
+              ))}
+            </Box>
+          </Box>
         );
       }
       case "checkbox-group": {
