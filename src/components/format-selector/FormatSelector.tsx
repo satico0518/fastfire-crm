@@ -21,7 +21,6 @@ import {
   CircularProgress,
   Paper,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
 } from "@mui/material";
@@ -203,25 +202,27 @@ export const FormatSelector = () => {
     switch (field.type) {
       case "text":
         return (
-          <TextField
-            key={field.name}
-            label={field.label}
-            required={field.required}
-            placeholder={field.placeholder}
-            value={(getValue(field.name) as string) || ""}
-            onChange={(e) => setValue(field.name, e.target.value)}
-            fullWidth
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
-            }}
-          />
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <TextField
+              required={field.required}
+              placeholder={field.placeholder}
+              value={(getValue(field.name) as string) || ""}
+              onChange={(e) => setValue(field.name, e.target.value)}
+              fullWidth
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                },
+                '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
+              }}
+            />
+          </Box>
         );
       case "textarea": {
         // Check if this is an observation textarea (ends with _obs)
@@ -263,29 +264,31 @@ export const FormatSelector = () => {
       }
       case "number":
         return (
-          <TextField
-            key={field.name}
-            label={field.label}
-            required={field.required}
-            placeholder={field.placeholder}
-            value={(getValue(field.name) as string) || ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              setValue(field.name, val);
-            }}
-            fullWidth
-            size="small"
-            type="number"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
-            }}
-          />
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <TextField
+              required={field.required}
+              placeholder={field.placeholder}
+              value={(getValue(field.name) as string) || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setValue(field.name, val);
+              }}
+              fullWidth
+              size="small"
+              type="number"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                },
+                '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', opacity: 1 }
+              }}
+            />
+          </Box>
         );
       case "date": {
         let minDate: Dayjs | undefined = undefined;
@@ -296,32 +299,35 @@ export const FormatSelector = () => {
             : dayjs(minFieldVal, "DD/MM/YYYY");
         }
         return (
-          <LocalizationProvider dateAdapter={AdapterDayjs} key={field.name}>
-            <DatePicker
-              label={field.label}
-              value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY") : null}
-              onChange={(val) =>
-                setValue(field.name, val ? val.format("DD/MM/YYYY") : "")
-              }
-              format="DD/MM/YYYY"
-              minDate={minDate}
-              slotProps={{
-                textField: { 
-                  size: "small", 
-                  fullWidth: true, 
-                  required: field.required,
-                  sx: {
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                    },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
-                  }
-                },
-              }}
-            />
-          </LocalizationProvider>
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY") : null}
+                onChange={(val) =>
+                  setValue(field.name, val ? val.format("DD/MM/YYYY") : "")
+                }
+                format="DD/MM/YYYY"
+                minDate={minDate}
+                slotProps={{
+                  textField: { 
+                    size: "small", 
+                    fullWidth: true, 
+                    required: field.required,
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        color: 'white',
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                      },
+                      '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
+                    }
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
         );
       }
       case "datetime": {
@@ -333,58 +339,64 @@ export const FormatSelector = () => {
             : dayjs(minFieldVal, "DD/MM/YYYY");
         }
         return (
-          <LocalizationProvider dateAdapter={AdapterDayjs} key={field.name}>
-            <DateTimePicker
-              label={field.label}
-              value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY HH:mm") : null}
-              onChange={(val) =>
-                setValue(field.name, val ? val.format("DD/MM/YYYY HH:mm") : "")
-              }
-              format="DD/MM/YYYY HH:mm"
-              minDateTime={minDateTime}
-              slotProps={{
-                textField: { 
-                  size: "small", 
-                  fullWidth: true, 
-                  required: field.required,
-                  sx: {
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                    },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
-                  }
-                },
-              }}
-            />
-          </LocalizationProvider>
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY HH:mm") : null}
+                onChange={(val) =>
+                  setValue(field.name, val ? val.format("DD/MM/YYYY HH:mm") : "")
+                }
+                format="DD/MM/YYYY HH:mm"
+                minDateTime={minDateTime}
+                slotProps={{
+                  textField: { 
+                    size: "small", 
+                    fullWidth: true, 
+                    required: field.required,
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        color: 'white',
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                      },
+                      '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
+                    }
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
         );
       }
       case "select": {
         const currentValue = (getValue(field.name) as string) || "";
         return (
-          <FormControl fullWidth size="small" key={field.name} required={field.required}>
-            <InputLabel sx={{ color: 'rgba(255,255,255,0.5)' }}>{field.label}</InputLabel>
-            <Select
-              value={currentValue}
-              onChange={(e) => setValue(field.name, e.target.value)}
-              label={field.label}
-              sx={{
-                color: 'white',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(10,132,255,0.5)' },
-                '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
-              }}
-            >
-              {(field.options || []).map((option: string) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <FormControl fullWidth size="small" required={field.required}>
+              <Select
+                value={currentValue}
+                onChange={(e) => setValue(field.name, e.target.value)}
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(10,132,255,0.5)' },
+                  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                }}
+              >
+                {(field.options || []).map((option: string) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         );
       }
       case "switch": {
@@ -710,6 +722,33 @@ export const FormatSelector = () => {
           </Paper>
         );
       }
+      case "header":
+        return (
+          <Typography 
+            key={field.name}
+            variant="overline" 
+            sx={{ 
+              gridColumn: '1 / -1', 
+              mt: 2, 
+              mb: -0.5, 
+              color: '#0a84ff', 
+              fontWeight: 900,
+              fontSize: '0.75rem',
+              letterSpacing: '1px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              '&::after': {
+                content: '""',
+                flex: 1,
+                height: '1px',
+                bgcolor: 'rgba(10,132,255,0.2)'
+              }
+            }}
+          >
+            {field.label}
+          </Typography>
+        );
       case "section": {
         return (
           <Box key={field.name} sx={{ mb: 3 }}>

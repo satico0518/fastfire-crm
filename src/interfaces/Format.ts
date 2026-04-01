@@ -1,6 +1,6 @@
 export type FormatStatus = "DRAFT" | "SUBMITTED" | "REVIEWED" | "REJECTED";
 
-export type FormatFieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "switch" | "image" | "checkbox-group" | "signature" | "dynamic-group" | "calculated-sum" | "section";
+export type FormatFieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "switch" | "image" | "checkbox-group" | "signature" | "dynamic-group" | "calculated-sum" | "section" | "header";
 
 export interface FormatField {
   name: string;

@@ -628,6 +628,49 @@ export const FORMAT_CATALOG: FormatType[] = [
           },
         ],
       },
+
+      // Inspección extintores
+      {
+        name: "inspeccion_extintores",
+        label: "Inspección extintores",
+        type: "section",
+        required: false,
+        subFields: [
+          { name: "extintores_total", label: "Cuántos extintores existen en total", type: "number", required: true },
+          
+          { name: "header_tipo_a", label: "Tipo A", type: "header", required: false },
+          { name: "ext_a_2lb", label: "2 LB", type: "number", required: true },
+          { name: "ext_a_5lb", label: "5 LB", type: "number", required: true },
+          { name: "ext_a_10lb", label: "10 LB", type: "number", required: true },
+          { name: "ext_a_20lb", label: "20 LB", type: "number", required: true },
+          { name: "ext_a_30lb", label: "30 LB", type: "number", required: true },
+
+          { name: "header_tipo_b", label: "Tipo B", type: "header", required: false },
+          { name: "ext_b_5lb", label: "5 LB", type: "number", required: true },
+          { name: "ext_b_10lb", label: "10 LB", type: "number", required: true },
+          { name: "ext_b_15lb", label: "15 LB", type: "number", required: true },
+          { name: "ext_b_20lb", label: "20 LB", type: "number", required: true },
+          { name: "ext_b_50lb", label: "50 LB", type: "number", required: true },
+
+          { name: "header_multi", label: "Multipropósito", type: "header", required: false },
+          { name: "ext_multi_5lb", label: "5 LB", type: "number", required: true },
+          { name: "ext_multi_10lb", label: "10 LB", type: "number", required: true },
+          { name: "ext_multi_15lb", label: "15 LB", type: "number", required: true },
+          { name: "ext_multi_20lb", label: "20 LB", type: "number", required: true },
+          { name: "ext_multi_30lb", label: "30 LB", type: "number", required: true },
+
+          { name: "header_otros", label: "Otro tipo de extintores", type: "header", required: false },
+          { 
+            name: "ext_otros", 
+            label: "Detalle (tipo y capacidad)", 
+            type: "textarea", 
+            required: false,
+            placeholder: "Describa otros tipos y sus capacidades..."
+          },
+          
+          { name: "extintores_vencimiento", label: "Fecha de vencimiento de los extintores", type: "date", required: true },
+        ],
+      },
     ],
   },
 ];
