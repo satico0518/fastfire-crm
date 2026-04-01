@@ -1,6 +1,6 @@
 export type FormatStatus = "DRAFT" | "SUBMITTED" | "REVIEWED" | "REJECTED";
 
-export type FormatFieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "image" | "checkbox-group" | "signature" | "dynamic-group" | "calculated-sum";
+export type FormatFieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "image" | "checkbox-group" | "signature" | "dynamic-group" | "calculated-sum" | "section";
 
 export interface FormatField {
   name: string;
@@ -24,7 +24,6 @@ export type FormatTypeId =
   | "AVANCE_OBRA"
   | "ADICIONALES"
   | "ACTA_ENTREGA"
-  | "REPORTE_MANTENIMIENTO"
   | "ACTA_VISITA_MANTENIMIENTO";
 
 export interface FormatType {
