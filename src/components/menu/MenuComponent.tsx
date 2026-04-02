@@ -249,7 +249,7 @@ export const MenuComponent = ({
               </Tooltip>
             </li>
           )}
-          {(currentUser?.permissions.includes("ADMIN") || currentUser?.permissions.includes("PLANNER")) && (
+          {(currentUser?.permissions.includes("ADMIN") || currentUser?.permissions.includes("PLANNER") || currentUser?.permissions.includes("MANAGER")) && (
             <li>
               <Tooltip title={isSidebarCollapsed ? "Agenda" : ""} placement="right" arrow>
                 <NavLink
@@ -258,7 +258,7 @@ export const MenuComponent = ({
                   className={({ isActive }) => isActive ? "active" : ""}
                 >
                   <CalendarMonthOutlinedIcon />
-                  {!isSidebarCollapsed && <span>Agenda Mantenimientos</span>}
+                  {!isSidebarCollapsed && <span>Agenda</span>}
                 </NavLink>
               </Tooltip>
             </li>

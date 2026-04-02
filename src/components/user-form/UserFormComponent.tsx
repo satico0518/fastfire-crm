@@ -47,6 +47,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
     PROVIDER: false,
     FORMATER: false,
     PLANNER: false,
+    MANAGER: false,
   });
 
   const {
@@ -64,6 +65,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         PURCHASE: false,
         FORMATER: false,
         PLANNER: false,
+        MANAGER: false,
         PROVIDER: event.target.checked,
       });
     } else {
@@ -86,6 +88,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         PROVIDER: editingUser.permissions?.includes("PROVIDER"),
         FORMATER: editingUser.permissions?.includes("FORMATER"),
         PLANNER: editingUser.permissions?.includes("PLANNER"),
+        MANAGER: editingUser.permissions?.includes("MANAGER"),
       });
       setLabelWg(
         workgroups
@@ -299,6 +302,20 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                     />
                   }
                   label="Proveedor"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.MANAGER}
+                      onChange={handleAccessChange}
+                      name="MANAGER"
+                      disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
+                    />
+                  }
+                  label="Manager"
                   sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
                 />
               </FormGroup>

@@ -51,7 +51,9 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
   const setSnackbar = useUiStore(state => state.setSnackbar);
   const [showHistory, setShowHistory] = useState(false);
   
-  const isAllowedToManage = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
+  const isAllowedToManage = schedule.type === 'MANAGER_ACTIVITY' 
+    ? user?.permissions?.includes("MANAGER")
+    : user?.permissions?.includes("PLANNER");
   const dateObj = dayjs(schedule.dateStr);
   const statusColor = getStatusColor(schedule.status);
 
@@ -102,11 +104,25 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
            {schedule.priority === 'URGENT' && (
              <Chip label="URGENTE" size="small" sx={{ mb: 1.5, ml: 1, fontWeight: 800, bgcolor: 'rgba(255,69,58,0.2)', color: '#ff453a' }} />
            )}
+           {schedule.type === 'MANAGER_ACTIVITY' && (
+             <Chip 
+               label="PERSONAL" 
+               size="small" 
+               sx={{ 
+                 mb: 1.5, 
+                 ml: schedule.priority === 'URGENT' ? 1 : 0, 
+                 fontWeight: 900, 
+                 bgcolor: 'rgba(168, 85, 247, 0.2)', 
+                 color: '#a855f7',
+                 border: '1px solid rgba(168, 85, 247, 0.4)'
+               }} 
+             />
+           )}
            <Typography variant="h5" component="div" sx={{ fontWeight: 800, mt: 0.5, lineHeight: 1.2, color: '#0a84ff' }}>
-             {schedule.projectName}
+             {schedule.type === 'MANAGER_ACTIVITY' ? 'Actividad Personal' : schedule.projectName}
            </Typography>
            <Typography variant="subtitle2" sx={{ fontWeight: 600, mt: 0.5, color: 'rgba(255,255,255,0.7)' }}>
-             {schedule.title}
+             {schedule.type === 'MANAGER_ACTIVITY' ? schedule.projectName : schedule.title}
            </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
@@ -164,7 +180,7 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
               <LocationOnOutlinedIcon />
             </Box>
             <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>Dirección / Establecimiento</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>Ubicación</Typography>
               <Typography variant="body1" sx={{ fontWeight: 500, color: 'white' }}>
                 {schedule.address}
               </Typography>
@@ -193,59 +209,63 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
             </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
-              Factura
-            </Typography>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box sx={{ 
-                p: 0.8, 
-                bgcolor: schedule.hasQuotation === 'SI' ? 'rgba(48,209,88,0.15)' : (schedule.hasQuotation === 'NO' ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.05)'), 
-                borderRadius: 1.5, 
-                color: schedule.hasQuotation === 'SI' ? '#30d158' : (schedule.hasQuotation === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.4)'), 
-                display: 'flex' 
-              }}>
-                <RequestQuoteOutlinedIcon fontSize="small" />
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ 
-                  fontWeight: 700, 
-                  color: schedule.hasQuotation === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
-                }}>
-                  {schedule.hasQuotation === 'SI' 
-                    ? (schedule.quotationNumber ? `Nº ${schedule.quotationNumber}` : 'SÍ TIENE') 
-                    : (schedule.hasQuotation === 'NO' ? 'PENDIENTE' : 'N/A')}
+          {schedule.type !== 'MANAGER_ACTIVITY' && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
+                  Factura
                 </Typography>
-              </Box>
-            </Stack>
-          </Grid>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Box sx={{ 
+                    p: 0.8, 
+                    bgcolor: schedule.hasQuotation === 'SI' ? 'rgba(48,209,88,0.15)' : (schedule.hasQuotation === 'NO' ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.05)'), 
+                    borderRadius: 1.5, 
+                    color: schedule.hasQuotation === 'SI' ? '#30d158' : (schedule.hasQuotation === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.4)'), 
+                    display: 'flex' 
+                  }}>
+                    <RequestQuoteOutlinedIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ 
+                      fontWeight: 700, 
+                      color: schedule.hasQuotation === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
+                    }}>
+                      {schedule.hasQuotation === 'SI' 
+                        ? (schedule.quotationNumber ? `Nº ${schedule.quotationNumber}` : 'SÍ TIENE') 
+                        : (schedule.hasQuotation === 'NO' ? 'PENDIENTE' : 'N/A')}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
-              Informe Técnico
-            </Typography>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box sx={{ 
-                p: 0.8, 
-                bgcolor: schedule.hasReport === 'SI' ? 'rgba(10,132,255,0.15)' : (schedule.hasReport === 'NO' ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.05)'), 
-                borderRadius: 1.5, 
-                color: schedule.hasReport === 'SI' ? '#0a84ff' : (schedule.hasReport === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.4)'), 
-                display: 'flex' 
-              }}>
-                <FactCheckOutlinedIcon fontSize="small" />
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ 
-                  fontWeight: 700, 
-                  color: schedule.hasReport === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
-                }}>
-                  {schedule.hasReport === 'SI' 
-                    ? (schedule.reportNumber ? `Nº ${schedule.reportNumber}` : 'SÍ TIENE') 
-                    : (schedule.hasReport === 'NO' ? 'PENDIENTE' : 'N/A')}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.5)', mb: 1.5, textTransform: 'uppercase' }}>
+                  Informe Técnico
                 </Typography>
-              </Box>
-            </Stack>
-          </Grid>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Box sx={{ 
+                    p: 0.8, 
+                    bgcolor: schedule.hasReport === 'SI' ? 'rgba(10,132,255,0.15)' : (schedule.hasReport === 'NO' ? 'rgba(255,69,58,0.15)' : 'rgba(255,255,255,0.05)'), 
+                    borderRadius: 1.5, 
+                    color: schedule.hasReport === 'SI' ? '#0a84ff' : (schedule.hasReport === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.4)'), 
+                    display: 'flex' 
+                  }}>
+                    <FactCheckOutlinedIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ 
+                      fontWeight: 700, 
+                      color: schedule.hasReport === 'SI' ? 'white' : 'rgba(255,255,255,0.5)' 
+                    }}>
+                      {schedule.hasReport === 'SI' 
+                        ? (schedule.reportNumber ? `Nº ${schedule.reportNumber}` : 'SÍ TIENE') 
+                        : (schedule.hasReport === 'NO' ? 'PENDIENTE' : 'N/A')}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+            </>
+          )}
         </Grid>
 
         {schedule.observations && (

@@ -262,7 +262,7 @@ export default function UsersTable() {
       field: "permissions",
       headerName: "Permisos",
       type: "string",
-      width: 250,
+      width: 350,
       renderCell: ({ row }: GridRenderCellParams<User>) => (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center', py: 0.5, height: '100%', overflow: 'hidden' }}>
           {row.permissions?.map((acc: Access) => (

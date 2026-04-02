@@ -11,7 +11,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --sidebar-width: 300px;
+  --sidebar-width: 220px;
   --sidebar-collapsed-width: 74px;
 }
 
