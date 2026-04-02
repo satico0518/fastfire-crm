@@ -7,9 +7,10 @@ interface Props {
   dateLabel: string;
   schedules: MaintenanceSchedule[];
   isTodayGroup?: boolean;
+  onEdit?: (schedule: MaintenanceSchedule) => void;
 }
 
-export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules, isTodayGroup = false }) => {
+export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules, isTodayGroup = false, onEdit }) => {
   return (
     <Box sx={{ mb: 1 }} data-today-group={isTodayGroup ? 'true' : undefined}>
       {/* Date Header Tag */}
@@ -32,7 +33,7 @@ export const ScheduleDayBlock: React.FC<Props> = ({ dateLabel, schedules, isToda
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {schedules.length > 0 ? (
           schedules.map(schedule => (
-            <ScheduleCard key={schedule.id} schedule={schedule} />
+            <ScheduleCard key={schedule.id} schedule={schedule} onEdit={onEdit} />
           ))
         ) : (
           <Box sx={{

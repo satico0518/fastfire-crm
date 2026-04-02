@@ -9,6 +9,7 @@ import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 
 interface Props {
   schedule: MaintenanceSchedule;
+  onEdit?: (schedule: MaintenanceSchedule) => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -21,7 +22,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const ScheduleCard: React.FC<Props> = ({ schedule }) => {
+export const ScheduleCard: React.FC<Props> = ({ schedule, onEdit }) => {
   const [open, setOpen] = useState(false);
   const timeStr = dayjs(schedule.dateStr).format('HH:mm');
   const isAllDay = timeStr === '00:00';
@@ -106,6 +107,7 @@ export const ScheduleCard: React.FC<Props> = ({ schedule }) => {
         open={open} 
         onClose={() => setOpen(false)} 
         schedule={schedule} 
+        onEdit={onEdit} 
       />
     </>
   );
