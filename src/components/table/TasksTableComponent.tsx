@@ -1487,6 +1487,34 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               format="DD/MM/YYYY"
               value={selectedDueDate}
               onChange={(val) => setSelectedDueDate(val)}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  variant: 'outlined',
+                  sx: {
+                    '& .MuiInputLabel-root': { color: 'white !important', fontWeight: 700 },
+                    '& .MuiOutlinedInput-root': {
+                      color: 'white',
+                      borderRadius: '12px',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3) !important' },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.6) !important' },
+                      '&.Mui-focused fieldset': { borderColor: 'white !important' },
+                      '& .MuiInputBase-input': { color: 'white !important' },
+                    },
+                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7) !important' },
+                  }
+                },
+                popper: {
+                  sx: {
+                    '& .MuiPaper-root': { bgcolor: '#1c1c1e', color: 'white', border: '1px solid rgba(255,255,255,0.1)' },
+                    '& .MuiPickersDay-root': { color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } },
+                    '& .MuiTypography-root': { color: 'rgba(255,255,255,0.7)' },
+                    '& .MuiDayCalendar-weekDayLabel': { color: 'rgba(255,255,255,0.5)' },
+                    '& .MuiPickersCalendarHeader-label': { color: 'white' },
+                    '& .MuiIconButton-root': { color: 'white' }
+                  }
+                }
+              }}
             />
           </LocalizationProvider>
         }
@@ -1508,6 +1536,17 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             minRows={3}
             maxRows={8}
             placeholder="Escribe aquí las notas..."
+            sx={{
+              '& .MuiInputLabel-root': { color: 'white !important', fontWeight: 700 },
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                borderRadius: '12px',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.3) !important' },
+                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.6) !important' },
+                '&.Mui-focused fieldset': { borderColor: 'white !important' },
+                '& .MuiInputBase-input': { color: 'white !important' },
+              },
+            }}
           />
         }
         okText="Guardar"

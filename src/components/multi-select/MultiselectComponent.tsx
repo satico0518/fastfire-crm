@@ -10,7 +10,6 @@ import Chip from "@mui/material/Chip";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
-  disablePortal: true,
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
@@ -18,22 +17,7 @@ const MenuProps = {
       backgroundColor: '#1c1c1e',
       color: 'white',
       border: '1px solid rgba(255, 255, 255, 0.1)',
-    },
-    sx: {
       zIndex: 9999,
-    }
-  },
-  anchorOrigin: {
-    vertical: 'bottom' as const,
-    horizontal: 'left' as const,
-  },
-  transformOrigin: {
-    vertical: 'top' as const,
-    horizontal: 'left' as const,
-  },
-  MenuListProps: {
-    style: {
-      padding: 0,
     },
   },
 };

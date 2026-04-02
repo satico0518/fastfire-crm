@@ -171,3 +171,40 @@ button.Mui-disabled {
 .MuiTabs-indicator {
   height: 2px !important;
 }
+/* Estilos globales para inputs dentro de modales (Tema Oscuro Premium) */
+.MuiDialog-root .MuiInputLabel-root,
+.MuiDialog-root .MuiFormLabel-root,
+.MuiDialog-root .MuiInputBase-input,
+.MuiDialog-root .MuiInputBase-input::placeholder {
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
+.MuiDialog-root .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.MuiDialog-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.MuiDialog-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: white !important;
+}
+
+.MuiDialog-root .MuiSvgIcon-root {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Fix específico para inputs estándar dentro de diálogos */
+.MuiDialog-root .MuiInput-underline:before {
+  border-bottom-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.MuiDialog-root .MuiInput-underline:after {
+  border-bottom-color: white !important;
+}
+
+.MuiDialog-root .MuiInput-root {
+  color: white !important;
+}
