@@ -429,6 +429,7 @@ export const AgendaMantenimientosPage = () => {
             dateLabel={dateLabel}
             schedules={schedules}
             isTodayGroup={dateLabel.startsWith('HOY')}
+            onEdit={handleEditSchedule}
           />
         ))}
 
@@ -448,6 +449,7 @@ export const AgendaMantenimientosPage = () => {
               dateLabel={dateLabel}
               schedules={schedules}
               isTodayGroup={dateLabel.startsWith('HOY')}
+              onEdit={handleEditSchedule}
             />
           ))}
 
