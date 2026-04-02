@@ -91,7 +91,7 @@ body {
     padding: 8px;
     height: calc(100vh - 50px);
     margin-top: 0;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   .header {

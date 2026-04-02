@@ -662,7 +662,15 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             </>
           )}
           {params.row.status === "ARCHIVED" && (
-            <Chip color="default" label={translateStatus(params.row.status)} />
+            <Chip 
+              label={translateStatus(params.row.status)} 
+              sx={{ 
+                color: 'white', 
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(4px)'
+              }} 
+            />
           )}{" "}
           {params.row.status === "DELETED" && (
             <Chip color="error" label={translateStatus(params.row.status)} />
@@ -1209,21 +1217,21 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               content: <TasksFormComponent />,
             })}
             sx={{
-              background: 'rgba(10,132,255,0.15)',
-              border: '1px solid rgba(10,132,255,0.4)',
-              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #0a84ff 0%, #007aff 100%)',
+              borderRadius: '12px',
               textTransform: 'none',
               fontWeight: 700,
-              color: '#0a84ff',
-              backdropFilter: 'blur(10px)',
-              whiteSpace: 'nowrap',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(10,132,255,0.3)',
+              minWidth: isMobile ? '40px' : 'auto',
+              padding: isMobile ? '8px 12px' : '6px 16px',
               '&:hover': {
-                background: 'rgba(10,132,255,0.25)',
-                border: '1px solid #0a84ff'
+                background: 'linear-gradient(135deg, #007aff 0%, #0063cc 100%)',
+                boxShadow: '0 6px 16px rgba(10,132,255,0.4)',
               }
             }}
           >
-            Nueva Tarea
+            {!isMobile && "Nueva Tarea"}
           </Button>
         </Box>
 
@@ -1254,7 +1262,15 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               />
             }
             label={
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Archivadas</span>
+              isMobile ? (
+                <ArchiveOutlinedIcon sx={{ 
+                  fontSize: '1.2rem', 
+                  color: showArchivedTasks ? '#0a84ff' : 'rgba(255,255,255,0.5)',
+                  mt: '3px'
+                }} />
+              ) : (
+                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Archivadas</span>
+              )
             }
             labelPlacement="end"
           />
@@ -1287,7 +1303,15 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               />
             }
             label={
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Eliminadas</span>
+              isMobile ? (
+                <DeleteOutlineOutlinedIcon sx={{ 
+                  fontSize: '1.2rem', 
+                  color: showDeletedTasks ? '#ff453a' : 'rgba(255,255,255,0.5)',
+                  mt: '3px'
+                }} />
+              ) : (
+                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Eliminadas</span>
+              )
             }
             labelPlacement="end"
           />
@@ -1302,27 +1326,26 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.82rem',
-              borderRadius: '10px',
-              padding: '6px 14px',
-              border: '1px solid rgba(48,209,88,0.5)',
-              background: 'rgba(48,209,88,0.12)',
+              borderRadius: '12px',
+              padding: isMobile ? '8px 12px' : '6px 16px',
+              border: '1px solid rgba(48,209,88,0.4)',
+              background: 'rgba(48,209,88,0.15)',
               backdropFilter: 'blur(10px)',
-              letterSpacing: '0.3px',
+              transition: 'all 0.2s ease',
               '&:hover': {
                 background: 'rgba(48,209,88,0.25)',
-                border: '1px solid rgba(48,209,88,0.8)',
-                boxShadow: '0 0 12px rgba(48,209,88,0.3)',
-              },
-              transition: 'all 0.2s ease',
+                border: '1px solid rgba(48,209,88,0.7)',
+                boxShadow: '0 4px 12px rgba(48,209,88,0.2)',
+              }
             }}
           >
-            Excel
+            {!isMobile && "Excel"}
           </Button>
         </div>
       </Box>
 
       {/* Row 2: Tag filter pill */}
-      <div style={{ display: "flex", alignItems: "center", marginTop: "6px" }}>
+      <Box sx={{ display: "flex", alignItems: "center", mt: "6px", pb: 0 }}>
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -1343,13 +1366,19 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             onClick={(e) => setTagAnchorEl(e.currentTarget)}
             sx={{
               color: activeTagFilters.length > 0 ? "white" : "rgba(255,255,255,0.8)",
-              borderColor: "rgba(255,255,255,0.4)",
+              borderColor: activeTagFilters.length > 0 ? "transparent" : "rgba(255,255,255,0.3)",
               fontSize: "0.75rem",
-              borderRadius: "16px",
+              borderRadius: "12px",
               flexShrink: 0,
+              background: activeTagFilters.length > 0 ? 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' : 'transparent',
+              padding: isMobile ? '8px 12px' : '4px 12px',
+              '&:hover': {
+                borderColor: "rgba(255,255,255,0.6)",
+                background: activeTagFilters.length > 0 ? 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)' : 'rgba(255,255,255,0.05)',
+              }
             }}
           >
-            Etiquetas{activeTagFilters.length > 0 ? ` (${activeTagFilters.length})` : ""}
+            {!isMobile ? `Etiquetas${activeTagFilters.length > 0 ? ` (${activeTagFilters.length})` : ""}` : (activeTagFilters.length > 0 ? `(${activeTagFilters.length})` : "")}
           </Button>
 
           {activeTagFilters.map((tag) => (
@@ -1422,7 +1451,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
             )}
           </MenuList>
         </Popover>
-      </div>
+      </Box>
+      {isMobile && <Box sx={{ height: '20px' }} />}
       <TagsInput
         openTagsDialog={openTagsDialog}
         setOpenTagsDialog={setOpenTagsDialog}

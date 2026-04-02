@@ -72,9 +72,9 @@ export const TasksFormComponent = ({
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedOwnerKeys, setSelectedOwnerKeys] = useState<string[]>([]);
-  const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([
-    workgroups?.filter((wg) => wg.key === workgroupKey)[0]?.name as string || '',
-  ]);
+  const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>(
+    workgroups?.filter((wg) => wg.key === workgroupKey).map((wg) => wg.name) || []
+  );
   const [priority, setPriority] = useState<Priority>("LOW");
   const currentUser = useAuhtStore((state) => state.user);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
