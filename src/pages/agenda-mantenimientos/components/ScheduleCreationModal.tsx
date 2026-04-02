@@ -68,38 +68,49 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
   const [quotationNumber, setQuotationNumber] = useState('');
   const [hasReport, setHasReport] = useState<'SI' | 'NO' | 'NA'>('NO');
   const [reportNumber, setReportNumber] = useState('');
+  const [currentType, setCurrentType] = useState<'MAINTENANCE' | 'MANAGER_ACTIVITY'>('MAINTENANCE');
 
   const isEditMode = !!editingSchedule;
 
   useEffect(() => {
-    if (open && editingSchedule) {
-      {/* Modo edición: cargar datos existentes */}
-      setUbication(editingSchedule.address || '');
-      setActivity(editingSchedule.title || '');
-      setObs(editingSchedule.observations || '');
-      setProjectName(editingSchedule.projectName || '');
-      setDateVal(editingSchedule.dateStr ? dayjs(editingSchedule.dateStr).format('YYYY-MM-DDTHH:mm') : '');
-      setHasQuotation(editingSchedule.hasQuotation || 'NO');
-      setQuotationNumber(editingSchedule.quotationNumber || '');
-      setHasReport(editingSchedule.hasReport || 'NO');
-      setReportNumber(editingSchedule.reportNumber || '');
-      setContactName(editingSchedule.contactName || '');
-      setContactPhone(editingSchedule.contactPhone || '');
-    } else if (open && selectedDateStr) {
-      {/* Modo creación: inicializar con fecha seleccionada */}
-      setDateVal(selectedDateStr + 'T08:00');
-      setUbication('');
-      setActivity('');
-      setProjectName('');
-      setObs('');
-      setHasQuotation('NO');
-      setQuotationNumber('');
-      setHasReport('NO');
-      setReportNumber('');
-      setContactName('');
-      setContactPhone('');
+    if (open) {
+      if (editingSchedule) {
+        {/* Modo edición: cargar datos existentes */}
+        setUbication(editingSchedule.address || '');
+        setActivity(editingSchedule.title || '');
+        setObs(editingSchedule.observations || '');
+        setProjectName(editingSchedule.projectName || '');
+        setDateVal(editingSchedule.dateStr ? dayjs(editingSchedule.dateStr).format('YYYY-MM-DDTHH:mm') : '');
+        setHasQuotation(editingSchedule.hasQuotation || 'NO');
+        setQuotationNumber(editingSchedule.quotationNumber || '');
+        setHasReport(editingSchedule.hasReport || 'NO');
+        setReportNumber(editingSchedule.reportNumber || '');
+        setContactName(editingSchedule.contactName || '');
+        setContactPhone(editingSchedule.contactPhone || '');
+        setCurrentType(editingSchedule.type || 'MAINTENANCE');
+      } else {
+        {/* Modo creación: inicializar con fecha seleccionada */}
+        setDateVal(selectedDateStr ? selectedDateStr + 'T08:00' : dayjs().format('YYYY-MM-DDTHH:mm'));
+        setUbication('');
+        setActivity('');
+        setProjectName('');
+        setObs('');
+        setHasQuotation('NO');
+        setQuotationNumber('');
+        setHasReport('NO');
+        setReportNumber('');
+        setContactName('');
+        setContactPhone('');
+        
+        // Determinar tipo por defecto basado en rol
+        if (user?.permissions?.includes('MANAGER')) {
+          setCurrentType('MANAGER_ACTIVITY');
+        } else {
+          setCurrentType('MAINTENANCE');
+        }
+      }
     }
-  }, [open, selectedDateStr, editingSchedule]);
+  }, [open, selectedDateStr, editingSchedule, user]);
 
   const handleSave = async () => {
     if (!projectName || !ubication || !activity || !dateVal) return;
@@ -122,22 +133,24 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
       return;
     }
 
-    if (hasQuotation === 'SI' && !quotationNumber.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Debes completar el número de factura',
-        severity: 'warning'
-      });
-      return;
-    }
+    if (currentType === 'MAINTENANCE') {
+      if (hasQuotation === 'SI' && !quotationNumber.trim()) {
+        setSnackbar({
+          open: true,
+          message: 'Debes completar el número de factura',
+          severity: 'warning'
+        });
+        return;
+      }
 
-    if (hasReport === 'SI' && !reportNumber.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Debes completar el número de informe',
-        severity: 'warning'
-      });
-      return;
+      if (hasReport === 'SI' && !reportNumber.trim()) {
+        setSnackbar({
+          open: true,
+          message: 'Debes completar el número de informe',
+          severity: 'warning'
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -156,6 +169,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           reportNumber: hasReport === 'SI' ? reportNumber : '',
           contactName,
           contactPhone,
+          type: currentType,
         };
 
         const resp = await MaintenanceService.updateSchedule(
@@ -206,6 +220,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           contactPhone,
           status: 'SCHEDULED',
           priority: 'NORMAL',
+          type: currentType,
           createdAt: new Date().toISOString(),
           createdBy: user ? `${user.firstName} ${user.lastName}` : 'Administrador',
         };
@@ -252,7 +267,9 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
 
       <DialogTitle sx={{ p: 3, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: 800 }}>
-          {isEditMode ? 'Editar Agendamiento' : 'Nuevo Agendamiento'}
+          {currentType === 'MANAGER_ACTIVITY' 
+            ? (isEditMode ? 'Editar Actividad' : 'Nueva Actividad Personal')
+            : (isEditMode ? 'Editar Agendamiento' : 'Nuevo Agendamiento')}
         </Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
           <CloseIcon />
@@ -264,7 +281,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           
           <Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-              <BusinessOutlinedIcon fontSize="small" /> Nombre del Proyecto *
+              <BusinessOutlinedIcon fontSize="small" /> {currentType === 'MANAGER_ACTIVITY' ? 'Título' : 'Nombre del Proyecto'} *
             </Typography>
             <TextField 
               fullWidth
@@ -281,7 +298,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
           
           <Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-              <EventAvailableOutlinedIcon fontSize="small" /> Fecha de Mantenimiento *
+              <EventAvailableOutlinedIcon fontSize="small" /> {currentType === 'MANAGER_ACTIVITY' ? 'Fecha' : 'Fecha de Mantenimiento'} *
             </Typography>
             <TextField 
               fullWidth
@@ -362,115 +379,119 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
             </Box>
           </Box>
 
-           <Box>
-             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-               <RequestQuoteOutlinedIcon fontSize="small" /> ¿Ya tiene Factura?
-             </Typography>
-             <ToggleButtonGroup
-               value={hasQuotation}
-               exclusive
-               onChange={(_, val) => val && setHasQuotation(val)}
-               size="small"
-               fullWidth
-               sx={{ 
-                 mb: hasQuotation === 'SI' ? 1.5 : 0,
-                 bgcolor: 'rgba(255,255,255,0.05)',
-                 borderRadius: '12px',
-                 overflow: 'hidden',
-                 border: '1px solid rgba(255,255,255,0.1)',
-                 '& .MuiToggleButton-root': { 
-                   color: 'rgba(255,255,255,0.5)', 
-                   border: 'none',
-                   py: 0.8,
-                   '&.Mui-selected': { 
-                     color: 'white', 
-                     bgcolor: 'rgba(48,209,88,0.2)',
-                     fontWeight: 800,
-                     '&:hover': { bgcolor: 'rgba(48,209,88,0.3)' }
-                   } 
-                 } 
-               }}
-             >
-               <ToggleButton value="SI">SI</ToggleButton>
-               <ToggleButton value="NO">NO</ToggleButton>
-               <ToggleButton value="NA">NA</ToggleButton>
-             </ToggleButtonGroup>
-             
-             {hasQuotation === 'SI' && (
-               <TextField 
-                 fullWidth
-                 placeholder="Escribe el Nº de Factura..."
-                 variant="outlined"
-                 size="small"
-                 required
-                 value={quotationNumber}
-                 onChange={(e) => setQuotationNumber(e.target.value)}
-                 sx={{ 
-                   mt: 1,
-                   ...darkInputFieldSx,
-                   '& .MuiOutlinedInput-root': {
-                     ...darkInputFieldSx['& .MuiOutlinedInput-root'],
-                     '&.Mui-focused fieldset': { borderColor: '#30d158' }
-                   }
-                 }}
-               />
-             )}
-           </Box>
+           {currentType === 'MAINTENANCE' && (
+             <>
+               <Box>
+                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
+                   <RequestQuoteOutlinedIcon fontSize="small" /> ¿Ya tiene Factura?
+                 </Typography>
+                 <ToggleButtonGroup
+                   value={hasQuotation}
+                   exclusive
+                   onChange={(_, val) => val && setHasQuotation(val)}
+                   size="small"
+                   fullWidth
+                   sx={{ 
+                     mb: hasQuotation === 'SI' ? 1.5 : 0,
+                     bgcolor: 'rgba(255,255,255,0.05)',
+                     borderRadius: '12px',
+                     overflow: 'hidden',
+                     border: '1px solid rgba(255,255,255,0.1)',
+                     '& .MuiToggleButton-root': { 
+                       color: 'rgba(255,255,255,0.5)', 
+                       border: 'none',
+                       py: 0.8,
+                       '&.Mui-selected': { 
+                         color: 'white', 
+                         bgcolor: 'rgba(48,209,88,0.2)',
+                         fontWeight: 800,
+                         '&:hover': { bgcolor: 'rgba(48,209,88,0.3)' }
+                       } 
+                     } 
+                   }}
+                 >
+                   <ToggleButton value="SI">SI</ToggleButton>
+                   <ToggleButton value="NO">NO</ToggleButton>
+                   <ToggleButton value="NA">NA</ToggleButton>
+                 </ToggleButtonGroup>
+                 
+                 {hasQuotation === 'SI' && (
+                   <TextField 
+                     fullWidth
+                     placeholder="Escribe el Nº de Factura..."
+                     variant="outlined"
+                     size="small"
+                     required
+                     value={quotationNumber}
+                     onChange={(e) => setQuotationNumber(e.target.value)}
+                     sx={{ 
+                       mt: 1,
+                       ...darkInputFieldSx,
+                       '& .MuiOutlinedInput-root': {
+                         ...darkInputFieldSx['& .MuiOutlinedInput-root'],
+                         '&.Mui-focused fieldset': { borderColor: '#30d158' }
+                       }
+                     }}
+                   />
+                 )}
+               </Box>
 
-           <Box>
-             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-               <DescriptionOutlinedIcon fontSize="small" /> ¿Ya tiene Informe?
-             </Typography>
-             <ToggleButtonGroup
-               value={hasReport}
-               exclusive
-               onChange={(_, val) => val && setHasReport(val)}
-               size="small"
-               fullWidth
-               sx={{ 
-                 mb: hasReport === 'SI' ? 1.5 : 0,
-                 bgcolor: 'rgba(255,255,255,0.05)',
-                 borderRadius: '12px',
-                 overflow: 'hidden',
-                 border: '1px solid rgba(255,255,255,0.1)',
-                 '& .MuiToggleButton-root': { 
-                   color: 'rgba(255,255,255,0.5)', 
-                   border: 'none',
-                   py: 0.8,
-                   '&.Mui-selected': { 
-                     color: 'white', 
-                     bgcolor: 'rgba(10,132,255,0.2)',
-                     fontWeight: 800,
-                     '&:hover': { bgcolor: 'rgba(10,132,255,0.3)' }
-                   } 
-                 } 
-               }}
-             >
-               <ToggleButton value="SI">SI</ToggleButton>
-               <ToggleButton value="NO">NO</ToggleButton>
-               <ToggleButton value="NA">NA</ToggleButton>
-             </ToggleButtonGroup>
+               <Box>
+                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
+                   <DescriptionOutlinedIcon fontSize="small" /> ¿Ya tiene Informe?
+                 </Typography>
+                 <ToggleButtonGroup
+                   value={hasReport}
+                   exclusive
+                   onChange={(_, val) => val && setHasReport(val)}
+                   size="small"
+                   fullWidth
+                   sx={{ 
+                     mb: hasReport === 'SI' ? 1.5 : 0,
+                     bgcolor: 'rgba(255,255,255,0.05)',
+                     borderRadius: '12px',
+                     overflow: 'hidden',
+                     border: '1px solid rgba(255,255,255,0.1)',
+                     '& .MuiToggleButton-root': { 
+                       color: 'rgba(255,255,255,0.5)', 
+                       border: 'none',
+                       py: 0.8,
+                       '&.Mui-selected': { 
+                         color: 'white', 
+                         bgcolor: 'rgba(10,132,255,0.2)',
+                         fontWeight: 800,
+                         '&:hover': { bgcolor: 'rgba(10,132,255,0.3)' }
+                       } 
+                     } 
+                   }}
+                 >
+                   <ToggleButton value="SI">SI</ToggleButton>
+                   <ToggleButton value="NO">NO</ToggleButton>
+                   <ToggleButton value="NA">NA</ToggleButton>
+                 </ToggleButtonGroup>
 
-             {hasReport === 'SI' && (
-               <TextField 
-                 fullWidth
-                 placeholder="Escribe el Nº de Informe..."
-                 variant="outlined"
-                 size="small"
-                 required
-                 value={reportNumber}
-                 onChange={(e) => setReportNumber(e.target.value)}
-                 sx={{ 
-                   mt: 1,
-                   ...darkInputFieldSx,
-                   '& .MuiOutlinedInput-root': {
-                     ...darkInputFieldSx['& .MuiOutlinedInput-root'],
-                     '&.Mui-focused fieldset': { borderColor: '#0a84ff' }
-                   }
-                 }}
-               />
-             )}
-           </Box>
+                 {hasReport === 'SI' && (
+                   <TextField 
+                     fullWidth
+                     placeholder="Escribe el Nº de Informe..."
+                     variant="outlined"
+                     size="small"
+                     required
+                     value={reportNumber}
+                     onChange={(e) => setReportNumber(e.target.value)}
+                     sx={{ 
+                       mt: 1,
+                       ...darkInputFieldSx,
+                       '& .MuiOutlinedInput-root': {
+                         ...darkInputFieldSx['& .MuiOutlinedInput-root'],
+                         '&.Mui-focused fieldset': { borderColor: '#0a84ff' }
+                       }
+                     }}
+                   />
+                 )}
+               </Box>
+             </>
+           )}
 
            <Box>
              <Typography variant="caption" component="div" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block', fontWeight: 700 }}>
@@ -506,7 +527,7 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
         <Button 
           variant="contained" 
           onClick={handleSave}
-          disabled={!projectName || !activity || !ubication || !dateVal || (hasQuotation === 'SI' && !quotationNumber.trim()) || (hasReport === 'SI' && !reportNumber.trim()) || isLoading}
+          disabled={!projectName || !activity || !ubication || !dateVal || (currentType === 'MAINTENANCE' && ((hasQuotation === 'SI' && !quotationNumber.trim()) || (hasReport === 'SI' && !reportNumber.trim()))) || isLoading}
           sx={{ 
             bgcolor: 'rgba(10,132,255,0.2)', 
             border: '1px solid rgba(10,132,255,0.5)',
@@ -528,7 +549,9 @@ export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selected
             }
           }}
         >
-          {isLoading ? 'Guardando...' : (isEditMode ? 'Actualizar Agendamiento' : 'Agendar Mantenimiento')}
+          {isLoading ? 'Guardando...' : (currentType === 'MANAGER_ACTIVITY' 
+            ? (isEditMode ? 'Actualizar Actividad' : 'Guardar Actividad')
+            : (isEditMode ? 'Actualizar Agendamiento' : 'Agendar Mantenimiento'))}
         </Button>
       </DialogActions>
     </Dialog>

@@ -29,9 +29,27 @@ export const DialogueMultiselect = ({
     fullWidth
     maxWidth="xs"
     disableRestoreFocus
+    PaperProps={{
+      sx: {
+        bgcolor: '#1c1c1e',
+        color: 'white',
+        borderRadius: '20px',
+        border: '1px solid rgba(255,255,255,0.1)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        overflow: 'visible'
+      }
+    }}
   >
-    <DialogTitle>{title}</DialogTitle>
-    <DialogContent sx={{ paddingTop: '10px !important', overflow: 'visible' }}>
+    <DialogTitle sx={{ 
+      fontSize: '1.25rem', 
+      fontWeight: 700, 
+      pb: 1,
+      color: 'white' 
+    }}>
+      {title}
+    </DialogTitle>
+    <DialogContent sx={{ paddingTop: '35px !important', overflow: 'visible' }}>
       <MultiselectComponent
         labels={labels}
         title={title}
@@ -39,11 +57,17 @@ export const DialogueMultiselect = ({
         setValue={setValue}
       />
     </DialogContent>
-    <DialogActions sx={{ padding: '16px 24px' }}>
+    <DialogActions sx={{ padding: '20px 24px' }}>
       <Button
         onClick={() => {
           setValue([]);
           setOpen(false);
+        }}
+        sx={{ 
+          color: 'rgba(255,255,255,0.6)',
+          textTransform: 'none',
+          fontWeight: 600,
+          '&:hover': { color: 'white' }
         }}
       >
         Cancelar
@@ -54,6 +78,16 @@ export const DialogueMultiselect = ({
         onClick={() => {
           setOpen(false);
           okButtonAction();
+        }}
+        sx={{
+          borderRadius: '12px',
+          textTransform: 'none',
+          fontWeight: 700,
+          padding: '8px 24px',
+          background: 'linear-gradient(135deg, #0a84ff 0%, #007aff 100%)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #007aff 0%, #0063cc 100%)',
+          }
         }}
       >
         {okButtonText}

@@ -7,7 +7,7 @@
   justify-content: flex-start;
   background-color: rgba(0, 0, 0, 0.2);
   transition: width 0.3s ease-in-out;
-  padding: 20px;
+  padding: 12px 10px;
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -16,7 +16,8 @@
   }
 
   &__menu-items {
-    font-weight: bold;
+    font-weight: 600;
+    font-size: 0.85rem;
 
     ul {
       list-style: none;
@@ -26,20 +27,20 @@
     
     li {
       list-style: none;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       
       a {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 6px;
+        gap: 8px;
+        padding: 4px 2px;
         border-radius: 8px;
         transition: all 0.2s;
         text-decoration: none;
         
         svg {
           flex-shrink: 0;
-          font-size: 20px;
+          font-size: 18px;
         }
       }
     }
@@ -63,19 +64,26 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 8px;
+    margin-top: 4px;
 
     span {
       font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.6);
     }
   }
 
   &__workgroups-title-text {
     cursor: pointer;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &:hover {
-      color: #a19bc3;
-      font-size: large;
+      color: #b4a6fd;
     }
   }
 
@@ -89,14 +97,18 @@
   }
 
   &__workgroup-item-icon {
-    padding: 0 5px;
-    border-radius: 5px;
-    margin-right: 10px;
-    font-size: small;
-    width: 20px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.65rem;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
     text-align: center;
-    font-weight: bold;
+    font-weight: 800;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &--collapsed {

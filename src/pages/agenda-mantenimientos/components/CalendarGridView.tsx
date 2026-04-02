@@ -4,6 +4,7 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import dayjs from 'dayjs';
 import localeData from 'dayjs/plugin/localeData';
+import PersonIcon from '@mui/icons-material/Person';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { ScheduleDetailModal } from './ScheduleDetailModal';
 
@@ -230,7 +231,7 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
                               }}
                               sx={{ 
                                 bgcolor: 'rgba(255,255,255,0.1)', 
-                                borderLeft: `3px solid ${getStatusColor(sch.status)}`,
+                                borderLeft: `3px solid ${sch.type === 'MANAGER_ACTIVITY' ? '#a855f7' : getStatusColor(sch.status)}`,
                                 borderRadius: 1, 
                                 px: 1, 
                                 py: 0.5,
@@ -241,14 +242,20 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
                               <Typography variant="caption" sx={{ 
                                 color: 'white', 
                                 fontWeight: 700, 
-                                display: '-webkit-box',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
                                 WebkitLineClamp: 1,
                                 WebkitBoxOrient: 'vertical',
                                 overflow: 'hidden',
                                 lineHeight: 1.2,
                                 fontSize: '0.7rem'
                               }}>
-                                {dayjs(sch.dateStr).format('HH:mm')} {sch.projectName}
+                                {dayjs(sch.dateStr).format('HH:mm')} 
+                                {sch.type === 'MANAGER_ACTIVITY' && <PersonIcon sx={{ fontSize: '0.75rem', color: '#a855f7' }} />}
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {sch.projectName}
+                                </span>
                               </Typography>
                             </Box>
                           </Tooltip>

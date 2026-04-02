@@ -45,7 +45,7 @@ export const ScheduleCard: React.FC<Props> = ({ schedule, onEdit }) => {
           top: 16,
           bottom: 16,
           width: '3px',
-          bgcolor: getStatusColor(schedule.status),
+          bgcolor: schedule.type === 'MANAGER_ACTIVITY' ? '#a855f7' : getStatusColor(schedule.status),
           borderTopRightRadius: 2,
           borderBottomRightRadius: 2,
           zIndex: 1
@@ -54,11 +54,25 @@ export const ScheduleCard: React.FC<Props> = ({ schedule, onEdit }) => {
         <CardActionArea sx={{ p: 1.5, pl: 2.5 }} onClick={() => setOpen(true)}>
           {/* Top Row: Title and Time */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-            <Box sx={{ maxWidth: '75%' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, color: 'white', fontSize: '1rem' }}>
-                {schedule.projectName}
-              </Typography>
-            </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, color: 'white', fontSize: '1rem' }}>
+                  {schedule.projectName}
+                </Typography>
+                {schedule.type === 'MANAGER_ACTIVITY' && (
+                  <Chip 
+                    label="PERSONAL" 
+                    size="small" 
+                    sx={{ 
+                      height: 16, 
+                      fontSize: '0.6rem', 
+                      fontWeight: 900, 
+                      bgcolor: 'rgba(168, 85, 247, 0.2)', 
+                      color: '#a855f7',
+                      border: '1px solid rgba(168, 85, 247, 0.4)'
+                    }} 
+                  />
+                )}
+              </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
               <Typography variant="body2" sx={{ fontWeight: 700, color: '#0a84ff', fontSize: '0.8rem' }}>
                 {isAllDay ? 'Todo el día' : timeStr}
@@ -78,27 +92,29 @@ export const ScheduleCard: React.FC<Props> = ({ schedule, onEdit }) => {
               </Typography>
             </Box>
             
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-              {/* Quotation Indicator */}
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                color: schedule.hasQuotation === 'SI' ? '#30d158' : (schedule.hasQuotation === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.2)'),
-                transition: 'color 0.2s'
-              }}>
-                <RequestQuoteOutlinedIcon sx={{ fontSize: 16 }} />
-              </Box>
+            {schedule.type !== 'MANAGER_ACTIVITY' && (
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                {/* Quotation Indicator */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  color: schedule.hasQuotation === 'SI' ? '#30d158' : (schedule.hasQuotation === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.2)'),
+                  transition: 'color 0.2s'
+                }}>
+                  <RequestQuoteOutlinedIcon sx={{ fontSize: 16 }} />
+                </Box>
 
-              {/* Report Indicator */}
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                color: schedule.hasReport === 'SI' ? '#0a84ff' : (schedule.hasReport === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.2)'),
-                transition: 'color 0.2s'
-              }}>
-                <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
+                {/* Report Indicator */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  color: schedule.hasReport === 'SI' ? '#0a84ff' : (schedule.hasReport === 'NO' ? '#ff453a' : 'rgba(255,255,255,0.2)'),
+                  transition: 'color 0.2s'
+                }}>
+                  <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
+                </Box>
               </Box>
-            </Box>
+            )}
           </Box>
         </CardActionArea>
       </Card>
