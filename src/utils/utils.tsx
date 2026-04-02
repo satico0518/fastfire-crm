@@ -34,6 +34,8 @@ export const translateAccess = (access: Access) => {
       return "FORMATOS";
     case "PLANNER":
       return "AGENDA PLANNER";
+    case "MANAGER":
+      return "MANAGER";
     default:
       return "NA";
   }

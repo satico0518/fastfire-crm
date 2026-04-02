@@ -10,7 +10,6 @@ import Chip from "@mui/material/Chip";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
-  disablePortal: true,
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
@@ -18,31 +17,18 @@ const MenuProps = {
       backgroundColor: '#1c1c1e',
       color: 'white',
       border: '1px solid rgba(255, 255, 255, 0.1)',
-    },
-    sx: {
       zIndex: 9999,
-    }
-  },
-  anchorOrigin: {
-    vertical: 'bottom' as const,
-    horizontal: 'left' as const,
-  },
-  transformOrigin: {
-    vertical: 'top' as const,
-    horizontal: 'left' as const,
-  },
-  MenuListProps: {
-    style: {
-      padding: 0,
     },
   },
 };
 
 const darkSelectSx = {
-  color: '#1c1c1e',
-  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(0,0,0,0.3)' },
-  '& .MuiInput-underline:after': { borderBottomColor: '#1c1c1e' },
-  '& .MuiSvgIcon-root': { color: 'rgba(0,0,0,0.5)' },
+  color: 'white',
+  borderRadius: '12px',
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
 };
 
 function getStyles(name: string, personName: readonly string[], theme: Theme) {
@@ -94,7 +80,7 @@ export const MultiselectComponent = ({
           input={<OutlinedInput id="select-multiple-chip" placeholder={title} />}
           renderValue={(selected) => {
             if (selected.length === 0) {
-              return <span style={{ color: 'rgba(0,0,0,0.5)' }}>{title}</span>;
+              return <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{title}</span>;
             }
             return (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, py: 0.5 }}>
