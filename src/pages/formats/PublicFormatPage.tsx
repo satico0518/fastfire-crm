@@ -760,6 +760,66 @@ export const PublicFormatPage = () => {
           </Paper>
         );
       }
+      case "header":
+        return (
+          <Typography 
+            key={field.name}
+            variant="overline" 
+            sx={{ 
+              gridColumn: '1 / -1', 
+              mt: 2, 
+              mb: -0.5, 
+              color: '#0a84ff', 
+              fontWeight: 900,
+              fontSize: '0.75rem',
+              letterSpacing: '1px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              '&::after': {
+                content: '""',
+                flex: 1,
+                height: '1px',
+                bgcolor: 'rgba(10,132,255,0.2)'
+              }
+            }}
+          >
+            {field.label}
+          </Typography>
+        );
+      case "section": {
+        return (
+          <Box key={field.name} sx={{ mb: 3 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 800, 
+                fontSize: '0.95rem',
+                color: 'white', 
+                mb: 2,
+                pb: 1,
+                borderBottom: '2px solid rgba(10,132,255,0.5)',
+                letterSpacing: '0.5px'
+              }}
+            >
+              {field.label}
+            </Typography>
+            <Box 
+              sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                gap: 2,
+                p: 2,
+                bgcolor: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 3
+              }}
+            >
+              {(field.subFields || []).map((subField) => renderField(subField, groupData, onGroupFieldChange, groupIndex))}
+            </Box>
+          </Box>
+        );
+      }
       default:
         return null;
     }
