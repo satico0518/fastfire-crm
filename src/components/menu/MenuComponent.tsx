@@ -20,7 +20,7 @@ import SecondaryActions, {
 } from "../menu-secondary/SecondaryActions";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
-import { Button, Tooltip, IconButton, Box } from "@mui/material";
+import { Button, Tooltip, IconButton, Box, Typography } from "@mui/material";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { WorkgroupService } from "../../services/workgroup.service";
@@ -42,7 +42,7 @@ export const MenuComponent = ({
   const isAuth = useAuhtStore((state) => state.isAuth);
   const currentUser = useAuhtStore((state) => state.user);
   const hasHydrated = useAuhtStore((state) => state.hasHydrated);
-  
+
   const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
   const setIsSidebarCollapsed = useUiStore((state) => state.setIsSidebarCollapsed);
 
@@ -50,7 +50,7 @@ export const MenuComponent = ({
   if (!hasHydrated) {
     return null;
   }
-  
+
   const isAdmin = currentUser?.permissions.includes("ADMIN");
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const setModal = useUiStore((state) => state.setModal);
@@ -170,10 +170,10 @@ export const MenuComponent = ({
 
   return (
     <div className={`menu ${isMobileMenuOpen ? "menu--open" : ""} ${isSidebarCollapsed ? "menu--collapsed" : ""}`}>
-      
+
       {/* Sidebar Toggle - Only on Desktop */}
       <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: isSidebarCollapsed ? 'center' : 'flex-end', mb: 1 }}>
-        <IconButton 
+        <IconButton
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           size="small"
           sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
@@ -200,27 +200,27 @@ export const MenuComponent = ({
           )}
           {(currentUser?.permissions.includes("PURCHASE") ||
             currentUser?.permissions.includes("PROVIDER")) && (
-            <li>
-              <Tooltip title={isSidebarCollapsed ? (currentUser?.permissions.includes("PROVIDER") ? "Cotización" : "Comercial") : ""} placement="right" arrow>
-                <NavLink
-                  to="/purchasing-manager"
-                  onClick={closeOnMobile}
-                  className={({ isActive }) => isActive ? "active" : ""}
-                >
-                  {currentUser?.permissions.includes("PROVIDER") ? (
-                    <RequestQuoteOutlinedIcon />
-                  ) : (
-                    <ShoppingCartOutlinedIcon />
-                  )}
-                  {!isSidebarCollapsed && (
-                    <span>
-                      {currentUser?.permissions.includes("PROVIDER") ? "Cotización" : "Comercial"}
-                    </span>
-                  )}
-                </NavLink>
-              </Tooltip>
-            </li>
-          )}
+              <li>
+                <Tooltip title={isSidebarCollapsed ? (currentUser?.permissions.includes("PROVIDER") ? "Cotización" : "Comercial") : ""} placement="right" arrow>
+                  <NavLink
+                    to="/purchasing-manager"
+                    onClick={closeOnMobile}
+                    className={({ isActive }) => isActive ? "active" : ""}
+                  >
+                    {currentUser?.permissions.includes("PROVIDER") ? (
+                      <RequestQuoteOutlinedIcon />
+                    ) : (
+                      <ShoppingCartOutlinedIcon />
+                    )}
+                    {!isSidebarCollapsed && (
+                      <span>
+                        {currentUser?.permissions.includes("PROVIDER") ? "Cotización" : "Comercial"}
+                      </span>
+                    )}
+                  </NavLink>
+                </Tooltip>
+              </li>
+            )}
           {currentUser?.permissions.includes("ADMIN") && (
             <li>
               <Tooltip title={isSidebarCollapsed ? "Admin" : ""} placement="right" arrow>
@@ -278,32 +278,42 @@ export const MenuComponent = ({
         <ul>
           {isAdmin && (
             <li>
-              <Tooltip title={isSidebarCollapsed ? "Todas las tareas" : ""} placement="right" arrow>
+              <Tooltip title={isSidebarCollapsed ? "Tareas" : ""} placement="right" arrow>
                 <Button
                   fullWidth={!isSidebarCollapsed}
-                  sx={{ color: "white", justifyContent: isSidebarCollapsed ? 'center' : 'flex-start', minWidth: 0, px: isSidebarCollapsed ? 0 : 2 }}
+                  sx={{
+                    color: "white",
+                    justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+                    minWidth: 0,
+                    px: isSidebarCollapsed ? 0 : 1,
+                    py: 0.5
+                  }}
                   onClick={() => {
                     navigate("/tasks");
                     closeOnMobile();
                   }}
                 >
-                  <FormatListBulletedOutlinedIcon />
-                  {!isSidebarCollapsed && <Box sx={{ ml: 1, textTransform: 'none' }}>Ver todas las tareas</Box>}
+                  <FormatListBulletedOutlinedIcon sx={{ fontSize: 18 }} />
+                  {!isSidebarCollapsed && (
+                    <Box sx={{ ml: 1, textTransform: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Tareas
+                    </Box>
+                  )}
                 </Button>
               </Tooltip>
             </li>
           )}
           {!currentUser?.permissions.includes("PROVIDER") &&
-          workgroupsByRole().length > 0 ? (
+            workgroupsByRole().length > 0 ? (
             workgroupsByRole().map((wg) => (
               <li key={wg.id}>
                 <Tooltip title={isSidebarCollapsed ? wg.name : ""} placement="right" arrow>
-                  <div className="menu__workgroup-item">
+                  <div className="menu__workgroup-item" style={{ padding: '2px 0' }}>
                     <div
                       className="menu__workgroup-item-icon"
-                      style={{ 
+                      style={{
                         backgroundColor: wg.color ? wg.color : "#8a8282",
-                        margin: isSidebarCollapsed ? '0 auto' : '0 10px 0 0',
+                        margin: isSidebarCollapsed ? '0 auto' : '0 8px 0 0',
                         cursor: 'pointer'
                       }}
                       onClick={() => {
@@ -314,28 +324,42 @@ export const MenuComponent = ({
                       {wg.name.charAt(0).toUpperCase()}
                     </div>
                     {!isSidebarCollapsed && (
-                      <div className="menu__workgroups-title" style={{ marginTop: 0 }}>
-                        <span
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexGrow: 1,
+                        minWidth: 0
+                      }}>
+                        <Typography
                           className="menu__workgroups-title-text"
+                          noWrap
+                          sx={{
+                            fontSize: '0.8rem',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            flexGrow: 1
+                          }}
                           onClick={() => {
                             navigate("/tasksbygroup", { state: { wg } });
                             closeOnMobile();
                           }}
                         >
                           {wg.name.charAt(0).toUpperCase() + wg.name.substring(1).toLowerCase()}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           {!wg.isPrivate && (
                             <PublicOutlinedIcon
                               sx={{
-                                fontSize: "15px",
-                                marginLeft: "10px",
-                                top: "2px",
-                                color: "#b8d2e9",
+                                fontSize: "12px",
+                                mr: 0.5,
+                                color: "rgba(184, 210, 233, 0.7)",
                               }}
                             />
                           )}
-                        </span>
-                        <SecondaryActions options={getGroupSecondaryActions(wg).options} />
-                      </div>
+                          <SecondaryActions options={getGroupSecondaryActions(wg).options} />
+                        </Box>
+                      </Box>
                     )}
                   </div>
                 </Tooltip>
@@ -349,20 +373,34 @@ export const MenuComponent = ({
               <li>
                 <Button
                   fullWidth
-                  sx={{ color: "white", justifyContent: 'flex-start', textTransform: 'none' }}
+                  sx={{
+                    color: "rgba(255,255,255,0.7)",
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    py: 0.2,
+                    '&:hover': { color: 'white' }
+                  }}
                   onClick={() => {
                     navigate("/tasks", { state: { goTo: "wg" } });
                     closeOnMobile();
                   }}
                 >
-                  <FormatListBulletedOutlinedIcon sx={{ mr: 1 }} />
+                  <FormatListBulletedOutlinedIcon sx={{ mr: 1, fontSize: 16 }} />
                   Ver Grupos
                 </Button>
               </li>
               <li>
                 <Button
                   fullWidth
-                  sx={{ color: "white", justifyContent: 'flex-start', textTransform: 'none' }}
+                  sx={{
+                    color: "rgba(255,255,255,0.7)",
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    py: 0.2,
+                    '&:hover': { color: 'white' }
+                  }}
                   onClick={() =>
                     setModal({
                       ...modal,
@@ -372,7 +410,7 @@ export const MenuComponent = ({
                     })
                   }
                 >
-                  <AddOutlinedIcon sx={{ mr: 1 }} />
+                  <AddOutlinedIcon sx={{ mr: 1, fontSize: 16 }} />
                   Crear Grupo
                 </Button>
               </li>

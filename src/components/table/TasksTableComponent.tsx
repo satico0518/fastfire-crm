@@ -375,11 +375,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const handleEditNotes = async () => {
     try {
       if (selectedTask) {
-        selectedTask.notes = `${
-          selectedTask.notes && selectedTask.notes.length > 0
+        selectedTask.notes = `${selectedTask.notes && selectedTask.notes.length > 0
             ? `${selectedTask.notes}, `
             : ""
-        }[${dayjs(Date.now()).format("DDMMMYY hh:mm")}] ${taskNotes}`;
+          }[${dayjs(Date.now()).format("DDMMMYY hh:mm")}] ${taskNotes}`;
         const resp = await updateTaskByUser(selectedTask);
         if (resp.result === "OK") {
           setSnackbar({
@@ -450,7 +449,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const handleDeleteTask = async (task: Task) => {
     const isAdmin = currentUser?.permissions?.includes("ADMIN");
     const isAlreadyDeleted = task.status === "DELETED";
-    
+
     let deleteResult;
     if (isAlreadyDeleted && isAdmin) {
       deleteResult = await TaskService.physicalDeleteTask(task);
@@ -479,7 +478,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     setConfirmation({
       open: true,
       title: "Confirmación!",
-      text: isDeleted 
+      text: isDeleted
         ? `¿Estás seguro de borrar físicamente de la BASE DE DATOS la tarea "${task.name.toUpperCase()}"? Esta acción no se puede deshacer.`
         : `Vas a eliminar la tarea "${task.name.toUpperCase()}". Podrás recuperarla desde la pestaña de "Eliminadas" durante los próximos 30 días.`,
       actions: <Button color={isDeleted ? "error" : "primary"} onClick={() => handleDeleteTask(task)}>
@@ -496,7 +495,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       Responsables: task.ownerKeys?.map(k => getUserNameByKey(k, users || [])).join(', ') || 'Sin asignar',
       'Fecha Límite': task.dueDate ? dayjs(task.dueDate, 'DD/MM/YYYY').format('DD/MM/YYYY') : 'Sin fecha límite',
       Notas: task.notes || '',
-      Prioridad: task.priority ? ['Baja', 'Normal', 'Alta', 'Urgente'][['LOW','NORMAL','HIGH','URGENT'].indexOf(task.priority)] : '-',
+      Prioridad: task.priority ? ['Baja', 'Normal', 'Alta', 'Urgente'][['LOW', 'NORMAL', 'HIGH', 'URGENT'].indexOf(task.priority)] : '-',
       'Fecha de Creación': translateTimestampToString(task.createdDate),
       'Grupos de Trabajo': task.workgroupKeys?.map(k => getWorkgroupNameByKey(k, workgroups || [])).join(', ') || '',
       'Creado por': getUserNameByKey(task.createdByUserKey, users || []) || 'NA',
@@ -542,10 +541,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
     return getFilteredByTags(
       tasks !== null
         ? tasks?.filter((t) => {
-            if (showDeletedTasks) return t.status === "DELETED";
-            if (t.status === "DELETED") return false;
-            return showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED";
-          })
+          if (showDeletedTasks) return t.status === "DELETED";
+          if (t.status === "DELETED") return false;
+          return showArchivedTasks ? t.status === "ARCHIVED" : t.status !== "ARCHIVED";
+        })
         : []
     );
   };
@@ -605,10 +604,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           icon={<DeleteOutlineOutlinedIcon color="error" />}
           onClick={() => handleDeleteConfirmation(params.row)}
           label={params.row.status === "DELETED" ? "Borrar BD" : "Eliminar"}
-          sx={params.row.status === "DELETED" ? { 
-            color: '#ff453a !important', 
+          sx={params.row.status === "DELETED" ? {
+            color: '#ff453a !important',
             fontWeight: 'bold',
-            '& .MuiTypography-root': { fontWeight: 'bold' } 
+            '& .MuiTypography-root': { fontWeight: 'bold' }
           } : {}}
           showInMenu
         />,
@@ -619,7 +618,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "status",
       headerName: "Estado",
       type: "string",
-      width: 180,
+      width: 130,
       filterable: true,
       valueGetter: (_value: any, row: Task) => {
         // Para el filtro, devolvemos el estado traducido
@@ -792,7 +791,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       headerName: "Responsables",
       sortable: false,
       filterable: true,
-      width: 150,
+      width: 120,
       align: "center",
       editable: true,
       valueGetter: (_value: any, row: Task) => {
@@ -809,50 +808,50 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
         <div className={`${!row.ownerKeys && "no-owner"} owners-container`}>
           {Array.isArray(row.ownerKeys) && row.ownerKeys.length > 0
             ? row.ownerKeys.map((k) => {
-                const userAvatar = users?.find((u) => u.key === k)?.avatarURL;
+              const userAvatar = users?.find((u) => u.key === k)?.avatarURL;
 
-                if (userAvatar)
-                  return (
-                    <Avatar
-                      key={k}
-                      title={(users && getUserNameByKey(k, users)) || "NA"}
-                      src={userAvatar}
-                      sx={{ 
-                        width: "36px", 
-                        height: "36px", 
-                        marginLeft: "-10px",
-                        p: "1px",
-                        border: "1.5px solid rgba(255,255,255,0.2)",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-                        bgcolor: "white",
-                        cursor: 'zoom-in',
-                        transform: "translateZ(0)",
-                        transition: "transform 0.15s ease",
-                        "&:hover": { transform: "scale(1.2) translateZ(0)", zIndex: 10 }
-                      }}
-                      imgProps={{ style: { objectFit: 'contain' } }}
-                    />
-                  );
-
+              if (userAvatar)
                 return (
-                  <div
+                  <Avatar
                     key={k}
-                    className="owner-circle"
                     title={(users && getUserNameByKey(k, users)) || "NA"}
-                    style={{
-                      backgroundColor:
-                        users?.filter((u) => u.key === k)[0]?.color ??
-                        "blueviolet",
+                    src={userAvatar}
+                    sx={{
+                      width: "36px",
+                      height: "36px",
+                      marginLeft: "-10px",
+                      p: "1px",
+                      border: "1.5px solid rgba(255,255,255,0.2)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+                      bgcolor: "white",
+                      cursor: 'zoom-in',
+                      transform: "translateZ(0)",
+                      transition: "transform 0.15s ease",
+                      "&:hover": { transform: "scale(1.2) translateZ(0)", zIndex: 10 }
                     }}
-                  >
-                    {`${users
-                      ?.filter((u) => u.key === k)[0]
-                      ?.firstName.charAt(0)}${users
+                    imgProps={{ style: { objectFit: 'contain' } }}
+                  />
+                );
+
+              return (
+                <div
+                  key={k}
+                  className="owner-circle"
+                  title={(users && getUserNameByKey(k, users)) || "NA"}
+                  style={{
+                    backgroundColor:
+                      users?.filter((u) => u.key === k)[0]?.color ??
+                      "blueviolet",
+                  }}
+                >
+                  {`${users
+                    ?.filter((u) => u.key === k)[0]
+                    ?.firstName.charAt(0)}${users
                       ?.filter((u) => u.key === k)[0]
                       ?.lastName.charAt(0)}`}
-                  </div>
-                );
-              })
+                </div>
+              );
+            })
             : "Sin asignar"}
         </div>
       ),
@@ -861,10 +860,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           onClick={() => {
             setSelectedTask(row);
             setSelectedOwners(
-              (Array.isArray(row?.ownerKeys) 
+              (Array.isArray(row?.ownerKeys)
                 ? row.ownerKeys.map((k) =>
-                    getUserNameByKey(k, users as User[])
-                  ) 
+                  getUserNameByKey(k, users as User[])
+                )
                 : []) || []
             );
             setOpenOwnersDialog(true);
@@ -883,8 +882,8 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       renderCell: ({ row }: GridRenderCellParams<Task>) =>
         row?.dueDate
           ? dayjs(changeDateFromDMA_MDA(row.dueDate as string)).format(
-              "DD/MM/YYYY"
-            )
+            "DD/MM/YYYY"
+          )
           : "Sin fecha límite",
       editable: true,
       renderEditCell: ({ row }: GridRenderEditCellParams<Task>) => (
@@ -940,7 +939,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "priority",
       headerName: "Prioridad",
       type: "string",
-      width: 150,
+      width: 90,
       renderCell: (params: GridRenderCellParams<Task>) =>
         params.row?.priority ? translatePriority(params.row.priority) : "-",
       editable: true,
@@ -961,13 +960,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "createdDate",
       headerName: "Fecha de Creación",
       type: "string",
-      width: 180,
+      width: 150,
       renderCell: ({ row }: GridRenderCellParams<Task>) => (
         <span
           style={{ cursor: "pointer" }}
-          title={`Creada por ${
-            (users && getUserNameByKey(row.createdByUserKey, users)) || "NA"
-          }`}
+          title={`Creada por ${(users && getUserNameByKey(row.createdByUserKey, users)) || "NA"
+            }`}
         >
           {translateTimestampToString(row.createdDate)}
         </span>
@@ -978,7 +976,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       field: "workgroupKeys",
       headerName: "Grupos de Trabajo",
       type: "string",
-      width: 250,
+      width: 200,
       renderCell: ({ row }: GridRenderCellParams<Task>) => {
         const taskWorkgroups = workgroups?.filter((wg) =>
           row.workgroupKeys?.some((k) => k === (wg.key as string))
@@ -1051,13 +1049,13 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
       filterable: true,
       valueGetter: (_value: any, row: Task) =>
         (users && getUserNameByKey(row.createdByUserKey, users)) || "NA",
-    },  ];
+    },];
 
   return (
     <>
-      <Paper 
-        sx={{ 
-          height: isMobile ? "calc(100vh - 185px)" : "calc(100vh - 245px)", 
+      <Paper
+        sx={{
+          height: isMobile ? "calc(100vh - 185px)" : "calc(100vh - 245px)",
           width: "100%",
           backgroundColor: 'rgba(28, 28, 30, 0.6)',
           backdropFilter: 'blur(20px)',
@@ -1092,113 +1090,113 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
           }
         }}
       >
-      <DataGrid
-        autoPageSize
-        columnHeaderHeight={36}
-        rows={getTaskByRole()}
-        columns={columns}
-        filterModel={filterModel}
-        onFilterModelChange={(newModel) => setFilterModel(newModel)}
-        initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[20]}
-        localeText={{
-          MuiTablePagination: { 
-            labelRowsPerPage: "Filas por página",
-            labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
-          },
-          noRowsLabel: "Sin filas",
-          footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
-        }}
-        slotProps={{
-          filterPanel: {
-            sx: {
-              maxWidth: '95vw',
-              '& .MuiDataGrid-filterForm': {
-                display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: '10px',
-                padding: '8px',
+        <DataGrid
+          autoPageSize
+          columnHeaderHeight={36}
+          rows={getTaskByRole()}
+          columns={columns}
+          filterModel={filterModel}
+          onFilterModelChange={(newModel) => setFilterModel(newModel)}
+          initialState={{ pagination: { paginationModel } }}
+          pageSizeOptions={[20]}
+          localeText={{
+            MuiTablePagination: {
+              labelRowsPerPage: "Filas por página",
+              labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
+            },
+            noRowsLabel: "Sin filas",
+            footerRowSelected: (count) => `${count} fila${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`,
+          }}
+          slotProps={{
+            filterPanel: {
+              sx: {
+                maxWidth: '95vw',
+                '& .MuiDataGrid-filterForm': {
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: '10px',
+                  padding: '8px',
+                },
+                '& .MuiDataGrid-filterFormColumnInput': { width: '100%', m: 0 },
+                '& .MuiDataGrid-filterFormOperatorInput': { width: '100%', m: 0 },
+                '& .MuiDataGrid-filterFormValueInput': { width: '100%', m: 0 },
               },
-              '& .MuiDataGrid-filterFormColumnInput': { width: '100%', m: 0 },
-              '& .MuiDataGrid-filterFormOperatorInput': { width: '100%', m: 0 },
-              '& .MuiDataGrid-filterFormValueInput': { width: '100%', m: 0 },
             },
-          },
-        }}
-        sx={{
-          border: 0,
-          fontSize: "0.75rem",
-          "& .MuiDataGrid-cell": {
-            paddingTop: "4px",
-            paddingBottom: "4px",
-            lineHeight: 1.2,
-          },
-          "& .MuiDataGrid-columnHeader": {
+          }}
+          sx={{
+            border: 0,
             fontSize: "0.75rem",
-            minHeight: "30px",
-            lineHeight: 1.2,
-          },
-          "& .MuiDataGrid-row": {
-            maxHeight: "28px",
-            minHeight: "28px",
-          },
-          "& .MuiDataGrid-virtualScrollerContent": {
-            "& .MuiDataGrid-row": {
-              minHeight: "28px !important",
-              maxHeight: "28px !important",
-            },
-          },
-          "& .MuiDataGrid-actionsCell .MuiIconButton-root": {
-            color: "white",
-          },
-          "& .MuiChip-root": {
-            fontSize: "0.65rem",
-            height: "22px",
-            lineHeight: 1,
-            minHeight: "22px",
-            padding: "0 6px",
-          },
-          "& .MuiSvgIcon-root": {
-            fontSize: "1rem",
-          },
-          "@media (max-width: 1100px)": {
-            fontSize: "0.68rem",
-            "& .MuiChip-root": {
-              fontSize: "0.6rem",
-              height: "20px",
-              minHeight: "20px",
-              padding: "0 5px",
-            },
-            "& .MuiSvgIcon-root": {
-              fontSize: "0.9rem",
-            },
             "& .MuiDataGrid-cell": {
-              paddingTop: "2px",
-              paddingBottom: "2px",
+              paddingTop: "4px",
+              paddingBottom: "4px",
+              lineHeight: 1.2,
             },
             "& .MuiDataGrid-columnHeader": {
-              fontSize: "0.68rem",
-              minHeight: "28px",
+              fontSize: "0.75rem",
+              minHeight: "30px",
+              lineHeight: 1.2,
             },
             "& .MuiDataGrid-row": {
-              minHeight: "24px",
-              maxHeight: "24px",
+              maxHeight: "28px",
+              minHeight: "28px",
             },
-            "& .MuiDataGrid-virtualScrollerContent .MuiDataGrid-row": {
-              minHeight: "24px !important",
-              maxHeight: "24px !important",
+            "& .MuiDataGrid-virtualScrollerContent": {
+              "& .MuiDataGrid-row": {
+                minHeight: "28px !important",
+                maxHeight: "28px !important",
+              },
             },
-          },
-        }}
-        rowHeight={28}
-      />
+            "& .MuiDataGrid-actionsCell .MuiIconButton-root": {
+              color: "white",
+            },
+            "& .MuiChip-root": {
+              fontSize: "0.65rem",
+              height: "22px",
+              lineHeight: 1,
+              minHeight: "22px",
+              padding: "0 6px",
+            },
+            "& .MuiSvgIcon-root": {
+              fontSize: "1rem",
+            },
+            "@media (max-width: 1100px)": {
+              fontSize: "0.68rem",
+              "& .MuiChip-root": {
+                fontSize: "0.6rem",
+                height: "20px",
+                minHeight: "20px",
+                padding: "0 5px",
+              },
+              "& .MuiSvgIcon-root": {
+                fontSize: "0.9rem",
+              },
+              "& .MuiDataGrid-cell": {
+                paddingTop: "2px",
+                paddingBottom: "2px",
+              },
+              "& .MuiDataGrid-columnHeader": {
+                fontSize: "0.68rem",
+                minHeight: "28px",
+              },
+              "& .MuiDataGrid-row": {
+                minHeight: "24px",
+                maxHeight: "24px",
+              },
+              "& .MuiDataGrid-virtualScrollerContent .MuiDataGrid-row": {
+                minHeight: "24px !important",
+                maxHeight: "24px !important",
+              },
+            },
+          }}
+          rowHeight={28}
+        />
       </Paper>
       {/* Row 1: Nueva Tarea | Archivadas + Excel */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
         <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
           <TaskCreatorRowComponent />
         </Box>
-        
+
         {/* Mobile ONLY creator button */}
         <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
           <Button
@@ -1521,12 +1519,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
                 <ListItem key={`${event.modifiedDate}-${idx}`} alignItems="flex-start" sx={{ paddingY: 0.5 }}>
                   <ListItemText
                     primary={
-                      `${dayjs(event.modifiedDate).format('DD/MM/YYYY HH:mm')} - ${
-                        translateHistoryAction(event.action)
-                      } por ${
-                        (users && getUserNameByKey(event.modifierUserId, users)) ||
-                        event.modifierUserId ||
-                        'Desconocido'
+                      `${dayjs(event.modifiedDate).format('DD/MM/YYYY HH:mm')} - ${translateHistoryAction(event.action)
+                      } por ${(users && getUserNameByKey(event.modifierUserId, users)) ||
+                      event.modifierUserId ||
+                      'Desconocido'
                       }`
                     }
                     primaryTypographyProps={{ sx: { fontSize: '0.85rem' } }}
