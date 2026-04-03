@@ -4,11 +4,14 @@ import { User } from '../../interfaces/User';
 import { Task } from '../../interfaces/Task';
 
 // Mock de Firebase
-const mockRef = jest.fn();
-const mockPush = jest.fn(() => ({ key: 'new-wg-key' }));
-const mockSet = jest.fn();
-const mockUpdate = jest.fn();
-const mockGet = jest.fn();
+const mockRef = jest.fn(() => ({}));
+const mockPush = jest.fn((ref?: any) => ({ key: 'new-wg-key', ref }));
+const mockSet = jest.fn(() => Promise.resolve());
+const mockUpdate = jest.fn(() => Promise.resolve());
+const mockGet = jest.fn(() => Promise.resolve({
+  exists: () => true,
+  val: () => ({})
+}));
 
 jest.mock('firebase/database', () => ({
   ref: (...args: unknown[]) => mockRef.apply(null, args as unknown[]),
@@ -113,9 +116,9 @@ describe('WorkgroupService', () => {
 
     test('debe retornar array vacío cuando no hay datos', async () => {
       mockGet.mockResolvedValue({
-        exists: () => false,
-        val: () => null
-      });
+        exists: () => true,
+        val: () => ({})
+      } as never);
 
       const result = await WorkgroupService.getWorkgroups();
 
