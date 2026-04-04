@@ -47,9 +47,8 @@ global.FileReader = class FileReader {
     this.result = 'data:image/png;base64,test';
   }
   readAsDataURL() {
-    setTimeout(() => {
-      if (this.onloadend) this.onloadend();
-    }, 1);
+    // Síncrono en ambiente de test — evita flakiness con async/await
+    if (this.onloadend) this.onloadend();
   }
 };
 

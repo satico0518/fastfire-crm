@@ -255,6 +255,7 @@ export const FormatResultsTable = () => {
               <Tooltip title="PDF">
                 <IconButton 
                   size="small" 
+                  aria-label="PDF"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleExportPDF(params.row);
@@ -318,6 +319,7 @@ export const FormatResultsTable = () => {
             <Tooltip title="Descargar imagen">
               <IconButton
                 size="small"
+                aria-label="Descargar imagen"
                 onClick={() => downloadImage(src, fieldName)}
                 sx={{
                   position: "absolute",

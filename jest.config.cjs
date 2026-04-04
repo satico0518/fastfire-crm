@@ -1,77 +1,73 @@
-/** @type {import('jest').Config.InitialOptions } */
+/** @type {import('jest').Config} */
 
 module.exports = {
-  // Provide the path to your app files
+  // Directorio raíz de los archivos fuente y tests
   roots: ['<rootDir>/src'],
-  
-  // Module file extensions for modules that your tests should be able to import without specifying a file extension
-  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
-  
-  // The test environment that will be used for testing
+
+  // Entorno de testing — JSDOM para simular el browser
   testEnvironment: 'jsdom',
-  
-  // A list of paths to modules that run some code to configure or set up the testing framework before each test
+
+  // Setup ejecutado después de que el framework de testing se inicializa
   setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
-  
-  // The glob patterns Jest uses to detect test files
+
+  // Patrón canónico de Jest para detectar archivos de test
   testMatch: [
-    '**/__tests__/**/*.(js|jsx|ts|tsx)',
-    '**/*.(test|spec).(js|jsx|ts|tsx)'
+    '**/__tests__/**/*.[jt]s?(x)',
+    '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
-  
-  // A map from regular expressions to paths to transformers
+
+  // Transformación con babel-jest (TypeScript via @babel/preset-typescript)
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
-  
-  // An array of regexp pattern strings that are matched against all source file paths before transformation
+
+  // Ignorar node_modules y módulos CSS
   transformIgnorePatterns: [
     '/node_modules/',
-    '^.+\\.module\\.(css|sass|scss)$'
+    '\\.module\\.(css|sass|scss)$',
   ],
-  
-  // The directory where Jest should output its coverage files
-  coverageDirectory: 'coverage',
-  
-  // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: ['text', 'lcov', 'html'],
-  
-  // The threshold for code coverage
-  coverageThreshold: {
-    global: {
-      branches: 40,
-      functions: 40,
-      lines: 40,
-      statements: 40
-    }
-  },
-  
-  // Collect coverage from files that match these glob patterns
-  collectCoverageFrom: [
-    'src/**/*.(js|jsx|ts|tsx)',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.(js|jsx|ts|tsx)',
-    '!src/**/__tests__/**',
-    '!src/**/*.test.(js|jsx|ts|tsx)',
-    '!src/**/*.spec.(js|jsx|ts|tsx)'
-  ],
-  
-  // Module name mapper for absolute imports
+
+  // TS primero — resolución más eficiente en proyectos TypeScript
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+
+  // Alias y mocks de assets/estilos
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|sass|scss)$': '<rootDir>/src/test/styleMock.js',
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/test/fileMock.js',
   },
-  
-  // Extensions to treat as ESM
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  
-  // Clear mocks
-  clearMocks: true,
-  
-  // Reset mocks
-  resetMocks: false,
-  
-  // Verbose output
-  verbose: true
+
+  // Configuración de cobertura
+  coverageDirectory: 'coverage',
+  coverageProvider: 'babel',
+  coverageReporters: ['text', 'lcov', 'html'],
+  collectCoverageFrom: [
+    'src/**/*.(ts|tsx)',
+    '!src/**/*.d.ts',
+    '!src/**/*.stories.(ts|tsx)',
+    '!src/**/__tests__/**',
+    '!src/**/*.test.(ts|tsx)',
+    '!src/**/*.spec.(ts|tsx)',
+    '!src/main.tsx',
+    '!src/firebase/**',
+  ],
+
+  // Umbrales de cobertura mínima
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 65,
+      lines: 65,
+      statements: 65,
+    },
+  },
+
+  // Comportamiento de mocks entre tests
+  clearMocks: true,      // Limpia llamadas/instancias/resultados registrados
+  restoreMocks: true,    // Restaura implementaciones originales de spies
+
+  // Tiempo máximo por test (ms) — explícito para tests de MUI complejos
+  testTimeout: 10000,
+
+  verbose: true,
 };
