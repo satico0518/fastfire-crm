@@ -81,24 +81,31 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       setValue("firstName", editingUser.firstName || "");
       setValue("lastName", editingUser.lastName || "");
       setValue("email", editingUser.email);
-      setAccessState({
-        ADMIN: editingUser.permissions?.includes("ADMIN"),
-        TYG: editingUser.permissions?.includes("TYG"),
-        PURCHASE: editingUser.permissions?.includes("PURCHASE"),
-        PROVIDER: editingUser.permissions?.includes("PROVIDER"),
-        FORMATER: editingUser.permissions?.includes("FORMATER"),
-        PLANNER: editingUser.permissions?.includes("PLANNER"),
-        MANAGER: editingUser.permissions?.includes("MANAGER"),
-      });
-      setLabelWg(
-        workgroups
-          ?.filter((wg) =>
-            editingUser.workgroupKeys?.includes(wg.key as string)
-          )
-          .map((wg) => wg.name) as string[]
-      );
+      
+      const newAccessState = {
+        ADMIN: !!editingUser.permissions?.includes("ADMIN"),
+        TYG: !!editingUser.permissions?.includes("TYG"),
+        PURCHASE: !!editingUser.permissions?.includes("PURCHASE"),
+        PROVIDER: !!editingUser.permissions?.includes("PROVIDER"),
+        FORMATER: !!editingUser.permissions?.includes("FORMATER"),
+        PLANNER: !!editingUser.permissions?.includes("PLANNER"),
+        MANAGER: !!editingUser.permissions?.includes("MANAGER"),
+      };
+
+      // Evitar actualizaciones de estado innecesarias que pueden causar bucles infinitos
+      if (JSON.stringify(accessState) !== JSON.stringify(newAccessState)) {
+        setAccessState(newAccessState);
+      }
+
+      const newLabels = workgroups
+        ?.filter((wg) => editingUser.workgroupKeys?.includes(wg.key as string))
+        .map((wg) => wg.name) as string[] || [];
+
+      if (JSON.stringify(labelWg) !== JSON.stringify(newLabels)) {
+        setLabelWg(newLabels);
+      }
     }
-  }, [editingUser, setValue, workgroups]);
+  }, [editingUser, setValue, workgroups, accessState, labelWg]);
 
   const onSubmit = async (data: User) => {
     try {
@@ -160,7 +167,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       }
     } catch (error) {
       console.error(
-        `Error al intentar ${editingUser ? "editar" : "crear"} el usurio: `,
+        `Error al intentar ${editingUser ? "editar" : "crear"} el usuario: `,
         { error }
       );
       setSnackbar({
@@ -168,7 +175,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         open: true,
         message: `Error al intentar ${
           editingUser ? "editar" : "crear"
-        } el usurio`,
+        } el usuario`,
         severity: "error",
       });
     } finally {

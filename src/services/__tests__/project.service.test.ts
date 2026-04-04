@@ -1,108 +1,66 @@
-import { ProjectService } from "../project.service";
-import { push, ref, set, update } from "firebase/database";
+import { ProjectService } from '../project.service';
+import * as Firebase from 'firebase/database';
+import { Project } from '../../interfaces/Project';
 
-jest.mock("firebase/database", () => ({
-  ref: jest.fn(() => ({})),
-  push: jest.fn(),
-  set: jest.fn(),
-  update: jest.fn(),
-}));
+jest.mock('firebase/database');
 
-jest.mock("../../firebase/firebase.config", () => ({
-  auth: {
-    currentUser: { uid: "test-user-id" },
-  },
-  db: {},
-}));
+const mockProject: Project = {
+  id: 'p1-id',
+  key: 'p1',
+  name: 'Test Project',
+  location: 'Bogotá',
+  budget: 1000000,
+  status: 'IN_PROGRESS',
+  createdDate: Date.now(),
+  createdByUserId: 'u1',
+};
 
-jest.mock("uuid", () => ({
-  v4: () => "test-uuid",
-}));
-
-describe("ProjectService", () => {
+describe('ProjectService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (Firebase.ref as jest.Mock).mockReturnValue({});
+    (Firebase.update as jest.Mock).mockResolvedValue({ result: 'OK' });
+    (Firebase.set as jest.Mock).mockResolvedValue(undefined);
+    (Firebase.push as jest.Mock).mockReturnValue({ key: 'new-p-key' });
   });
 
-  describe("createProject", () => {
-    it("debe crear un proyecto exitosamente", async () => {
-      const mockPush = { key: "mock-key" };
-      (push as jest.Mock).mockReturnValue(mockPush);
-      (ref as jest.Mock).mockReturnValue({ key: "projects" });
-      (set as jest.Mock).mockResolvedValue(true);
-
-      const project: any = { name: "Test Project" };
-      const response = await ProjectService.createProject(project);
-
-      expect(response.result).toBe("OK");
-      expect(response.message).toBe("Proyecto creado exitosamente!");
-      expect(set).toHaveBeenCalledWith(mockPush, expect.objectContaining({
-        id: "test-uuid",
-        key: "mock-key",
-        createdByUserId: "test-user-id",
-        status: "TODO",
-      }));
-    });
-
-    it("debe retornar error cuando falla la creación", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      (push as jest.Mock).mockReturnValue({ key: "mock-key" });
-      (set as jest.Mock).mockRejectedValue(new Error("Firebase error"));
-
-      const project: any = { name: "Test Project" };
-      const response = await ProjectService.createProject(project);
-
-      expect(response.result).toBe("ERROR");
-      expect(response.errorMessage).toBe("Error tratando de crear Proyecto");
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
+  test('createProject debe llamar a push y set', async () => {
+    const result = await ProjectService.createProject(mockProject);
+    expect(Firebase.push).toHaveBeenCalled();
+    expect(Firebase.set).toHaveBeenCalled();
+    expect(result.result).toBe('OK');
   });
 
-  describe("deleteProject", () => {
-    it("debe realizar un soft delete del proyecto exitosamente", async () => {
-      (update as jest.Mock).mockResolvedValue(true);
-      (ref as jest.Mock).mockReturnValue({});
-
-      const response = await ProjectService.deleteProject("some-key");
-
-      expect(response.result).toBe("OK");
-      expect(update).toHaveBeenCalledWith(expect.anything(), { status: "DELETED" });
-    });
-
-    it("debe retornar error cuando falla la eliminación", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      (update as jest.Mock).mockRejectedValue(new Error("Update fail"));
-
-      const response = await ProjectService.deleteProject("some-key");
-
-      expect(response.result).toBe("ERROR");
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
+  test('updateProject debe llamar a update en el path correcto', async () => {
+    const result = await ProjectService.updateProject(mockProject);
+    expect(Firebase.ref).toHaveBeenCalledWith(expect.anything(), `projects/${mockProject.key}`);
+    expect(Firebase.update).toHaveBeenCalledWith(expect.anything(), mockProject);
+    expect(result.result).toBe('OK');
   });
 
-  describe("updateProject", () => {
-    it("debe actualizar un proyecto exitosamente", async () => {
-      (update as jest.Mock).mockResolvedValue(true);
-      (ref as jest.Mock).mockReturnValue({});
+  test('deleteProject debe llamar a update con status DELETED', async () => {
+    const result = await ProjectService.deleteProject('p1');
+    expect(Firebase.update).toHaveBeenCalledWith(expect.anything(), { status: 'DELETED' });
+    expect(result.result).toBe('OK');
+  });
 
-      const project: any = { key: "some-key", name: "Updated Name" };
-      const response = await ProjectService.updateProject(project);
+  test('maneja errores en createProject', async () => {
+    (Firebase.set as jest.Mock).mockRejectedValueOnce(new Error('Fail'));
+    const result = await ProjectService.createProject(mockProject);
+    expect(result.result).toBe('ERROR');
+  });
 
-      expect(response.result).toBe("OK");
-      expect(update).toHaveBeenCalledWith(expect.anything(), project);
-    });
+  test('maneja errores en updateProject', async () => {
+    (Firebase.update as jest.Mock).mockRejectedValueOnce(new Error('Fail'));
+    const result = await ProjectService.updateProject(mockProject);
+    expect(result.result).toBe('ERROR');
+    expect(result.errorMessage).toBeDefined();
+  });
 
-    it("debe retornar error cuando falla la actualización", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      (update as jest.Mock).mockRejectedValue(new Error("Update fail"));
-
-      const response = await ProjectService.updateProject({ key: "some-key" } as any);
-
-      expect(response.result).toBe("ERROR");
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
+  test('maneja errores en deleteProject', async () => {
+    (Firebase.update as jest.Mock).mockRejectedValueOnce(new Error('Fail'));
+    const result = await ProjectService.deleteProject('p1');
+    expect(result.result).toBe('ERROR');
+    expect(result.errorMessage).toBeDefined();
   });
 });

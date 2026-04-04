@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "jest --forceExit",
+    "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --forceExit",
     "test:ci": "jest --ci --coverage --forceExit"
