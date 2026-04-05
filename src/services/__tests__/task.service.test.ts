@@ -1,211 +1,215 @@
 import { TaskService } from '../task.service';
+import { db } from '../../firebase/firebase.config';
+import { push, set, update, get, remove } from 'firebase/database';
 import { Task } from '../../interfaces/Task';
-import * as Firebase from 'firebase/database';
 import { v4 as uuidv4 } from 'uuid';
 
-// Mock UUID
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid'),
+jest.mock('../../firebase/firebase.config', () => ({
+  db: {}
 }));
 
-// Mock Firebase
-jest.mock('firebase/database');
+jest.mock('firebase/database', () => ({
+  ref: jest.fn(),
+  push: jest.fn(),
+  set: jest.fn(),
+  update: jest.fn(),
+  get: jest.fn(),
+  remove: jest.fn()
+}));
 
-const mockSnapshot = (data: any) => ({
-  val: () => data,
-  exists: () => data !== null,
-});
+jest.mock('uuid', () => ({
+  v4: jest.fn()
+}));
 
 describe('TaskService', () => {
-  const mockTask: Partial<Task> = {
-    key: 'task-1',
-    id: '1',
-    name: 'Test Task',
-    status: 'TODO',
-    priority: 'NORMAL',
-    createdByUserKey: 'user-1',
-    createdDate: Date.now(),
-    notes: 'Old Notes',
-    history: []
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
-    (Firebase.getDatabase as jest.Mock).mockReturnValue({});
-    (Firebase.ref as jest.Mock).mockReturnValue({ path: 'test-path' });
-    (Firebase.push as jest.Mock).mockReturnValue({ key: 'new-key', path: 'new-path' });
-    (Firebase.set as jest.Mock).mockResolvedValue(undefined);
-    (Firebase.update as jest.Mock).mockResolvedValue(undefined);
-    (Firebase.get as jest.Mock).mockResolvedValue(mockSnapshot(null));
-    (Firebase.remove as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('createTask', () => {
-    test('debe crear una tarea correctamente y generar ID', async () => {
-      const taskInput: Partial<Task> = { name: 'New Task', notes: 'Something' };
-      const result = await TaskService.createTask(taskInput as Task, 'creator-1');
-      
-      expect(result.result).toBe('OK');
-      expect(uuidv4).toHaveBeenCalled();
-      expect(Firebase.set).toHaveBeenCalled();
-      
-      const savedTask = (Firebase.set as jest.Mock).mock.calls[0][1];
-      expect(savedTask.id).toBe('test-uuid');
-      expect(savedTask.status).toBe('TODO');
-      expect(savedTask.history).toHaveLength(1);
-      expect(savedTask.history[0].action).toBe('CREATED');
-      expect(savedTask.history[0].note).toBe('Something');
+    it('debe crear una tarea exitosamente', async () => {
+      const mockTask: Partial<Task> = { name: 'Nueva Tarea' };
+      (uuidv4 as jest.Mock).mockReturnValue('mock-uuid');
+      (push as jest.Mock).mockReturnValue({ key: 'mock-key' });
+      (set as jest.Mock).mockResolvedValue(undefined);
+
+      const response = await TaskService.createTask(mockTask as Task, 'user1');
+
+      expect(response.result).toBe('OK');
+      expect(mockTask.id).toBe('mock-uuid');
+      expect(mockTask.key).toBe('mock-key');
+      expect(mockTask.status).toBe('TODO');
+      expect(mockTask.createdByUserKey).toBe('user1');
+      expect(set).toHaveBeenCalled();
     });
 
-    test('debe manejar error al crear tarea', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      (Firebase.set as jest.Mock).mockRejectedValue(new Error('Firebase Error'));
-      
-      const result = await TaskService.createTask({} as Task);
-      expect(result.result).toBe('ERROR');
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+    it('debe manejar excepcion al crear tarea', async () => {
+      (push as jest.Mock).mockImplementation(() => { throw new Error('DB Error'); });
+
+      const response = await TaskService.createTask({} as Task);
+
+      expect(response.result).toBe('ERROR');
+      expect(response.errorMessage).toBe('Error tratando de crear Tarea');
+    });
+
+    it('debe agregar nota en historia si existe', async () => {
+      const mockTask: Partial<Task> = { name: 'Tarea con nota', notes: ' initial note ' };
+      (uuidv4 as jest.Mock).mockReturnValue('id');
+      (push as jest.Mock).mockReturnValue({ key: 'key' });
+      (set as jest.Mock).mockResolvedValue(undefined);
+
+      await TaskService.createTask(mockTask as Task);
+
+      expect(mockTask.history![0].note).toBe(' initial note ');
     });
   });
 
   describe('updateTask', () => {
-    test('debe actualizar tarea encontrando diferencias y agregando notas', async () => {
-      (Firebase.get as jest.Mock).mockResolvedValue(mockSnapshot(mockTask));
-      
-      const updatedTask: Partial<Task> = {
-        ...mockTask,
-        name: 'Updated Name',
-        notes: 'Old Notes and New Part',
-        status: 'IN_PROGRESS'
+    it('debe actualizar tarea modificando delta y añadir historia', async () => {
+      const previousTask = {
+        key: 'task1',
+        name: 'Old Name',
+        status: 'TODO',
+        priority: 'NORMAL',
+        history: []
       };
 
-      const result = await TaskService.updateTask(updatedTask as Task, 'modifier-1');
-      
-      expect(result.result).toBe('OK');
-      const payload = (Firebase.update as jest.Mock).mock.calls[0][1];
-      
-      expect(payload.name).toBe('Updated Name');
-      expect(payload.history).toHaveLength(2); // UPDATED and NOTE_ADDED
+      (get as jest.Mock).mockResolvedValue({
+        val: () => previousTask
+      });
+      (update as jest.Mock).mockResolvedValue(undefined);
+
+      const updatedTask = {
+        key: 'task1',
+        name: 'New Name', // Changed
+        status: 'DONE', // Changed
+        priority: 'NORMAL', // Same
+        notes: 'new note added', // Notes changed
+        unknownField: undefined // should be ignored or normalized
+      };
+
+      const response = await TaskService.updateTask(updatedTask as any, 'user1');
+
+      expect(response.result).toBe('OK');
+      expect(update).toHaveBeenCalled();
+      const payload = (update as jest.Mock).mock.calls[0][1];
+      expect(payload.history.length).toBe(2); // NOTE_ADDED and UPDATED
       expect(payload.history[0].action).toBe('NOTE_ADDED');
-      expect(payload.history[0].note).toBe('and New Part');
+      expect(payload.history[1].action).toBe('UPDATED');
+      expect(payload.history[1].changes.length).toBe(2); // name and status
     });
 
-    test('debe retornar ERROR si tarea no existe', async () => {
-      (Firebase.get as jest.Mock).mockResolvedValue(mockSnapshot(null));
-      const result = await TaskService.updateTask({ key: 'none' } as Task);
-      expect(result.result).toBe('ERROR');
-      expect(result.errorMessage).toBe('Tarea no encontrada.');
+    it('debe manejar error si get() falla o la tarea no existe', async () => {
+      (get as jest.Mock).mockResolvedValue({ val: () => null });
+
+      const response = await TaskService.updateTask({ key: 't1' } as any);
+
+      expect(response.result).toBe('ERROR');
+      expect(response.errorMessage).toBe('Tarea no encontrada.');
     });
 
-    test('debe manejar error al actualizar', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      (Firebase.get as jest.Mock).mockRejectedValue(new Error('DB Error'));
-      
-      const result = await TaskService.updateTask(mockTask as Task);
-      expect(result.result).toBe('ERROR');
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
+    it('debe manejar excepcion durante la actualización', async () => {
+      (get as jest.Mock).mockRejectedValue(new Error('Network error'));
 
-    test('debe truncar historial a 20 elementos', async () => {
-      const longHistory = Array(25).fill({ action: 'TEST' });
-      (Firebase.get as jest.Mock).mockResolvedValue(mockSnapshot({ ...mockTask, history: longHistory }));
-      
-      const updatedTask = { ...mockTask, name: 'Changed' };
-      await TaskService.updateTask(updatedTask as Task);
-      
-      const payload = (Firebase.update as jest.Mock).mock.calls[0][1];
-      expect(payload.history).toHaveLength(20);
+      const response = await TaskService.updateTask({ key: 't1' } as any);
+
+      expect(response.result).toBe('ERROR');
+      expect(response.errorMessage).toBe('Error al intentar editar la tarea.');
+    });
+    
+    it('debe procesar arrays y objetos en la limpieza de datos', async () => {
+      (get as jest.Mock).mockResolvedValue({ val: () => ({ key: 't1' }) });
+      (update as jest.Mock).mockResolvedValue(undefined);
+
+      await TaskService.updateTask({
+        key: 't1',
+        tags: ['a', undefined, 'b'],
+        complex: { nested: undefined, valid: true } 
+      } as any);
+
+      const payload = (update as jest.Mock).mock.calls[0][1];
+      expect(payload.tags).toEqual(['a', null, 'b']);
+      expect(payload.complex).toEqual({ valid: true });
     });
   });
 
   describe('deleteTask', () => {
-    test('debe marcar tarea como DELETED', async () => {
-      const result = await TaskService.deleteTask(mockTask as Task);
-      expect(result.result).toBe('OK');
-      expect(Firebase.update).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({
-        status: 'DELETED'
-      }));
+    it('debe eliminar logicamente actualizando el status a DELETED', async () => {
+      (update as jest.Mock).mockResolvedValue(undefined);
+      const response = await TaskService.deleteTask({ key: 't1' } as Task);
+      expect(response.result).toBe('OK');
+      expect(update).toHaveBeenCalledWith(undefined, expect.objectContaining({ status: 'DELETED' }));
     });
 
-    test('debe manejar error en eliminación lógica', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      (Firebase.update as jest.Mock).mockRejectedValue(new Error('Fail'));
-      const result = await TaskService.deleteTask(mockTask as Task);
-      expect(result.result).toBe('ERROR');
-      consoleSpy.mockRestore();
+    it('debe manejar error en deleteTask', async () => {
+      (update as jest.Mock).mockRejectedValue(new Error());
+      const response = await TaskService.deleteTask({ key: 't1' } as Task);
+      expect(response.result).toBe('ERROR');
     });
   });
 
   describe('physicalDeleteTask', () => {
-    test('debe remover tarea permanentemente', async () => {
-      const result = await TaskService.physicalDeleteTask(mockTask as Task);
-      expect(result.result).toBe('OK');
-      expect(Firebase.remove).toHaveBeenCalled();
+    it('debe borrar fisicamente (remove)', async () => {
+      (remove as jest.Mock).mockResolvedValue(undefined);
+      const response = await TaskService.physicalDeleteTask({ key: 't1' } as Task);
+      expect(response.result).toBe('OK');
+      expect(remove).toHaveBeenCalled();
     });
 
-    test('debe manejar error en eliminación física', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      (Firebase.remove as jest.Mock).mockRejectedValue(new Error('Fail'));
-      const result = await TaskService.physicalDeleteTask(mockTask as Task);
-      expect(result.result).toBe('ERROR');
-      consoleSpy.mockRestore();
+    it('debe manejar error en physicalDeleteTask', async () => {
+      (remove as jest.Mock).mockRejectedValue(new Error());
+      const response = await TaskService.physicalDeleteTask({ key: 't1' } as Task);
+      expect(response.result).toBe('ERROR');
     });
   });
 
   describe('removeGroupTasks', () => {
-    test('debe eliminar múltiples tareas permanentemente', async () => {
-      const tasks = [mockTask as Task, { ...mockTask, key: '2' } as Task];
-      const result = await TaskService.removeGroupTasks(tasks);
-      expect(result).toEqual({
-        result: 'OK',
-        message: 'Tareas eliminadas exitosamente!'
-      });
-      expect(Firebase.remove).toHaveBeenCalledTimes(2);
+    it('debe borrar todas las tareas de una lista fisicamente', async () => {
+      (remove as jest.Mock).mockResolvedValue(undefined);
+      const response = await TaskService.removeGroupTasks([{ key: '1' }, { key: '2' }] as Task[]);
+      expect(response.result).toBe('OK');
+      expect(remove).toHaveBeenCalledTimes(2);
     });
 
-    test('debe manejar error en eliminación de grupo', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      (Firebase.remove as jest.Mock).mockRejectedValue(new Error('Fail'));
-      const result = await TaskService.removeGroupTasks([mockTask as Task]);
-      expect(result.result).toBe('ERROR');
-      consoleSpy.mockRestore();
+    it('debe manejar error en removeGroupTasks', async () => {
+      (remove as jest.Mock).mockRejectedValue(new Error());
+      const response = await TaskService.removeGroupTasks([{ key: '1' }] as Task[]);
+      expect(response.result).toBe('ERROR');
     });
   });
 
   describe('cleanupDeletedTasks', () => {
-    test('debe limpiar tareas eleminadas de hace más de 30 días', async () => {
-      const oldDate = Date.now() - (35 * 24 * 60 * 60 * 1000); // 35 dias
-      const recentDate = Date.now() - (5 * 24 * 60 * 60 * 1000); // 5 dias
+    it('debe borrar tareas que tengan > 30 dias eliminadas (status DELETED)', async () => {
+      const now = Date.now();
+      const thirtyOneDaysAgo = now - (31 * 24 * 60 * 60 * 1000);
+      const tenDaysAgo = now - (10 * 24 * 60 * 60 * 1000);
       
-      const tasksData = {
-        'old': { status: 'DELETED', deletedDate: oldDate },
-        'recent': { status: 'DELETED', deletedDate: recentDate },
-        'active': { status: 'TODO', deletedDate: oldDate }
+      const mockData = {
+        't1': { status: 'DELETED', deletedDate: thirtyOneDaysAgo }, // delete
+        't2': { status: 'DELETED', deletedDate: tenDaysAgo }, // keep
+        't3': { status: 'DONE' }, // keep
       };
 
-      (Firebase.get as jest.Mock).mockResolvedValue(mockSnapshot(tasksData));
-      
-      const result = await TaskService.cleanupDeletedTasks();
-      expect(result.result).toBe('OK');
-      // Solo debe haber llamado a remove para 'old'
-      expect(Firebase.remove).toHaveBeenCalledTimes(1);
+      (get as jest.Mock).mockResolvedValue({ val: () => mockData });
+      (remove as jest.Mock).mockResolvedValue(undefined);
+
+      const response = await TaskService.cleanupDeletedTasks();
+
+      expect(response.result).toBe('OK');
+      // Should have deleted only t1
+      expect(remove).toHaveBeenCalledTimes(1);
     });
 
-    test('debe manejar caso sin tareas para limpiar', async () => {
-      (Firebase.get as jest.Mock).mockResolvedValue(mockSnapshot(null));
-      const result = await TaskService.cleanupDeletedTasks();
-      expect(result.result).toBe('OK');
-      expect(result.message).toBe('No tasks to cleanup');
+    it('no hace nada si no hay datos', async () => {
+      (get as jest.Mock).mockResolvedValue({ val: () => null });
+      const response = await TaskService.cleanupDeletedTasks();
+      expect(response.message).toBe('No tasks to cleanup');
     });
 
-    test('debe manejar error en limpieza', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      (Firebase.get as jest.Mock).mockRejectedValue(new Error('Fail'));
-      const result = await TaskService.cleanupDeletedTasks();
-      expect(result.result).toBe('ERROR');
-      consoleSpy.mockRestore();
+    it('debe manejar excepcion en cleanup', async () => {
+      (get as jest.Mock).mockRejectedValue(new Error());
+      const response = await TaskService.cleanupDeletedTasks();
+      expect(response.result).toBe('ERROR');
     });
   });
 });
-

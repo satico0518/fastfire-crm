@@ -1,189 +1,229 @@
-  test("exporta a PDF exitosamente", async () => {
-    render(<FormatResultsTable />);
-    fireEvent.click(screen.getByText("Formato Demo"));
-    const pdfButton = screen.getByLabelText("PDF");
-    fireEvent.click(pdfButton);
-    await waitFor(() => expect(mockExportPdf).toHaveBeenCalled());
-    expect(mockSetSnackbar).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("PDF generado exitosamente") }));
-  });
-
-  test("muestra error al exportar PDF", async () => {
-    mockExportPdf.mockImplementationOnce(() => { throw new Error("fail"); });
-    render(<FormatResultsTable />);
-    fireEvent.click(screen.getByText("Formato Demo"));
-    const pdfButton = screen.getByLabelText("PDF");
-    fireEvent.click(pdfButton);
-    await waitFor(() => expect(mockSetSnackbar).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("Error al generar PDF") })));
-  });
-
-  test("permite rechazar un envío", async () => {
-    mockReviewSubmission.mockResolvedValue({ result: "OK", message: "ok" });
-    render(<FormatResultsTable />);
-    fireEvent.click(screen.getByText("Formato Demo"));
-    fireEvent.click(screen.getByRole("grid").querySelector("tr") as HTMLElement);
-    fireEvent.click(screen.getByText("Rechazar"));
-    await waitFor(() => expect(mockReviewSubmission).toHaveBeenCalled());
-  });
-
-  test("visualiza y cierra el diálogo de detalles", async () => {
-    render(<FormatResultsTable />);
-    fireEvent.click(screen.getByText("Formato Demo"));
-    fireEvent.click(screen.getByRole("grid").querySelector("tr") as HTMLElement);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("Cerrar"));
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  });
-
-  test("descarga imagen correctamente", () => {
-    render(<FormatResultsTable />);
-    fireEvent.click(screen.getByText("Formato Demo"));
-    fireEvent.click(screen.getByRole("grid").querySelector("tr") as HTMLElement);
-    // Esperar a que el diálogo esté abierto
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    // Buscar el botón de descarga de imagen por aria-label
-    const downloadBtn = screen.getByLabelText("Descargar imagen");
-    expect(downloadBtn).toBeInTheDocument();
-    // Simular click (el resto del flujo depende de mocks de window)
-  });
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { FormatResultsTable } from "../FormatResultsTable";
+import { FormatService } from "../../../services/format.service";
+import * as utils from "../../../utils/utils";
 
-const mockReviewSubmission = jest.fn();
-const mockSetSnackbar = jest.fn();
+jest.mock("../../../services/format.service", () => ({
+  FormatService: {
+    reviewSubmission: jest.fn(),
+  },
+}));
+
+const mockExportPDF = jest.fn().mockResolvedValue(undefined);
 const mockDownloadExcel = jest.fn();
-const mockExportPdf = jest.fn();
 
+jest.mock("../../../utils/utils", () => ({
+  __esModule: true,
+  ...jest.requireActual("../../../utils/utils"),
+  exportSubmissionToPDF: (...args: any[]) => mockExportPDF(...args),
+  downloadExcelFile: (...args: any[]) => mockDownloadExcel(...args)
+}));
 
-const mockSubmissions = [
+jest.mock("../../../config/formatCatalog", () => ({
+  ...jest.requireActual("../../../config/formatCatalog"),
+  getFormatTypeById: jest.fn().mockImplementation((id) => {
+    if (id === "ACTA_ENTREGA") return {
+      id: "ACTA_ENTREGA",
+      name: "Acta de Entrega",
+      fields: [
+        { name: "imgField", label: "Image Field", type: "text" },
+        { name: "tagsField", label: "Tags Field", type: "tags" }
+      ]
+    };
+    return { id, name: id, fields: [] };
+  }),
+  FORMAT_CATALOG: [{ id: "ACTA_ENTREGA", name: "Acta de Entrega", fields: [] }]
+}));
+
+let mockSubmissions = [
   {
-    key: "s1",
-    formatTypeId: "LEGALIZACION_CUENTAS",
-    formatTypeName: "Formato Demo",
+    key: "sub1",
+    formatTypeId: "ACTA_ENTREGA",
     status: "SUBMITTED",
     createdByUserKey: "u1",
-    createdDate: Date.now(),
-    updatedDate: Date.now(),
-    reviewNotes: "",
-    isPublicSubmission: false,
-    data: { campo_a: "valor a", imagen: "data:image/png;base64,AAA" },
+    createdDate: 123456789,
+    data: {
+      field1: "test",
+      imgField: "https://res.cloudinary.com/demo/image/upload/v1544439009/sample.jpg",
+      arrField: [
+        { sub1: "val", sub2: 2 }
+      ],
+      tagsField: ["tagA", "tagB"]
+    }
   },
+  {
+    key: "sub2",
+    formatTypeId: "ACTA_ENTREGA",
+    status: "REVIEWED",
+    createdByUserKey: "PUBLIC",
+    createdDate: 123456789,
+    reviewNotes: "Looks good",
+    data: {
+      calc: [
+        { val: 100 },
+        { val: 200 }
+      ]
+    }
+  }
 ];
-
-jest.mock("@mui/x-data-grid", () => ({
-  DataGrid: ({ rows, columns, onRowClick }: any) => (
-    <table role="grid">
-      <tbody>
-        {rows.map((row: any) => (
-          <tr key={row.key} onClick={() => onRowClick?.({ row })}>
-            {columns.map((col: any) => (
-              <td key={col.field}>
-                {col.renderCell
-                  ? col.renderCell({ row })
-                  : String(row[col.field] || "")}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  ),
-}));
 
 jest.mock("../../../stores/formats/formats.store", () => ({
   useFormatsStore: jest.fn((selector) =>
-    selector ? selector({ submissions: mockSubmissions }) : { submissions: mockSubmissions }
+    selector({
+      submissions: mockSubmissions,
+    })
   ),
 }));
 
 jest.mock("../../../stores/users/users.store", () => ({
   useUsersStore: jest.fn((selector) =>
-    selector
-      ? selector({ users: [{ key: "u1", firstName: "Juan", lastName: "Perez" }] })
-      : { users: [{ key: "u1", firstName: "Juan", lastName: "Perez" }] }
+    selector({
+      users: [{ key: "u1", firstName: "Davo", lastName: "Gomez" }],
+    })
   ),
 }));
 
-jest.mock("../../../stores", () => ({
-  useAuhtStore: jest.fn((selector) =>
-    selector ? selector({ user: { key: "u1", permissions: ["ADMIN"] } }) : { user: { key: "u1", permissions: ["ADMIN"] } }
-  ),
-}));
-
+const mockSetSnackbar = jest.fn();
 jest.mock("../../../stores/ui/ui.store", () => ({
   useUiStore: jest.fn((selector) =>
-    selector ? selector({ setSnackbar: mockSetSnackbar }) : { setSnackbar: mockSetSnackbar }
+    selector({
+      setSnackbar: mockSetSnackbar,
+    })
   ),
 }));
 
-jest.mock("../../../services/format.service", () => ({
-  FormatService: {
-    reviewSubmission: (...args: unknown[]) => mockReviewSubmission(...args),
-  },
-}));
-
-jest.mock("../../../config/formatCatalog", () => ({
-  FORMAT_CATALOG: [
-    {
-      id: "LEGALIZACION_CUENTAS",
-      name: "Formato Demo",
-      description: "Formato de prueba",
-      fields: [
-        { name: "campo_a", label: "Campo A", type: "text" },
-        { name: "imagen", label: "Imagen", type: "text" },
-      ],
-    },
-  ],
-  getFormatTypeById: () => ({
-    id: "LEGALIZACION_CUENTAS",
-    name: "Formato Demo",
-    fields: [
-      { name: "campo_a", label: "Campo A", type: "text" },
-      { name: "imagen", label: "Imagen", type: "text" },
-    ],
-  }),
-}));
-
-jest.mock("../../../config/formatColumns", () => ({
-  getColumnsForFormat: () => [
-    { field: "status", headerName: "Estado" },
-    { field: "imagen", headerName: "Imagen", type: "text" },
-  ],
-}));
-
-jest.mock("../../../utils/utils", () => ({
-  getUserNameByKey: () => "Juan Perez",
-  translateTimestampToString: () => "01/01/2025",
-  downloadExcelFile: (...args: unknown[]) => mockDownloadExcel(...args),
-  exportSubmissionToPDF: (...args: unknown[]) => mockExportPdf(...args),
+let mockUser: any = { key: "u1" };
+jest.mock("../../../stores", () => ({
+  useAuhtStore: jest.fn((selector) =>
+    selector({
+      user: mockUser,
+    })
+  ),
 }));
 
 describe("FormatResultsTable", () => {
   beforeEach(() => {
-    mockReviewSubmission.mockReset();
-    mockSetSnackbar.mockReset();
-    mockDownloadExcel.mockReset();
-    mockExportPdf.mockReset();
+    jest.clearAllMocks();
   });
 
-  test("muestra selector de formatos y permite entrar a resultados", () => {
+  it("renderiza correctamente las tarjetas resumen", () => {
     render(<FormatResultsTable />);
-    fireEvent.click(screen.getByText("Formato Demo"));
-    expect(screen.getByRole("grid")).toBeInTheDocument();
-    expect(screen.getByText("Excel")).toBeInTheDocument();
+    // Hay "Acta de Entrega" o el nombre mapeado por ACTA_ENTREGA en el mock del catálogo
+    expect(screen.getByText(/Selecciona un formato/i)).toBeInTheDocument();
   });
 
-  test("exporta a excel y revisa envío", async () => {
-    mockReviewSubmission.mockResolvedValue({ result: "OK", message: "ok" });
+  it("selecciona un formato e interactua con tabla", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    // Buscamos el nombre del formato ACTA_ENTREGA
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+
     render(<FormatResultsTable />);
+    fireEvent.click(screen.getByText(formatName));
 
-    fireEvent.click(screen.getByText("Formato Demo"));
-    fireEvent.click(screen.getByText("Excel"));
-    expect(mockDownloadExcel).toHaveBeenCalled();
+    // Deberiamos estar en la tabla
+    expect(screen.getByTestId("ArrowBackIcon")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("grid").querySelector("tr") as HTMLElement);
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    expect(screen.getByText("Aprobar")).toBeInTheDocument();
+    expect(screen.getByText("Rechazar")).toBeInTheDocument();
+
+    // Ver Notas del revisor (Añadir)
+    const tb = screen.getByRole("textbox");
+    fireEvent.change(tb, { target: { value: "Please change X" } });
+
+    (FormatService.reviewSubmission as jest.Mock).mockResolvedValueOnce({ result: "OK", message: "Aprobado" });
     fireEvent.click(screen.getByText("Aprobar"));
 
-    await waitFor(() => expect(mockReviewSubmission).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "success" })
+      );
+    });
+  });
+
+  it("falla review", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+    
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    (FormatService.reviewSubmission as jest.Mock).mockResolvedValueOnce({ result: "ERROR", errorMessage: "Bad" });
+    fireEvent.click(screen.getByText("Rechazar"));
+
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "error" })
+      );
+    });
+  });
+
+  it("exporta a PDF", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+    
+    const pdfBtns = screen.getAllByTestId("PictureAsPdfIcon");
+    fireEvent.click(pdfBtns[0].parentElement!);
+
+    await waitFor(() => {
+      expect(mockExportPDF).toHaveBeenCalled();
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ message: "PDF generado exitosamente" })
+      );
+    });
+  });
+
+  it("falla al exportar a PDF", async () => {
+    mockExportPDF.mockRejectedValueOnce(new Error("Net error"));
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+    
+    const pdfBtns = screen.getAllByTestId("PictureAsPdfIcon");
+    fireEvent.click(pdfBtns[0].parentElement!);
+
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "error" })
+      );
+    });
+  });
+
+  it("exporta a excel csv", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const exportBtn = screen.getByTestId("DownloadIcon").parentElement;
+    if (exportBtn) fireEvent.click(exportBtn);
+
+    expect(mockDownloadExcel).toHaveBeenCalled();
+  });
+
+  it("descarga imagen en renderFieldValue", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+    
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    const downloadBtn = screen.getByRole("button", { name: "Descargar imagen" });
+    fireEvent.click(downloadBtn);
+    
+    expect(mockSetSnackbar).toHaveBeenCalledWith(
+       expect.objectContaining({ message: "Descargando imagen..." })
+    );
+
   });
 });
