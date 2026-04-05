@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
 import { MenuComponent } from "../MenuComponent";
@@ -19,6 +19,18 @@ let mockUser: any = {
 };
 let mockHasHydrated = true;
 let mockIsAuth = true;
+let mockWorkgroups: any[] = [
+  {
+    id: "1",
+    key: "wg1",
+    name: "Equipo Alpha",
+    isActive: true,
+    isPrivate: false,
+    color: "#4CAF50",
+    memberKeys: [],
+    createdDate: 0,
+  },
+];
 
 jest.mock("../../../stores", () => ({
   useAuhtStore: jest.fn((selector) =>
@@ -33,19 +45,31 @@ jest.mock("../../../stores", () => ({
 jest.mock("../../../stores/workgroups/workgroups.store", () => ({
   useWorkgroupStore: jest.fn((selector) =>
     selector({
-      workgroups: [
-        {
-          id: "1",
-          key: "wg1",
-          name: "Equipo Alpha",
-          isActive: true,
-          isPrivate: false,
-          color: "#4CAF50",
-          memberKeys: [],
-          createdDate: 0,
-        },
-      ],
+      workgroups: mockWorkgroups,
     })
+  ),
+}));
+
+jest.mock("../../menu-secondary/SecondaryActions", () => ({
+  __esModule: true,
+  default: ({ options }: { options: { label: string; action: () => void }[] }) => (
+    <div>
+      {options.map((opt) => (
+        <button key={opt.label} onClick={opt.action} type="button">
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
+jest.mock("../../workgroups-form/WorkgroupsFormComponent", () => ({
+  WorkgroupsFormComponent: () => <div data-testid="workgroups-form">WorkgroupsForm</div>,
+}));
+
+jest.mock("../../tasks-form/TasksFormComponent", () => ({
+  TasksFormComponent: ({ workgroupKey }: { workgroupKey: string }) => (
+    <div data-testid="tasks-form">TasksForm-{workgroupKey}</div>
   ),
 }));
 
@@ -95,6 +119,18 @@ describe("MenuComponent", () => {
     mockIsSidebarCollapsed = false;
     mockHasHydrated = true;
     mockIsAuth = true;
+    mockWorkgroups = [
+      {
+        id: "1",
+        key: "wg1",
+        name: "Equipo Alpha",
+        isActive: true,
+        isPrivate: false,
+        color: "#4CAF50",
+        memberKeys: [],
+        createdDate: 0,
+      },
+    ];
   });
 
   const renderComponent = (isMobileMenuOpen = false) => {
@@ -170,5 +206,115 @@ describe("MenuComponent", () => {
     renderComponent(true);
     fireEvent.click(screen.getByText("T&G"));
     expect(onCloseMobileMenu).toHaveBeenCalled();
+  });
+
+  it("togglea el estado colapsado del sidebar", () => {
+    mockIsSidebarCollapsed = false;
+    renderComponent();
+
+    const toggleButton = screen.getAllByRole("button")[0];
+    fireEvent.click(toggleButton);
+
+    expect(mockSetIsSidebarCollapsed).toHaveBeenCalledWith(true);
+  });
+
+  it("permite navegar a tareas por grupo haciendo click en icono y nombre", () => {
+    renderComponent(true);
+
+    fireEvent.click(screen.getByText("E"));
+    expect(mockNavigate).toHaveBeenCalledWith("/tasksbygroup", { state: { wg: expect.objectContaining({ key: "wg1" }) } });
+    expect(onCloseMobileMenu).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText("Equipo alpha"));
+    expect(mockNavigate).toHaveBeenCalledWith("/tasksbygroup", { state: { wg: expect.objectContaining({ key: "wg1" }) } });
+  });
+
+  it("muestra sin asignación para usuario sin grupos visibles", () => {
+    mockUser = { permissions: ["TYG"], workgroupKeys: ["none"] };
+    mockWorkgroups = [
+      {
+        id: "x1",
+        key: "private1",
+        name: "Privado",
+        isActive: true,
+        isPrivate: true,
+        color: "#123456",
+        memberKeys: [],
+        createdDate: 0,
+      },
+    ];
+
+    renderComponent();
+    expect(screen.getByText("Sin asignación")).toBeInTheDocument();
+  });
+
+  it("abre modal al crear nuevo grupo desde acciones secundarias", () => {
+    renderComponent();
+    fireEvent.click(screen.getByRole("button", { name: "Nuevo grupo" }));
+
+    expect(mockSetModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        open: true,
+        title: "Nuevo Grupo",
+      })
+    );
+  });
+
+  it("abre modal para nueva tarea y modificar desde acciones de grupo", () => {
+    renderComponent();
+
+    fireEvent.click(screen.getByRole("button", { name: "Nueva Tarea" }));
+    expect(mockSetModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        open: true,
+        title: "Nueva Tarea",
+      })
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Modificar" }));
+    expect(mockSetModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        open: true,
+        title: "Modificar Grupo",
+      })
+    );
+  });
+
+  it("elimina grupo correctamente y muestra snackbar success", async () => {
+    (WorkgroupService.deleteWorkgroup as jest.Mock).mockResolvedValueOnce({ result: "OK" });
+    renderComponent();
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+
+    const confirmationPayload = mockSetConfirmation.mock.calls[0][0];
+    const actionView = render(confirmationPayload.actions);
+    fireEvent.click(within(actionView.container).getByRole("button", { name: "Eliminar" }));
+
+    await waitFor(() => {
+      expect(WorkgroupService.deleteWorkgroup).toHaveBeenCalled();
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "success" })
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("/home");
+      expect(mockSetConfirmation).toHaveBeenCalledWith({ open: false });
+    });
+  });
+
+  it("maneja error al eliminar grupo y cierra confirmación", async () => {
+    (WorkgroupService.deleteWorkgroup as jest.Mock).mockRejectedValueOnce(new Error("boom"));
+    renderComponent();
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+
+    const confirmationPayload = mockSetConfirmation.mock.calls[0][0];
+    const actionView = render(confirmationPayload.actions);
+    fireEvent.click(within(actionView.container).getByRole("button", { name: "Eliminar" }));
+
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "error", message: "Error eliminando grupo!" })
+      );
+      expect(mockSetConfirmation).toHaveBeenCalledWith({ open: false });
+    });
   });
 });
