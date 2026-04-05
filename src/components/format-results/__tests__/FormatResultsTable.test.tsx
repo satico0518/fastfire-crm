@@ -47,6 +47,7 @@ jest.mock("../../../config/formatCatalog", () => ({
             { name: "emptyNested", label: "Empty Nested", type: "text" },
           ],
         },
+        { name: "dummy_obs_check", label: "Obs check", type: "text" },
         { name: "imgField", label: "Image Field", type: "text" },
         { name: "tagsField", label: "Tags Field", type: "tags" },
         { name: "arrField", label: "Array Field", type: "tags" },
@@ -74,9 +75,10 @@ let mockSubmissions = [
       ],
       tagsField: ["tagA", "tagB"],
       calcTotal: 300,
+      rootObj: { nestedA: "x" },
       calc: [
         { val: 100 },
-        { val: 200 }
+        { val: 200, nested: { deep: "yes" } }
       ]
     }
   },
@@ -100,6 +102,14 @@ let mockSubmissions = [
         { val: 200 }
       ]
     }
+  },
+  {
+    key: "sub3",
+    formatTypeId: "ACTA_ENTREGA",
+    status: "DRAFT",
+    createdByUserKey: "uX",
+    createdDate: 123456700,
+    data: "valor plano"
   }
 ];
 
@@ -337,6 +347,91 @@ describe("FormatResultsTable", () => {
     fireEvent.click(screen.getByText("Aprobar"));
 
     expect(FormatService.reviewSubmission).not.toHaveBeenCalled();
+  });
+
+  it("abre detalle haciendo click en fila y permite cerrar dialogo", () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const rows = screen.getAllByRole("row");
+    fireEvent.click(rows[1]);
+    expect(screen.getByText("Acta de Entrega")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Cerrar"));
+    expect(screen.queryByText("Rechazar")).not.toBeInTheDocument();
+  });
+
+  it("vuelve al selector usando el boton de retroceso", () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    fireEvent.click(screen.getByLabelText("Volver al selector"));
+
+    expect(screen.getByText(/Selecciona un formato para ver sus resultados/i)).toBeInTheDocument();
+  });
+
+  it("oculta chip de pendientes cuando no hay submissions SUBMITTED", () => {
+    const prev = mockSubmissions;
+    mockSubmissions = prev.map((s: any) => ({ ...s, status: s.status === "SUBMITTED" ? "REVIEWED" : s.status }));
+
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    expect(screen.queryByText(/pendiente/)).not.toBeInTheDocument();
+
+    mockSubmissions = prev;
+  });
+
+  it("maneja error al descargar imagen", () => {
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = jest.spyOn(document, "createElement").mockImplementation((tagName: string) => {
+      if (tagName.toLowerCase() === "a") {
+        throw new Error("create link failed");
+      }
+      return originalCreateElement(tagName);
+    });
+
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    fireEvent.click(screen.getByRole("button", { name: "Descargar imagen" }));
+
+    expect(mockSetSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "error", message: "Error al descargar la imagen" })
+    );
+
+    createElementSpy.mockRestore();
+  });
+
+  it("usa fallback de campos cuando no existe formato y cierra con onClose del dialog", () => {
+    const { FORMAT_CATALOG, getFormatTypeById } = require("../../../config/formatCatalog");
+    const getFormatTypeByIdMock = getFormatTypeById as jest.Mock;
+    const previousImpl = getFormatTypeByIdMock.getMockImplementation();
+    getFormatTypeByIdMock.mockImplementation(() => null);
+
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    expect(screen.getByText(/field1/i)).toBeInTheDocument();
+
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    getFormatTypeByIdMock.mockImplementation(previousImpl);
   });
 
   it("exporta a excel csv", async () => {
