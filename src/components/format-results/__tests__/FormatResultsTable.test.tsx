@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { FormatResultsTable } from "../FormatResultsTable";
 import { FormatService } from "../../../services/format.service";
@@ -27,8 +27,30 @@ jest.mock("../../../config/formatCatalog", () => ({
       id: "ACTA_ENTREGA",
       name: "Acta de Entrega",
       fields: [
+        { name: "header_main", label: "Bloque principal", type: "header" },
+        { name: "field1", label: "Field 1", type: "text" },
+        {
+          name: "sectionA",
+          label: "Sección A",
+          type: "section",
+          subFields: [
+            { name: "nestedText", label: "Nested Text", type: "text" },
+          ],
+        },
+        { name: "header_hidden", label: "Bloque oculto", type: "header" },
+        { name: "missingField", label: "Missing Field", type: "text" },
+        {
+          name: "sectionEmpty",
+          label: "Sección Vacía",
+          type: "section",
+          subFields: [
+            { name: "emptyNested", label: "Empty Nested", type: "text" },
+          ],
+        },
         { name: "imgField", label: "Image Field", type: "text" },
-        { name: "tagsField", label: "Tags Field", type: "tags" }
+        { name: "tagsField", label: "Tags Field", type: "tags" },
+        { name: "arrField", label: "Array Field", type: "tags" },
+        { name: "calcTotal", label: "Calculated Total", type: "calculated-sum", calculateSum: "calc.val" },
       ]
     };
     return { id, name: id, fields: [] };
@@ -45,11 +67,17 @@ let mockSubmissions = [
     createdDate: 123456789,
     data: {
       field1: "test",
+      nestedText: "texto anidado",
       imgField: "https://res.cloudinary.com/demo/image/upload/v1544439009/sample.jpg",
       arrField: [
         { sub1: "val", sub2: 2 }
       ],
-      tagsField: ["tagA", "tagB"]
+      tagsField: ["tagA", "tagB"],
+      calcTotal: 300,
+      calc: [
+        { val: 100 },
+        { val: 200 }
+      ]
     }
   },
   {
@@ -58,8 +86,15 @@ let mockSubmissions = [
     status: "REVIEWED",
     createdByUserKey: "PUBLIC",
     createdDate: 123456789,
+    isPublicSubmission: true,
     reviewNotes: "Looks good",
     data: {
+      field1: "public field",
+      nestedText: "public nested",
+      imgField: "data:image/png;base64,abc",
+      tagsField: ["publicA"],
+      arrField: ["x", "y"],
+      calcTotal: 300,
       calc: [
         { val: 100 },
         { val: 200 }
@@ -195,6 +230,113 @@ describe("FormatResultsTable", () => {
         expect.objectContaining({ severity: "error" })
       );
     });
+  });
+
+  it("muestra el detalle completo de una submission enviada", () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    expect(screen.getByText("Acta de Entrega")).toBeInTheDocument();
+    expect(screen.getByText(/Bloque principal/)).toBeInTheDocument();
+    expect(screen.getByText(/Sección A/)).toBeInTheDocument();
+    expect(screen.getByText(/Sección Vacía/)).toBeInTheDocument();
+    expect(screen.getByText(/Sin información registrada/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Notas de revisión \(opcional\)/).length).toBeGreaterThan(0);
+    expect(screen.getByText("Rechazar")).toBeInTheDocument();
+    expect(screen.getByText("Aprobar")).toBeInTheDocument();
+    expect(screen.getAllByText(/\$\s?300/).length).toBeGreaterThan(0);
+    expect(screen.getByText("tagA")).toBeInTheDocument();
+    expect(screen.getByText("val")).toBeInTheDocument();
+  });
+
+  it("muestra informacion publica y descarga imagen cloudinary en detalle", () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[1].parentElement!);
+
+    expect(screen.getAllByText(/Público/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Usuario Público/)).toBeInTheDocument();
+    expect(screen.getByText("Looks good")).toBeInTheDocument();
+    expect(screen.getByAltText("imgField")).toBeInTheDocument();
+
+    const downloadBtn = screen.getByRole("button", { name: "Descargar imagen" });
+    fireEvent.click(downloadBtn);
+
+    expect(mockSetSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Descargando imagen..." })
+    );
+  });
+
+  it("aprueba una submission y cierra el dialogo", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    (FormatService.reviewSubmission as jest.Mock).mockResolvedValueOnce({ result: "OK", message: "Aprobado" });
+
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Observación" } });
+    fireEvent.click(screen.getByText("Aprobar"));
+
+    await waitFor(() => {
+      expect(FormatService.reviewSubmission).toHaveBeenCalledWith(
+        "sub1",
+        "REVIEWED",
+        "u1",
+        "Observación"
+      );
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "success" })
+      );
+      expect(screen.queryByText("Aprobar")).not.toBeInTheDocument();
+    });
+  });
+
+  it("rechaza una submission y usa severidad warning", async () => {
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    (FormatService.reviewSubmission as jest.Mock).mockResolvedValueOnce({ result: "OK", message: "Rechazado" });
+
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    fireEvent.click(screen.getByText("Rechazar"));
+
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "warning", message: "Rechazado" })
+      );
+    });
+  });
+
+  it("no intenta revisar si falta la clave del usuario", () => {
+    mockUser = { key: "" };
+    const { FORMAT_CATALOG } = require("../../../config/formatCatalog");
+    render(<FormatResultsTable />);
+    const formatName = FORMAT_CATALOG.find((f: any) => f.id === "ACTA_ENTREGA").name;
+    fireEvent.click(screen.getByText(formatName));
+
+    const viewBtns = screen.getAllByTestId("VisibilityIcon");
+    fireEvent.click(viewBtns[0].parentElement!);
+
+    fireEvent.click(screen.getByText("Aprobar"));
+
+    expect(FormatService.reviewSubmission).not.toHaveBeenCalled();
   });
 
   it("exporta a excel csv", async () => {
