@@ -1,88 +1,170 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { AgendaMantenimientosPage } from "../AgendaMantenimientosPage";
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { AgendaMantenimientosPage } from '../AgendaMantenimientosPage';
+import { BrowserRouter } from 'react-router-dom';
+import { useAuhtStore } from '../../../stores';
+import { useUiStore } from '../../../stores/ui/ui.store';
+import { MaintenanceService } from '../../../services/maintenance.service';
+import userEvent from '@testing-library/user-event';
+import dayjs from 'dayjs';
 
-const mockNavigate = jest.fn();
-const mockSubscribe = jest.fn();
-const mockSetSnackbar = jest.fn();
+jest.mock('../../../stores');
+jest.mock('../../../stores/ui/ui.store');
+jest.mock('../../../services/maintenance.service');
 
-let mockAuthState: any = {
-  user: { id: "u1", permissions: ["PLANNER"] },
-};
-
-jest.mock("react-router-dom", () => ({
-  useNavigate: () => mockNavigate,
+// Mock child components to avoid huge rendering overhead
+jest.mock('../components/ScheduleDayBlock', () => ({
+  ScheduleDayBlock: ({ dateLabel, onEdit, schedules }: any) => (
+    <div data-testid="schedule-block">
+      {dateLabel}
+      <button onClick={() => onEdit(schedules[0])}>Edit Item</button>
+    </div>
+  )
+}));
+jest.mock('../components/CalendarGridView', () => ({
+  CalendarGridView: ({ onOpenCreation }: any) => (
+    <div data-testid="calendar-grid">
+      <button onClick={() => onOpenCreation('2023-01-01')}>Open Creation Grid</button>
+    </div>
+  )
+}));
+jest.mock('../components/ScheduleCreationModal', () => ({
+  ScheduleCreationModal: ({ open, onClose, onSave }: any) => open ? (
+    <div data-testid="creation-modal">
+      <button onClick={onClose}>Close</button>
+      <button onClick={() => onSave({ title: 'Test Schedule', type: 'MAINTENANCE' })}>Save</button>
+    </div>
+  ) : null
 }));
 
-jest.mock("../../../stores", () => ({
-  useAuhtStore: jest.fn((selector) => (selector ? selector(mockAuthState) : mockAuthState)),
-}));
+describe('AgendaMantenimientosPage', () => {
+  const mockSetSnackbar = jest.fn();
 
-jest.mock("../../../stores/ui/ui.store", () => ({
-  useUiStore: jest.fn((selector) =>
-    selector ? selector({ setSnackbar: mockSetSnackbar }) : { setSnackbar: mockSetSnackbar }
-  ),
-}));
-
-jest.mock("../../../services/maintenance.service", () => ({
-  MaintenanceService: {
-    subscribeToSchedules: (...args: unknown[]) => mockSubscribe(...args),
-    createSchedule: jest.fn(),
-  },
-}));
-
-jest.mock("../components/ScheduleDayBlock", () => ({
-  ScheduleDayBlock: ({ dateLabel }: { dateLabel: string }) => <div>DayBlock:{dateLabel}</div>,
-}));
-
-jest.mock("../components/CalendarGridView", () => ({
-  CalendarGridView: () => <div>Calendar grid mock</div>,
-}));
-
-jest.mock("../components/ScheduleCreationModal", () => ({
-  ScheduleCreationModal: ({ open }: { open: boolean }) => <div>CreationModal:{String(open)}</div>,
-}));
-
-jest.mock("../components/MaintenanceExportControls", () => ({
-  MaintenanceExportControls: () => <div>Export controls mock</div>,
-}));
-
-jest.mock("../../unauthorized/UnauthorizedPage", () => ({
-  UnauthorizedPage: () => <div>Unauthorized mock</div>,
-}));
-
-describe("AgendaMantenimientosPage", () => {
   beforeEach(() => {
-    mockNavigate.mockReset();
-    mockSetSnackbar.mockReset();
-    mockSubscribe.mockReset();
-  });
+    jest.clearAllMocks();
+    
+    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({ user: { permissions: ['ADMIN', 'PLANNER', 'MANAGER'] } })
+    );
 
-  test("muestra unauthorized cuando usuario no tiene permisos", () => {
-    mockAuthState = { user: { permissions: ["USER"] } };
-    render(<AgendaMantenimientosPage />);
-    expect(screen.getByText("Unauthorized mock")).toBeInTheDocument();
-  });
+    (useUiStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        setSnackbar: mockSetSnackbar,
+      })
+    );
 
-  test("renderiza agenda y datos suscritos cuando usuario está autorizado", async () => {
-    mockAuthState = { user: { id: "u1", permissions: ["PLANNER"] } };
-    mockSubscribe.mockImplementation((cb: (data: any[]) => void) => {
-      cb([
-        {
-          id: "1",
-          dateStr: "2099-01-01T10:00:00.000Z",
-          type: "MAINTENANCE",
-          status: "SCHEDULED",
-          title: "Mtto 1",
-        },
-      ]);
-      return jest.fn();
+    (MaintenanceService.subscribeToSchedules as jest.Mock).mockImplementation((callback) => {
+      // simulate initial load and some past and future schedules to cover group mapping
+      const pastSchedule = { id: 's1', type: 'MAINTENANCE', dateStr: dayjs().subtract(1, 'month').format('YYYY-MM-DD') };
+      const todaySchedule = { id: 's2', type: 'MAINTENANCE', dateStr: dayjs().format('YYYY-MM-DD') };
+      const futureSchedule = { id: 's3', type: 'MAINTENANCE', dateStr: dayjs().add(20, 'day').format('YYYY-MM-DD') };
+      callback([pastSchedule, todaySchedule, futureSchedule]);
+      return jest.fn(); // unsubscribe mock
     });
+  });
 
-    render(<AgendaMantenimientosPage />);
+  const setupComponent = () => {
+    return render(
+      <BrowserRouter>
+        <AgendaMantenimientosPage />
+      </BrowserRouter>
+    );
+  };
 
-    await waitFor(() => expect(screen.getAllByText("Agenda").length).toBeGreaterThan(0));
-    expect(screen.getAllByText("Export controls mock").length).toBeGreaterThan(0);
-    expect(screen.getByText("Calendar grid mock")).toBeInTheDocument();
+  it('renderiza Unauthorized si no tiene permisos', () => {
+    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({ user: { permissions: ['NO_PERM'] } })
+    );
+
+    const { container } = setupComponent();
+    expect(screen.queryByText(/Agenda/i)).not.toBeInTheDocument();
+  });
+
+  it('renderiza calendario por defecto en modo mes', () => {
+    setupComponent();
+    expect(screen.getByTestId('calendar-grid')).toBeInTheDocument();
+  });
+
+  it('permite cambiar a modo dia y ver listado (mobile y desktop)', () => {
+    setupComponent();
+    
+    // Changing to Day view (Día)
+    const dayBtn = screen.getAllByRole('button', { name: /Día|DÍA/i })[0];
+    fireEvent.click(dayBtn);
+
+    // After clicking day view, it should render schedule blocks!
+    expect(screen.queryByTestId('calendar-grid')).not.toBeInTheDocument();
+    
+    // There are day words
+    expect(screen.getAllByText(/HOY/i).length).toBeGreaterThan(0);
+  });
+
+  it('permite cambiar a modo semana', () => {
+    setupComponent();
+    
+    const weekBtn = screen.getAllByRole('button', { name: /Semana/i })[0];
+    fireEvent.click(weekBtn);
+
+    expect(screen.queryByTestId('calendar-grid')).not.toBeInTheDocument();
+  });
+
+  it('permite navegar HOY, anterior, siguiente dia', () => {
+    setupComponent();
+    const dayBtn = screen.getAllByRole('button', { name: /Día/i })[0];
+    fireEvent.click(dayBtn);
+
+    // Prev/Next/Hoy buttons are rendered
+    const hoyBtn = screen.getByRole('button', { name: /HOY/i });
+    fireEvent.click(hoyBtn);
+  });
+
+  it('debe manejar handleCreateSchedule exito y error', async () => {
+    setupComponent();
+    
+    // simulate opening creation
+    const openBtn = screen.getByText('Open Creation Grid');
+    fireEvent.click(openBtn);
+
+    expect(screen.getByTestId('creation-modal')).toBeInTheDocument();
+
+    (MaintenanceService.createSchedule as jest.Mock).mockResolvedValue({ result: 'OK' });
+    
+    // trigger save inside mock
+    const saveBtn = screen.getByText('Save');
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(MaintenanceService.createSchedule).toHaveBeenCalledWith(expect.objectContaining({ title: 'Test Schedule' }));
+      expect(mockSetSnackbar).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success' }));
+    });
+    
+    // test error
+    (MaintenanceService.createSchedule as jest.Mock).mockResolvedValue({ result: 'ERROR', errorMessage: 'DB Error' });
+    fireEvent.click(saveBtn);
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+  });
+
+  it('debe manejar handleEditSchedule (edita desde bloque)', () => {
+    setupComponent();
+    // change to Day mode so ScheduleDayBlock is rendered
+    fireEvent.click(screen.getAllByRole('button', { name: /Día/i })[0]);
+
+    const editBtns = screen.getAllByText('Edit Item');
+    fireEvent.click(editBtns[0]); // edits the first schedule the mock sent
+
+    expect(screen.getByTestId('creation-modal')).toBeInTheDocument();
+  });
+
+  it('cierra modal handleCloseCreation', () => {
+    setupComponent();
+    const openBtn = screen.getByText('Open Creation Grid');
+    fireEvent.click(openBtn);
+    
+    const closeBtn = screen.getByText('Close');
+    fireEvent.click(closeBtn);
+    
+    expect(screen.queryByTestId('creation-modal')).not.toBeInTheDocument();
   });
 });

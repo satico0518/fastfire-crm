@@ -3,6 +3,8 @@ import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
 import { MenuComponent } from "../MenuComponent";
 import { WorkgroupService } from "../../../services/workgroup.service";
+import { useAuhtStore } from "../../../stores";
+import { useWorkgroupStore } from "../../../stores/workgroups/workgroups.store";
 
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
@@ -168,16 +170,5 @@ describe("MenuComponent", () => {
     renderComponent(true);
     fireEvent.click(screen.getByText("T&G"));
     expect(onCloseMobileMenu).toHaveBeenCalled();
-  });
-
-  it("maneja borrar grupo correctamente (simulando secondary actions)", async () => {
-    renderComponent();
-    // Simulate user action to delete group
-    const { deleteWorkgroup } = WorkgroupService;
-    (deleteWorkgroup as jest.Mock).mockResolvedValue({ result: "OK" });
-
-    // Try to trigger secondary actions delete
-    // For coverage, we can just call it via mock execution or checking logic
-    // We already invoked the secondary actions button logic
   });
 });
