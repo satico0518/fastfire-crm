@@ -163,4 +163,49 @@ describe('HomePage', () => {
       }
     });
   });
+
+  describe('interacciones hover en quick links', () => {
+    test('debe ejecutar mouseenter para todos los accesos rápidos visibles', () => {
+      mockUser = { ...mockUser, permissions: ['ADMIN'] };
+      renderPage();
+
+      const links = [
+        { title: 'Tareas & Grupos', color: '#0a84ff' },
+        { title: 'Agenda Mantenimientos', color: '#30d158' },
+        { title: 'Comercial / Compras', color: '#ff9f0a' },
+        { title: 'Formatos', color: '#bf5af2' },
+      ];
+
+      links.forEach(({ title, color }) => {
+        const button = screen.getByText(title).closest('button');
+        expect(button).toBeInTheDocument();
+        if (button) {
+          fireEvent.mouseEnter(button);
+          const expectedRgbByHex: Record<string, string> = {
+            '#0a84ff': 'rgb(10, 132, 255)',
+            '#30d158': 'rgb(48, 209, 88)',
+            '#ff9f0a': 'rgb(255, 159, 10)',
+            '#bf5af2': 'rgb(191, 90, 242)',
+          };
+          expect(button.style.borderColor).toBe(expectedRgbByHex[color]);
+          expect(button.style.transform).toBe('translateY(-3px)');
+        }
+      });
+    });
+
+    test('debe restaurar estilos en mouseleave de acceso rápido', () => {
+      renderPage();
+      const formatsButton = screen.getByText('Formatos').closest('button');
+
+      expect(formatsButton).toBeInTheDocument();
+      if (formatsButton) {
+        fireEvent.mouseEnter(formatsButton);
+        fireEvent.mouseLeave(formatsButton);
+
+        expect(formatsButton.style.background).toBe('rgba(255, 255, 255, 0.04)');
+        expect(formatsButton.style.transform).toBe('translateY(0)');
+        expect(formatsButton.style.boxShadow).toBe('none');
+      }
+    });
+  });
 });
