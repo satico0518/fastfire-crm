@@ -113,6 +113,35 @@ describe('Tasks Store', () => {
       expect(tasks!.length).toBeGreaterThan(0);
     });
 
+    test('debe dejar tasks vacio cuando snapshot no es un objeto valido', async () => {
+      const { onValue } = require('firebase/database');
+      (onValue as jest.Mock).mockImplementationOnce((_ref, callback) => {
+        callback({ val: () => null });
+        return jest.fn();
+      });
+
+      await useTasksStore.getState().loadTasks();
+      expect(useTasksStore.getState().tasks).toEqual([]);
+    });
+
+    test('debe manejar errores del listener de Firebase y limpiar tasks', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const { onValue } = require('firebase/database');
+      (onValue as jest.Mock).mockImplementationOnce((_ref, _callback, onError) => {
+        onError(new Error('Firebase listener error'));
+        return jest.fn();
+      });
+
+      await useTasksStore.getState().loadTasks();
+
+      expect(useTasksStore.getState().tasks).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error cargando tareas desde Firebase',
+        expect.objectContaining({ error: expect.any(Error) })
+      );
+      consoleSpy.mockRestore();
+    });
+
     test('debe manejar errores y dejar tasks como array vacío', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       const { ref } = require('firebase/database');
