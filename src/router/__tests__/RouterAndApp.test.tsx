@@ -5,6 +5,7 @@ import { AppRouter } from "../AppRouter";
 
 let mockAuthState: any = {
   isAuth: true,
+  hasHydrated: true,
   user: { permissions: ["ADMIN"] },
 };
 
@@ -64,6 +65,7 @@ describe("Router and App smoke", () => {
   beforeEach(() => {
     mockAuthState = {
       isAuth: true,
+      hasHydrated: true,
       user: { permissions: ["ADMIN"] },
     };
     mockUiState = { isLoading: false };

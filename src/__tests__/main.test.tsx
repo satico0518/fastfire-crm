@@ -47,6 +47,12 @@ jest.mock("../stores/ui/ui.store", () => ({
   ),
 }));
 
+jest.mock("../stores", () => ({
+  useAuthStore: jest.fn((selector: (s: { isAuth: boolean; hasHydrated: boolean }) => unknown) =>
+    selector({ isAuth: true, hasHydrated: true })
+  ),
+}));
+
 const mockUseUiStore = useUiStore as jest.MockedFunction<typeof useUiStore>;
 
 const mockUiState = {
