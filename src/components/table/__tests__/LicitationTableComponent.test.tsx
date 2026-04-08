@@ -44,7 +44,7 @@ describe('LicitationTableComponent', () => {
     global.FileReader = jest.fn(() => mockFileReader) as any;
   });
 
-  const renderComponent = (items = []) => {
+  const renderComponent = (items: any[] = []) => {
     render(
       <LicitationTableComponent
         items={items}
@@ -56,7 +56,7 @@ describe('LicitationTableComponent', () => {
   };
 
   it('renderiza la tabla y los controles', () => {
-    renderComponent([{ id: '1', name: 'Item 1', price: 100 } as any]);
+    renderComponent([{ id: '1', name: 'Item 1', price: 100, key: 'k1', count: 1, showInTender: true, status: 'ACTIVE' }]);
     expect(screen.getByText(/Subir plantilla/i)).toBeInTheDocument();
     expect(screen.getByText('Valor total licitado:')).toBeInTheDocument();
   });
@@ -79,7 +79,7 @@ describe('LicitationTableComponent', () => {
     const file = new File(['dummy content'], 'example.xlsx', { type: 'application/octet-stream' });
     fireEvent.change(input, { target: { files: [file] } });
 
-    const frInstance = (global.FileReader as jest.Mock).mock.results[0].value;
+    const frInstance = (global.FileReader as unknown as jest.Mock).mock.results[0].value;
     (XLSX.read as jest.Mock).mockReturnValue({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } });
     (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue([ { id: 1, item: 'A', precio: 'invalid' } ]);
 
@@ -99,7 +99,7 @@ describe('LicitationTableComponent', () => {
     const file = new File([''], 'test.xlsx');
     fireEvent.change(input, { target: { files: [file] } });
 
-    const frInstance = (global.FileReader as jest.Mock).mock.results[0].value;
+    const frInstance = (global.FileReader as unknown as jest.Mock).mock.results[0].value;
     (XLSX.read as jest.Mock).mockReturnValue({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } });
     (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue([ { id: 1, item: 'A', precio: 100 } ]);
 
@@ -119,7 +119,7 @@ describe('LicitationTableComponent', () => {
     const file = new File([''], 'test.xlsx');
     fireEvent.change(input, { target: { files: [file] } });
 
-    const frInstance = (global.FileReader as jest.Mock).mock.results[0].value;
+    const frInstance = (global.FileReader as unknown as jest.Mock).mock.results[0].value;
     (XLSX.read as jest.Mock).mockReturnValue({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } });
     (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue([ { id: 1, item: 'A', precio: 100 } ]);
 
@@ -139,7 +139,7 @@ describe('LicitationTableComponent', () => {
     const file = new File([''], 'test.xlsx');
     fireEvent.change(input, { target: { files: [file] } });
 
-    const frInstance = (global.FileReader as jest.Mock).mock.results[0].value;
+    const frInstance = (global.FileReader as unknown as jest.Mock).mock.results[0].value;
     frInstance.onerror(new Error('fail upload'));
 
     await waitFor(() => {
@@ -155,7 +155,7 @@ describe('LicitationTableComponent', () => {
     const file = new File([''], 'test.xlsx');
     fireEvent.change(input, { target: { files: [file] } });
 
-    const frInstance = (global.FileReader as jest.Mock).mock.results[0].value;
+    const frInstance = (global.FileReader as unknown as jest.Mock).mock.results[0].value;
     (XLSX.read as jest.Mock).mockReturnValue({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } });
     (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue([ { id: 1, item: 'ITEM 1', precio: 100 } ]);
 
@@ -177,7 +177,7 @@ describe('LicitationTableComponent', () => {
     const file = new File([''], 'test.xlsx');
     fireEvent.change(input, { target: { files: [file] } });
 
-    const frInstance = (global.FileReader as jest.Mock).mock.results[0].value;
+    const frInstance = (global.FileReader as unknown as jest.Mock).mock.results[0].value;
     (XLSX.read as jest.Mock).mockReturnValue({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } });
     // Faltan keys como 'item'
     (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue([ { id: 1, precio: 10 } ]);

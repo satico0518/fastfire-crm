@@ -41,7 +41,7 @@ describe('StockFormComponent', () => {
   });
 
   it('renderiza valores por defecto en modo edición', () => {
-    const item: Item = { id: 'ID1', name: 'ITEM1', count: 5, price: 50 };
+    const item: Item = { id: 'ID1', name: 'ITEM1', count: 5, price: 50, key: 'k1', showInTender: true, status: 'ACTIVE' };
     render(<StockFormComponent editingItem={item} />);
     expect(screen.getByLabelText(/Código/i)).toHaveValue('ID1');
     expect(screen.getByLabelText(/Item/i)).toHaveValue('ITEM1');
@@ -71,9 +71,8 @@ describe('StockFormComponent', () => {
   });
 
   it('llama modifyItem y maneja error db', async () => {
-    const user = userEvent.setup();
     (PurchaseService.modifyItem as jest.Mock).mockResolvedValue({ result: 'ERROR DB' });
-    const item: Item = { id: 'ID1', name: 'ITEM 1', count: 5, price: 50 };
+    const item: Item = { id: 'ID1', name: 'ITEM 1', count: 5, price: 50, key: 'k1', showInTender: true, status: 'ACTIVE' };
     render(<StockFormComponent editingItem={item} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Editar Item/i }));

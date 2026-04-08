@@ -3,8 +3,6 @@ import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
 import { MenuComponent } from "../MenuComponent";
 import { WorkgroupService } from "../../../services/workgroup.service";
-import { useAuhtStore } from "../../../stores";
-import { useWorkgroupStore } from "../../../stores/workgroups/workgroups.store";
 
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
@@ -187,7 +185,6 @@ describe("MenuComponent", () => {
 
   it("abre modal de Nuevo grupo", () => {
     renderComponent();
-    const actions = screen.getAllByRole("button");
     const newGroupBtn = screen.getByText("Crear Grupo");
     fireEvent.click(newGroupBtn);
     expect(mockSetModal).toHaveBeenCalledWith(

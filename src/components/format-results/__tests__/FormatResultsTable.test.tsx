@@ -1,8 +1,7 @@
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { FormatResultsTable } from "../FormatResultsTable";
 import { FormatService } from "../../../services/format.service";
-import * as utils from "../../../utils/utils";
 
 jest.mock("../../../services/format.service", () => ({
   FormatService: {

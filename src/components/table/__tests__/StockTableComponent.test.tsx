@@ -4,8 +4,6 @@ import StockTableComponent from '../StockTableComponent';
 import { useUiStore } from '../../../stores/ui/ui.store';
 import { useStockStore } from '../../../stores/stock/stock.store';
 import { PurchaseService } from '../../../services/purchase.service';
-import userEvent from '@testing-library/user-event';
-import { Item } from '../../../interfaces/Item';
 
 jest.mock('../../../stores/ui/ui.store');
 jest.mock('../../../stores/stock/stock.store');

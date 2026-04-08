@@ -1,5 +1,5 @@
 import { PurchaseService } from '../purchase.service';
-import { push, remove, set, update } from 'firebase/database';
+import { remove, set, update } from 'firebase/database';
 
 jest.mock('firebase/database', () => ({
   ref: jest.fn(() => ({})),

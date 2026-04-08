@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { useAuhtStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 import { MaintenanceService } from '../../../services/maintenance.service';
-import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
 
 jest.mock('../../../stores');
@@ -76,7 +75,7 @@ describe('AgendaMantenimientosPage', () => {
       selector({ user: { permissions: ['NO_PERM'] } })
     );
 
-    const { container } = setupComponent();
+    setupComponent();
     expect(screen.queryByText(/Agenda/i)).not.toBeInTheDocument();
   });
 

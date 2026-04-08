@@ -1,5 +1,4 @@
 import { TaskService } from '../task.service';
-import { db } from '../../firebase/firebase.config';
 import { push, set, update, get, remove } from 'firebase/database';
 import { Task } from '../../interfaces/Task';
 import { v4 as uuidv4 } from 'uuid';

@@ -2,6 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { TasksFormComponent } from '../TasksFormComponent';
+import React from 'react';
 
 // ─── Mocks de stores ──────────────────────────────────────────────────────────
 const mockSetSnackbar = jest.fn();
@@ -58,6 +59,60 @@ jest.mock('../../../services/tags.service', () => ({
   TagsService: { createTag: jest.fn() },
 }));
 
+jest.mock('@mui/material', () => {
+  const actual = jest.requireActual('@mui/material');
+  const ReactLib = require('react');
+
+  return {
+    ...actual,
+    Autocomplete: ({ options = [], onChange, renderInput, PaperComponent }: any) => {
+      const [inputValue, setInputValue] = ReactLib.useState('');
+
+      const params = {
+        inputProps: {
+          value: inputValue,
+          onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+            setInputValue(event.target.value),
+        },
+      };
+
+      const optionsContent = (
+        <div>
+          {(options as string[]).map((opt) => (
+            <button key={opt} type="button" onClick={() => onChange?.(null, opt)}>
+              mock-option-{opt}
+            </button>
+          ))}
+        </div>
+      );
+
+      return (
+        <div data-testid="mock-autocomplete">
+          {renderInput(params)}
+          {PaperComponent ? <PaperComponent>{optionsContent}</PaperComponent> : optionsContent}
+        </div>
+      );
+    },
+    Chip: ({ label, onDelete }: any) => (
+      <div>
+        <span>{label}</span>
+        <button type="button" aria-label={`delete-${label}`} onClick={onDelete}>
+          delete
+        </button>
+      </div>
+    ),
+    Select: ({ children, onChange }: any) => (
+      <div>
+        <button type="button" onClick={() => onChange?.({ target: { value: 'URGENT' } })}>
+          mock-priority-change
+        </button>
+        {children}
+      </div>
+    ),
+    MenuItem: ({ children }: any) => <div>{children}</div>,
+  };
+});
+
 // ─── Mocks de sub-componentes ────────────────────────────────────────────────
 jest.mock('../../multi-select/MultiselectComponent', () => ({
   MultiselectComponent: ({ title }: { title: string }) => (
@@ -66,7 +121,15 @@ jest.mock('../../multi-select/MultiselectComponent', () => ({
 }));
 
 jest.mock('@mui/x-date-pickers', () => ({
-  DatePicker: () => <div data-testid="date-picker">DatePicker</div>,
+  DatePicker: ({ onChange }: { onChange?: (value: { format: (fmt: string) => string } | null) => void }) => (
+    <button
+      type="button"
+      data-testid="date-picker"
+      onClick={() => onChange?.({ format: () => '01/01/2026' })}
+    >
+      DatePicker
+    </button>
+  ),
   LocalizationProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
@@ -83,8 +146,6 @@ jest.mock('../../../utils/utils', () => ({
   getUserNameByKey: jest.fn((key: string) => `User-${key}`),
   getWorkgroupNameByKey: jest.fn((key: string) => `WG-${key}`),
 }));
-
-import React from 'react';
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 describe('TasksFormComponent', () => {
@@ -267,6 +328,107 @@ describe('TasksFormComponent', () => {
       await waitFor(() => {
         expect(mockSetSnackbar).toHaveBeenCalledWith(
           expect.objectContaining({ severity: 'error' })
+        );
+      });
+    });
+  });
+
+  describe('interacciones de etiquetas, fecha y prioridad', () => {
+    test('agrega y elimina etiqueta existente usando el flujo del selector', async () => {
+      const { TagsService } = require('../../../services/tags.service');
+      render(<TasksFormComponent />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'mock-option-backend' }));
+      fireEvent.click(screen.getByRole('button', { name: 'mock-option-backend' }));
+
+      expect(screen.getByText('backend')).toBeInTheDocument();
+      expect(TagsService.createTag).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'delete-backend' }));
+      await waitFor(() => {
+        expect(screen.queryByText('backend')).not.toBeInTheDocument();
+      });
+    });
+
+    test('crea una etiqueta nueva desde el botón + cuando no existe en catálogo', async () => {
+      const { TagsService } = require('../../../services/tags.service');
+      render(<TasksFormComponent />);
+
+      fireEvent.change(screen.getByLabelText(/Buscar o crear etiqueta/i), {
+        target: { value: 'etiqueta-nueva' },
+      });
+
+      const autoCompleteContainer = screen.getByTestId('mock-autocomplete');
+      fireEvent.click(autoCompleteContainer.querySelector('button') as HTMLButtonElement);
+
+      await waitFor(() => {
+        expect(TagsService.createTag).toHaveBeenCalledWith('etiqueta-nueva');
+      });
+      expect(screen.getByText('etiqueta-nueva')).toBeInTheDocument();
+    });
+
+    test('envía dueDate y prioridad actualizada al crear tarea', async () => {
+      const { TaskService } = require('../../../services/task.service');
+      render(<TasksFormComponent />);
+
+      fireEvent.change(screen.getByLabelText(/Nombre de la Tarea/i), {
+        target: { value: 'Tarea con fecha y prioridad' },
+      });
+      fireEvent.click(screen.getByTestId('date-picker'));
+      fireEvent.click(screen.getByRole('button', { name: 'mock-priority-change' }));
+
+      const form = screen.getByRole('button', { name: /Crear Tarea/i }).closest('form')!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(TaskService.createTask).toHaveBeenCalledWith(
+          expect.objectContaining({
+            dueDate: '01/01/2026',
+            priority: 'URGENT',
+          })
+        );
+      });
+    });
+  });
+
+  describe('ramas adicionales de submit', () => {
+    test('envía ownerKeys vacío cuando getUserKeysByNames retorna vacío', async () => {
+      const { TaskService } = require('../../../services/task.service');
+      const utils = require('../../../utils/utils');
+      utils.getUserKeysByNames.mockReturnValueOnce([]);
+
+      render(<TasksFormComponent />);
+      fireEvent.change(screen.getByLabelText(/Nombre de la Tarea/i), {
+        target: { value: 'Sin responsables' },
+      });
+
+      const form = screen.getByRole('button', { name: /Crear Tarea/i }).closest('form')!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(TaskService.createTask).toHaveBeenCalledWith(
+          expect.objectContaining({ ownerKeys: [] })
+        );
+      });
+    });
+
+    test('tolera workgroups undefined y envía workgroupKeys undefined', async () => {
+      const { TaskService } = require('../../../services/task.service');
+      const { useWorkgroupStore } = require('../../../stores/workgroups/workgroups.store');
+
+      useWorkgroupStore.mockImplementationOnce((selector: Function) => selector({ workgroups: undefined }));
+
+      render(<TasksFormComponent />);
+      fireEvent.change(screen.getByLabelText(/Nombre de la Tarea/i), {
+        target: { value: 'Sin grupos' },
+      });
+
+      const form = screen.getByRole('button', { name: /Crear Tarea/i }).closest('form')!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(TaskService.createTask).toHaveBeenCalledWith(
+          expect.objectContaining({ workgroupKeys: undefined })
         );
       });
     });

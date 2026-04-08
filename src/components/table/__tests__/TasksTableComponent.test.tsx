@@ -4,8 +4,6 @@ import '@testing-library/jest-dom';
 import TasksTableComponent from '../TasksTableComponent';
 import { Box } from '@mui/material';
 
-import { Priority, Task } from '../../../interfaces/Task';
-
 jest.mock('@mui/x-date-pickers', () => ({
   LocalizationProvider: ({ children }: any) => <div>{children}</div>,
   DatePicker: ({ label, onChange }: any) => (
