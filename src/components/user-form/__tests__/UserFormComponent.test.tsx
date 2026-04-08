@@ -101,6 +101,16 @@ describe('UserFormComponent', () => {
       expect(screen.getByLabelText(/^Admin$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Proveedor/i)).toBeInTheDocument();
     });
+
+    test('debe permitir alternar permisos en modo edición', async () => {
+      render(<UserFormComponent editingUser={mockEditingUser} />);
+
+      const adminCheckbox = screen.getByLabelText(/^Admin$/i);
+      expect(adminCheckbox).toBeChecked();
+
+      await user.click(adminCheckbox);
+      expect(adminCheckbox).not.toBeChecked();
+    });
   });
 
   // ── Modo usuario PROVIDER ─────────────────────────────────────────────────

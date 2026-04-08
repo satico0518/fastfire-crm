@@ -96,6 +96,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const setModal = useUiStore((state) => state.setModal);
   const tasks = useTasksStore((state) => state.tasks);
+  const loadTasks = useTasksStore((state) => state.loadTasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const currentUser = useAuthStore((state) => state.user);
@@ -131,6 +132,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   useEffect(() => {
     TaskService.cleanupDeletedTasks();
   }, []);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks, currentUser?.key]);
 
 
   const translateHistoryAction = (action: string) => {

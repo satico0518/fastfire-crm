@@ -46,6 +46,7 @@ export const WorkgroupsFormComponent = ({
 }: WorkgroupsFormComponentProps) => {
   const [bgColor, setBgColor] = useState("deepskyblue");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null);
   const [isPrivate, setIsPrivate] = useState(editingGroup?.isPrivate ?? false);
   const [selectedMembers, setSelectedMembers] = useState<AutocompleteField[]>(
     []
@@ -173,6 +174,12 @@ export const WorkgroupsFormComponent = ({
   const handleColorChange = (color: ColorResult) => {
     setBgColor(color.hex);
     setShowColorPicker(false);
+    setColorAnchorEl(null);
+  };
+
+  const handleOpenColorPicker = (event: React.MouseEvent<HTMLElement>) => {
+    setColorAnchorEl(event.currentTarget);
+    setShowColorPicker(true);
   };
 
   return (
@@ -195,12 +202,17 @@ export const WorkgroupsFormComponent = ({
               '&:hover': { transform: 'scale(1.05)' },
               position: 'relative'
             }}
-            onClick={() => setShowColorPicker(true)}
+            onClick={handleOpenColorPicker}
           >
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 900 }}>G</Typography>
             <ColorPickerComponent
               visible={showColorPicker}
               handleChange={handleColorChange}
+              anchorEl={colorAnchorEl}
+              onClose={() => {
+                setShowColorPicker(false);
+                setColorAnchorEl(null);
+              }}
             />
           </Box>
           <TextField

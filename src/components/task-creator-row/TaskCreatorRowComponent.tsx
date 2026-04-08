@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Autocomplete, Button, Chip, TextField } from "@mui/material";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
@@ -28,9 +28,11 @@ import { TagsService } from "../../services/tags.service";
 import { Tag } from "../../interfaces/Tag";
 
 export const TaskCreatorRowComponent = () => {
-  const tags = Object.values(useTagsStore((state) => state.tags));
+  const tags = useTagsStore((state) => state.tags);
+  const loadTags = useTagsStore((state) => state.loadTags);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
+  const loadWorkgroups = useWorkgroupStore((state) => state.loadWorkgroups);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const currentUser = useAuthStore((state) => state.user);
 
@@ -55,6 +57,23 @@ export const TaskCreatorRowComponent = () => {
 
   const [openGroupsDialog, setOpenGroupsDialog] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
+  const availableTags = useMemo(
+    () => tags.filter((tag): tag is string => typeof tag === "string" && !!tag.trim()),
+    [tags]
+  );
+
+  useEffect(() => {
+    if (openTagsDialog && typeof loadTags === "function") {
+      loadTags();
+    }
+  }, [openTagsDialog, loadTags]);
+
+  useEffect(() => {
+    if (openGroupsDialog && typeof loadWorkgroups === "function") {
+      loadWorkgroups();
+    }
+  }, [openGroupsDialog, loadWorkgroups]);
 
   const resetForm = () => {
     setTaskName("");
@@ -121,7 +140,7 @@ export const TaskCreatorRowComponent = () => {
   };
 
   const handleAddTag = (tag: Tag | string) => {
-    if (!Object.values(tags).some((t) => t === tag)) {
+    if (!availableTags.some((t) => t === tag)) {
       TagsService.createTag(tag as string);
     }
     if (!selectedTags.some((t) => t === tag)) {
@@ -201,7 +220,7 @@ export const TaskCreatorRowComponent = () => {
                             className="selected-chip"
                             size="small"
                             color="success"
-                            label={Object.values(st)}
+                            label={st as string}
                             onDelete={() => handleDeleteTag(st as string)}
                           />
                         </div>
@@ -210,7 +229,7 @@ export const TaskCreatorRowComponent = () => {
                   </div>
                   <Autocomplete
                     disablePortal
-                    options={Object.values(tags)}
+                    options={availableTags}
                     includeInputInList
                     fullWidth
                     onChange={(_, tag) => tag && handleAddTag(tag)}
@@ -329,7 +348,7 @@ export const TaskCreatorRowComponent = () => {
               open={openGroupsDialog}
               labels={
                 workgroups
-                  ?.filter((wg) => wg.isActive)
+                  ?.filter((wg) => wg.isActive !== false)
                   .map((wg) => wg.name) as unknown as string[]
               }
               setOpen={setOpenGroupsDialog}

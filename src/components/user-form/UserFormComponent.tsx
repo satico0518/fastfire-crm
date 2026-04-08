@@ -81,7 +81,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       setValue("firstName", editingUser.firstName || "");
       setValue("lastName", editingUser.lastName || "");
       setValue("email", editingUser.email);
-      
+
       const newAccessState = {
         ADMIN: !!editingUser.permissions?.includes("ADMIN"),
         TYG: !!editingUser.permissions?.includes("TYG"),
@@ -92,20 +92,29 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         MANAGER: !!editingUser.permissions?.includes("MANAGER"),
       };
 
-      // Evitar actualizaciones de estado innecesarias que pueden causar bucles infinitos
-      if (JSON.stringify(accessState) !== JSON.stringify(newAccessState)) {
-        setAccessState(newAccessState);
-      }
+      setAccessState((prev) => {
+        const hasChanges = (Object.keys(newAccessState) as Access[]).some(
+          (key) => prev[key] !== newAccessState[key]
+        );
+        return hasChanges ? newAccessState : prev;
+      });
+    }
+  }, [editingUser, setValue]);
 
+  useEffect(() => {
+    if (editingUser) {
       const newLabels = workgroups
         ?.filter((wg) => editingUser.workgroupKeys?.includes(wg.key as string))
         .map((wg) => wg.name) as string[] || [];
 
-      if (JSON.stringify(labelWg) !== JSON.stringify(newLabels)) {
-        setLabelWg(newLabels);
-      }
+      setLabelWg((prev) => {
+        const hasChanges =
+          prev.length !== newLabels.length ||
+          prev.some((label, index) => label !== newLabels[index]);
+        return hasChanges ? newLabels : prev;
+      });
     }
-  }, [editingUser, setValue, workgroups, accessState, labelWg]);
+  }, [editingUser, workgroups]);
 
   const onSubmit = async (data: User) => {
     try {

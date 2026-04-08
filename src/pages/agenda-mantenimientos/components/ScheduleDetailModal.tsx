@@ -92,7 +92,7 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
       <DialogTitle sx={{ pb: 1, pt: 3, px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box>
            <Chip 
-              label={getStatusText(schedule.status)} 
+              label={getStatusText(schedule.status).toUpperCase()} 
               size="small"
               sx={{ 
                 mb: 1.5,
@@ -114,7 +114,8 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
                  fontWeight: 900, 
                  bgcolor: 'rgba(168, 85, 247, 0.2)', 
                  color: '#a855f7',
-                 border: '1px solid rgba(168, 85, 247, 0.4)'
+                 border: '1px solid rgba(168, 85, 247, 0.4)',
+                 marginLeft: '10px',
                }} 
              />
            )}

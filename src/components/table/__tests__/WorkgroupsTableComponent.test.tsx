@@ -13,6 +13,7 @@ const mockUsers: User[] = [
 const mockWorkgroups: Workgroup[] = [
   { key: 'wg1', name: 'Grupo Alpha', description: 'Desc Alpha', color: '#ff0000', isPrivate: true, memberKeys: ['u1'], isActive: true },
   { key: 'wg2', name: 'Grupo Beta', description: 'Desc Beta', color: '#00ff00', isPrivate: false, memberKeys: [], isActive: true },
+  { key: 'wg3', name: 'Grupo Inactivo', description: 'Desc Inactivo', color: '#ffaa00', isPrivate: false, memberKeys: ['u1'], isActive: false },
 ];
 
 const mockTasks: Task[] = [];
@@ -74,7 +75,7 @@ let mockAdminStatus = true;
 
 jest.mock('../../../stores', () => ({
   useAuthStore: jest.fn((selector: Function) => selector({
-    user: { key: 'admin', permissions: mockAdminStatus ? ['ADMIN'] : ['TYG'], workgroupKeys: ['wg1'] }
+    user: { key: 'admin', permissions: mockAdminStatus ? ['ADMIN'] : ['TYG'], workgroupKeys: ['wg1', 'wg3'] }
   })),
 }));
 
@@ -106,6 +107,7 @@ jest.mock('../../../stores/tasks/tasks.store', () => ({
 jest.mock('../../../services/workgroup.service', () => ({
   WorkgroupService: {
     deleteWorkgroup: jest.fn().mockResolvedValue(true),
+    reactivateWorkgroup: jest.fn().mockResolvedValue({ result: 'OK', message: 'Grupo de trabajo reactivado exitosamente!' }),
     deleteMemberFromWorkgroup: jest.fn().mockResolvedValue({ result: 'OK', message: 'Miembro eliminado' }),
   },
 }));
@@ -133,13 +135,36 @@ describe('WorkgroupsTableComponent', () => {
     render(<WorkgroupsTable />);
     expect(screen.getByText('Grupo Alpha')).toBeInTheDocument();
     expect(screen.getByText('Grupo Beta')).toBeInTheDocument();
+    expect(screen.getByText('Grupo Inactivo')).toBeInTheDocument();
   });
 
   test('debe filtrar grupos para un usuario no admin', () => {
     mockAdminStatus = false;
     render(<WorkgroupsTable />);
     expect(screen.getByText('Grupo Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Grupo Inactivo')).toBeInTheDocument();
     expect(screen.queryByText('Grupo Beta')).not.toBeInTheDocument();
+  });
+
+  test('debe mostrar estado inactivo para grupos desactivados', () => {
+    render(<WorkgroupsTable />);
+    expect(screen.getByText('Inactivo')).toBeInTheDocument();
+  });
+
+  test('debe permitir reactivar un grupo inactivo', async () => {
+    const { WorkgroupService } = require('../../../services/workgroup.service');
+    render(<WorkgroupsTable />);
+
+    fireEvent.click(screen.getByLabelText('Reactivar'));
+
+    await waitFor(() => {
+      expect(WorkgroupService.reactivateWorkgroup).toHaveBeenCalledWith(
+        expect.objectContaining({ key: 'wg3' })
+      );
+    });
+    expect(mockSetSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success' })
+    );
   });
 
   test('debe mostrar icono de público cuando no hay miembros', () => {
