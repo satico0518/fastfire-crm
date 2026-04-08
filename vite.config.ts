@@ -9,17 +9,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('@mui')) {
-              return 'vendor-mui';
-            }
-            if (id.includes('firebase')) {
-              return 'vendor-firebase';
-            }
-            if (id.includes('jspdf') || id.includes('xlsx')) {
-              return 'vendor-utils';
-            }
-            return 'vendor-others';
+          if (!id.includes('node_modules')) return;
+
+          // Only split known heavy groups; let Vite handle all other deps.
+          if (id.includes('/node_modules/@mui/')) {
+            return 'vendor-mui';
+          }
+          if (id.includes('/node_modules/firebase/')) {
+            return 'vendor-firebase';
+          }
+          if (id.includes('/node_modules/jspdf/') || id.includes('/node_modules/xlsx/')) {
+            return 'vendor-utils';
           }
         },
       },
