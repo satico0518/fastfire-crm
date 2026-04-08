@@ -134,7 +134,9 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   }, []);
 
   useEffect(() => {
-    loadTasks();
+    if (typeof loadTasks === "function") {
+      loadTasks();
+    }
   }, [loadTasks, currentUser?.key]);
 
 

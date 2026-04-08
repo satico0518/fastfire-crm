@@ -157,7 +157,7 @@ jest.mock('../../../stores/tasks/tasks.store', () => ({
       createdByUserKey: 'user2',
       createdBy: 'user2'
     }
-  ] }))
+  ], loadTasks: jest.fn() }))
 }));
 
 jest.mock('../../../stores/ui/ui.store', () => ({
