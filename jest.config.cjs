@@ -45,6 +45,7 @@ module.exports = {
     'src/**/*.(ts|tsx)',
     // ── Excluir infraestructura y declaraciones ──────────────────────────────
     '!src/**/*.d.ts',
+    '!src/interfaces/**',                    // tipos/interfaces sin lógica ejecutable
     '!src/main.tsx',                           // entry point — no testeable
     '!src/firebase/**',                        // infraestructura de conexión
     '!src/stores/index.ts',                    // barrel export puro
