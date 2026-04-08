@@ -47,6 +47,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
     PROVIDER: false,
     FORMATER: false,
     PLANNER: false,
+    MANAGER: false,
   });
 
   const {
@@ -64,6 +65,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         PURCHASE: false,
         FORMATER: false,
         PLANNER: false,
+        MANAGER: false,
         PROVIDER: event.target.checked,
       });
     } else {
@@ -79,23 +81,31 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       setValue("firstName", editingUser.firstName || "");
       setValue("lastName", editingUser.lastName || "");
       setValue("email", editingUser.email);
-      setAccessState({
-        ADMIN: editingUser.permissions.includes("ADMIN"),
-        TYG: editingUser.permissions.includes("TYG"),
-        PURCHASE: editingUser.permissions.includes("PURCHASE"),
-        PROVIDER: editingUser.permissions.includes("PROVIDER"),
-        FORMATER: editingUser.permissions.includes("FORMATER"),
-        PLANNER: editingUser.permissions.includes("PLANNER"),
-      });
-      setLabelWg(
-        workgroups
-          ?.filter((wg) =>
-            editingUser.workgroupKeys?.includes(wg.key as string)
-          )
-          .map((wg) => wg.name) as string[]
-      );
+      
+      const newAccessState = {
+        ADMIN: !!editingUser.permissions?.includes("ADMIN"),
+        TYG: !!editingUser.permissions?.includes("TYG"),
+        PURCHASE: !!editingUser.permissions?.includes("PURCHASE"),
+        PROVIDER: !!editingUser.permissions?.includes("PROVIDER"),
+        FORMATER: !!editingUser.permissions?.includes("FORMATER"),
+        PLANNER: !!editingUser.permissions?.includes("PLANNER"),
+        MANAGER: !!editingUser.permissions?.includes("MANAGER"),
+      };
+
+      // Evitar actualizaciones de estado innecesarias que pueden causar bucles infinitos
+      if (JSON.stringify(accessState) !== JSON.stringify(newAccessState)) {
+        setAccessState(newAccessState);
+      }
+
+      const newLabels = workgroups
+        ?.filter((wg) => editingUser.workgroupKeys?.includes(wg.key as string))
+        .map((wg) => wg.name) as string[] || [];
+
+      if (JSON.stringify(labelWg) !== JSON.stringify(newLabels)) {
+        setLabelWg(newLabels);
+      }
     }
-  }, [editingUser, setValue, workgroups]);
+  }, [editingUser, setValue, workgroups, accessState, labelWg]);
 
   const onSubmit = async (data: User) => {
     try {
@@ -157,7 +167,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
       }
     } catch (error) {
       console.error(
-        `Error al intentar ${editingUser ? "editar" : "crear"} el usurio: `,
+        `Error al intentar ${editingUser ? "editar" : "crear"} el usuario: `,
         { error }
       );
       setSnackbar({
@@ -165,7 +175,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
         open: true,
         message: `Error al intentar ${
           editingUser ? "editar" : "crear"
-        } el usurio`,
+        } el usuario`,
         severity: "error",
       });
     } finally {
@@ -214,7 +224,7 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
             sx={darkInputFieldSx}
           />
         )}
-        {!(editingUser?.permissions.includes("PROVIDER")) && (
+        {!(editingUser?.permissions?.includes("PROVIDER")) && (
             <FormControl sx={{ m: 1 }} component="fieldset" variant="standard">
               <FormLabel component="legend" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: 600 }}>Permisos</FormLabel>
               <FormGroup sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', mt: 1 }}>
@@ -299,6 +309,20 @@ export const UserFormComponent = ({ editingUser }: UserFormComponentProps) => {
                     />
                   }
                   label="Proveedor"
+                  sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={accessState.MANAGER}
+                      onChange={handleAccessChange}
+                      name="MANAGER"
+                      disabled={accessState.PROVIDER}
+                      sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#0a84ff' } }}
+                    />
+                  }
+                  label="Manager"
                   sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.85rem' } }}
                 />
               </FormGroup>

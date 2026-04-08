@@ -40,8 +40,9 @@ export const AgendaMantenimientosPage = () => {
   const [currentDay, setCurrentDay] = useState(dayjs().startOf('day'));
   const scheduleListRef = useRef<HTMLDivElement | null>(null);
 
-  const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER");
+  const isAllowedToView = user?.permissions?.includes("ADMIN") || user?.permissions?.includes("PLANNER") || user?.permissions?.includes("MANAGER");
   const isPlanner = user?.permissions?.includes("PLANNER");
+  const isManager = user?.permissions?.includes("MANAGER");
 
   // Navigation handlers
   const prevWeek = () => setCurrentWeekStart(currentWeekStart.subtract(1, 'week'));
@@ -60,7 +61,14 @@ export const AgendaMantenimientosPage = () => {
     }
 
     const unsubscribe = MaintenanceService.subscribeToSchedules((data) => {
-      setSchedulesData(data);
+      // Filtrado por roles:
+      // - MANAGER ve TODO.
+      // - Otros (ADMIN, PLANNER) NO ven agendamientos de managers.
+      const filtered = isManager 
+        ? data 
+        : data.filter(s => s.type !== 'MANAGER_ACTIVITY');
+        
+      setSchedulesData(filtered);
       setIsLoading(false);
     });
 
@@ -99,6 +107,22 @@ export const AgendaMantenimientosPage = () => {
   };
 
   const handleEditSchedule = (schedule: MaintenanceSchedule) => {
+    // Verificar permisos de edición:
+    // - Si es MANAGER_ACTIVITY, solo el MANAGER puede editar.
+    // - Si es MAINTENANCE, solo PLANNER o ADMIN pueden editar.
+    const canEdit = schedule.type === 'MANAGER_ACTIVITY' 
+      ? isManager 
+      : isPlanner;
+
+    if (!canEdit) {
+      setSnackbar({
+        open: true,
+        message: "No tienes permisos para editar este agendamiento",
+        severity: "warning"
+      });
+      return;
+    }
+
     setEditingSchedule(schedule);
     setCreationDate(null);
     setIsCreationOpen(true);
@@ -287,11 +311,11 @@ export const AgendaMantenimientosPage = () => {
             <ArrowBackIosNewIcon sx={{ fontSize: 24, strokeWidth: 2 }} />
           </IconButton>
           <Typography variant="h5" sx={{ fontWeight: 700, color: '#2b90ff', flexGrow: 1 }}>
-            Calendario
+            Agenda
           </Typography>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
-            {isPlanner && (
+            {(isPlanner || isManager) && (
               <IconButton size="small" onClick={() => handleOpenCreation()} sx={{ color: 'white', bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0070e0' } }}>
                 <AddIcon />
               </IconButton>
@@ -328,11 +352,11 @@ export const AgendaMantenimientosPage = () => {
       <Box sx={{ display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', gap: 1, mb: 1, mt: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', letterSpacing: '-1px' }}>
-            Agenda de Mantenimientos
+            Agenda
           </Typography>
           <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
             <MaintenanceExportControls schedules={schedulesData} setSnackbar={setSnackbar} />
-            {isPlanner && (
+            {(isPlanner || isManager) && (
               <Button
                 variant="contained"
                 size="small"
@@ -354,7 +378,7 @@ export const AgendaMantenimientosPage = () => {
                   }
                 }}
               >
-                Nuevo Agendamiento
+                {isManager ? 'Personal' : 'Nuevo Agendamiento'}
               </Button>
             )}
           </Stack>
@@ -429,6 +453,7 @@ export const AgendaMantenimientosPage = () => {
             dateLabel={dateLabel}
             schedules={schedules}
             isTodayGroup={dateLabel.startsWith('HOY')}
+            onEdit={handleEditSchedule}
           />
         ))}
 
@@ -448,6 +473,7 @@ export const AgendaMantenimientosPage = () => {
               dateLabel={dateLabel}
               schedules={schedules}
               isTodayGroup={dateLabel.startsWith('HOY')}
+              onEdit={handleEditSchedule}
             />
           ))}
 
@@ -466,7 +492,7 @@ export const AgendaMantenimientosPage = () => {
             schedules={schedulesData}
             onOpenCreation={handleOpenCreation}
             onEdit={handleEditSchedule}
-            isAdmin={isPlanner}
+            isAdmin={isPlanner || isManager}
           />
         </Box>
       )}

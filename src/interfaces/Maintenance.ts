@@ -6,7 +6,9 @@ export interface MaintenanceAuditEntry {
 
 export interface MaintenanceSchedule {
   id: string;
+  projectName: string;
   title: string; 
+  activity?: string; // New field for manager's activity description
   dateStr: string; 
   address: string; 
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
@@ -18,6 +20,8 @@ export interface MaintenanceSchedule {
   hasQuotation?: 'SI' | 'NO' | 'NA';
   quotationNumber?: string;
   hasReport?: 'SI' | 'NO' | 'NA';
+  reportNumber?: string;
+  type?: 'MAINTENANCE' | 'MANAGER_ACTIVITY';
   createdAt: string;
   createdBy: string;
   updatedAt?: string;

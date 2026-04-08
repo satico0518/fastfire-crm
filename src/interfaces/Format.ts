@@ -1,6 +1,6 @@
 export type FormatStatus = "DRAFT" | "SUBMITTED" | "REVIEWED" | "REJECTED";
 
-export type FormatFieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "image" | "checkbox-group" | "signature" | "dynamic-group" | "calculated-sum";
+export type FormatFieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "switch" | "image" | "checkbox-group" | "signature" | "dynamic-group" | "calculated-sum" | "section" | "header";
 
 export interface FormatField {
   name: string;
@@ -10,6 +10,7 @@ export interface FormatField {
   options?: string[]; // for select and checkbox-group types
   placeholder?: string;
   minDateFromField?: string; // Name of another date/datetime field that acts as minimum date
+  minRows?: number;
   
   // Specific properties for "dynamic-group"
   subFields?: FormatField[]; 
@@ -23,7 +24,8 @@ export type FormatTypeId =
   | "LEGALIZACION_CUENTAS"
   | "AVANCE_OBRA"
   | "ADICIONALES"
-  | "ACTA_ENTREGA";
+  | "ACTA_ENTREGA"
+  | "ACTA_VISITA_MANTENIMIENTO";
 
 export interface FormatType {
   id: FormatTypeId;

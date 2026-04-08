@@ -12,6 +12,7 @@ import {
   changeDateFromDMA_MDA,
   compareLicitationVsStock
 } from '../utils';
+import { jsPDF } from 'jspdf';
 import { User } from '../../interfaces/User';
 import { Workgroup } from '../../interfaces/Workgroup';
 import { Project } from '../../interfaces/Project';
@@ -39,7 +40,7 @@ describe('Utils', () => {
     });
 
     test('debe traducir acceso PROVIDER', () => {
-      expect(translateAccess('PROVIDER')).toBe('Provedor');
+      expect(translateAccess('PROVIDER')).toBe('PROVEEDOR');
     });
   });
 
@@ -233,6 +234,36 @@ describe('Utils', () => {
       const result = getWorkgroupColorByKey('wg999', mockWorkgroups);
       expect(result).toBe('secondary');
     });
+  });
+
+  describe('exportSubmissionToPDF', () => {
+    test('debe renderizar imagen inline y firma al final', async () => {
+      const { exportSubmissionToPDF } = await import('../utils');
+
+      const submission: any = {
+        formatTypeName: 'Formato Test',
+        createdDate: new Date().toISOString(),
+        data: {
+          nombre: 'Test',
+          foto: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA',
+          firma: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA',
+        },
+      };
+
+      const fields: any[] = [
+        { name: 'nombre', label: 'Nombre', type: 'text' },
+        { name: 'foto', label: 'Foto', type: 'image' },
+        { name: 'firma', label: 'Firma', type: 'signature' },
+      ];
+
+      await exportSubmissionToPDF(submission, fields, 'Usuario', 'APROBADO');
+      
+      const doc = ((jsPDF as unknown) as jest.Mock).mock.results[0].value;
+
+      expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+      expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+      expect(doc.text).toHaveBeenCalledWith('Firma:', expect.any(Number), expect.any(Number));
+    }, 20000);
   });
 
   describe('compareLicitationVsStock', () => {

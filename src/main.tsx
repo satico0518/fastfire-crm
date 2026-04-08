@@ -21,7 +21,7 @@ declare global {
 
 import { useUiStore } from "./stores/ui/ui.store";
 
-const Main = () => {
+export const Main = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
 
@@ -53,8 +53,12 @@ const Main = () => {
   );
 };
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <Main />
-  </StrictMode>
-);
+const rootEl = document.getElementById("root");
+/* istanbul ignore next -- createRoot solo en runtime fuera de Jest */
+if (rootEl && process.env.JEST_WORKER_ID === undefined) {
+  createRoot(rootEl).render(
+    <StrictMode>
+      <Main />
+    </StrictMode>
+  );
+}

@@ -7,8 +7,8 @@ export const PurchasingManagerPage = () => {
   const user = useAuhtStore((state) => state.user);
 
   if (
-    !user?.permissions.includes("PURCHASE") &&
-    !user?.permissions.includes("PROVIDER")
+    !user?.permissions?.includes("PURCHASE") &&
+    !user?.permissions?.includes("PROVIDER")
   )
     return <UnauthorizedPage />;
 

@@ -1,4 +1,4 @@
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Box } from "@mui/material";
 import { Priority } from "../../interfaces/Task";
 import { DialogueCustomContent } from "../dialogs/DialogueCustomContent";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
@@ -22,31 +22,65 @@ export const PriorityInput = ({
   okAction,
 }: PriorityInputProps) => (
   <DialogueCustomContent
-    width="150px"
+    width="200px"
+    maxWidth="xs"
     title="Prioridad"
     open={open}
     setOpen={setOpen}
     content={
-      <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-        <InputLabel id="demo-select-small-label">Prioridad</InputLabel>
+      <FormControl fullWidth size="small">
+        <InputLabel 
+          id="demo-select-small-label"
+          sx={{ color: 'rgba(255,255,255,0.7)', '&.Mui-focused': { color: 'white' } }}
+        >
+          Prioridad
+        </InputLabel>
         <Select
           labelId="demo-select-small-label"
           id="demo-select-small"
           value={priority}
           label="Prioridad"
           onChange={({ target }) => setPriority(target.value as Priority)}
+          sx={{
+            color: 'white',
+            borderRadius: '12px',
+            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+            '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
+          }}
+          MenuProps={{
+            PaperProps: {
+              sx: {
+                bgcolor: '#1c1c1e',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.1)',
+                '& .MuiMenuItem-root:hover': {
+                  bgcolor: 'rgba(255,255,255,0.05)'
+                }
+              }
+            }
+          }}
         >
           <MenuItem value="LOW">
-            <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmojiFlagsOutlinedIcon sx={{ color: "gray" }} /> Baja
+            </Box>
           </MenuItem>
           <MenuItem value="NORMAL">
-            <EmojiFlagsOutlinedIcon sx={{ color: "blue" }} /> Normal
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmojiFlagsOutlinedIcon sx={{ color: "#0a84ff" }} /> Normal
+            </Box>
           </MenuItem>
           <MenuItem value="HIGH">
-            <EmojiFlagsOutlinedIcon sx={{ color: "orange" }} /> Alta
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmojiFlagsOutlinedIcon sx={{ color: "#ff9f0a" }} /> Alta
+            </Box>
           </MenuItem>
           <MenuItem value="URGENT">
-            <EmojiFlagsOutlinedIcon sx={{ color: "red" }} /> Urgente
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmojiFlagsOutlinedIcon sx={{ color: "#ff453a" }} /> Urgente
+            </Box>
           </MenuItem>
         </Select>
       </FormControl>

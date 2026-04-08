@@ -3,6 +3,7 @@ import { MaintenanceSchedule } from '../../interfaces/Maintenance';
 export const mockSchedules: MaintenanceSchedule[] = [
   {
     id: "sched-101",
+    projectName: "CC Santafé",
     title: "Mantenimiento Preventivo CC Santafé",
     dateStr: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), // Ayer
     address: "Calle 185 #45-03, Bogotá",
@@ -16,6 +17,7 @@ export const mockSchedules: MaintenanceSchedule[] = [
   },
   {
     id: "sched-102",
+    projectName: "Planta Pepsico",
     title: "Ajuste de Presión Red Industrial",
     dateStr: new Date().toISOString(), // Hoy (hace un rato)
     address: "Autopista Medellín Km 2, Planta Pepsico",
@@ -29,6 +31,7 @@ export const mockSchedules: MaintenanceSchedule[] = [
   },
   {
     id: "sched-103",
+    projectName: "Torre Empresarial Q",
     title: "Inspección Anual Rociadores",
     dateStr: new Date(new Date().getTime() + 4 * 60 * 60 * 1000).toISOString(), // Hoy (más tarde)
     address: "Torre empresarial Q",
@@ -42,6 +45,7 @@ export const mockSchedules: MaintenanceSchedule[] = [
   },
   {
     id: "sched-104",
+    projectName: "Edificio Horizonte",
     title: "Cambio de Panel Contra Incendios",
     dateStr: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), // Mañana
     address: "Edificio Horizonte, Cr 7 #100-20",
@@ -55,6 +59,7 @@ export const mockSchedules: MaintenanceSchedule[] = [
   },
   {
     id: "sched-105",
+    projectName: "Clínica del Norte",
     title: "Mantenimiento Correctivo Sensores",
     dateStr: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), // Mañana
     address: "Clínica del Norte",
@@ -68,6 +73,7 @@ export const mockSchedules: MaintenanceSchedule[] = [
   },
   {
     id: "sched-106",
+    projectName: "La Floresta",
     title: "Limpieza Cuarto de Bombas",
     dateStr: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), // En 3 días
     address: "Conjunto Residencial La Floresta",

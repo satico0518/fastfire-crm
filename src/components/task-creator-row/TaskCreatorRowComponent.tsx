@@ -172,6 +172,8 @@ export const TaskCreatorRowComponent = () => {
             onChange={({ target }) => setTaskName(target.value)}
             fullWidth
             sx={{
+              flex: 1, // Para que ocupe todo el espacio disponible en el flex container
+              minWidth: '200px', // Ancho mínimo para que sea visible
               '& .MuiInput-root': {
                 color: 'white',
                 '&:before': { borderColor: 'rgba(255,255,255,0.3)' },
@@ -244,28 +246,29 @@ export const TaskCreatorRowComponent = () => {
               startIcon={<LocalOfferOutlinedIcon />}
               sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
-            <DialogueMultiselect
-              title="Responsables"
-              open={openOwnersDialog}
-              labels={
-                users?.filter(u => u.isActive && !u.permissions.includes('PROVIDER')).map((u) =>
-                  getUserNameByKey(u.key as string, users)
-                ) as unknown as string[]
-              }
-              setOpen={setOpenOwnersDialog}
-              value={selectedOwners}
-              setValue={setSelectedOwners}
-            />
             <Button
               size="small"
               onClick={() => setOpenOwnersDialog(!openOwnersDialog)}
               startIcon={<GroupAddOutlinedIcon />}
               sx={{ color: "white", minWidth: 40, p: '4px' }}
             />
+            <DialogueMultiselect
+              title="Responsables"
+              open={openOwnersDialog}
+              setOpen={setOpenOwnersDialog}
+              value={selectedOwners}
+              setValue={setSelectedOwners}
+              labels={
+                users?.filter(u => u.isActive && !u.permissions?.includes('PROVIDER')).map((u) =>
+                  getUserNameByKey(u.key as string, users)
+                ) as unknown as string[]
+              }
+            />
             <DialogueCustomContent
               title="Fecha Límite"
               open={openDueDateDialog}
               setOpen={setOpenDueDateDialog}
+              maxWidth="xs"
               content={
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
@@ -289,13 +292,17 @@ export const TaskCreatorRowComponent = () => {
               title="Notas"
               open={openNotesDialog}
               setOpen={setOpenNotesDialog}
+              width="500px"
               content={
                 <TextField
                   id="outlined-basic"
-                  variant="standard"
+                  variant="outlined"
                   value={taskNotes}
                   onChange={({ target }) => setTaskNotes(target.value || "")}
                   fullWidth
+                  multiline
+                  rows={4}
+                  placeholder="Escribe las notas aquí..."
                 />
               }
             />

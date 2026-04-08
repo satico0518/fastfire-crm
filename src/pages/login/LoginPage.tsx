@@ -33,12 +33,40 @@ export const LoginPage = () => {
   } = useForm();
 
   const translateErrorMessage = (message: string): string => {
-    if (message.includes("auth/invalid-credential") || message.includes("INVALID_LOGIN_CREDENTIALS"))
-      return "¡Usuario o Contraseña incorrectos!";
-    else if (message.includes("auth/too-many-requests"))
-      return "¡Demasiados intentos fallidos! Usuario bloqueado temporalmente por seguridad.";
+    // Asegurar que estamos buscando en el mensaje completo de Firebase
+    const lowerMessage = message.toLowerCase();
     
-    return "Ocurrió un error al intentar iniciar sesión. Por favor intente más tarde.";
+    // Credenciales inválidas - varios formatos posibles
+    if (lowerMessage.includes("invalid-credential") || 
+        lowerMessage.includes("invalid_credential") ||
+        lowerMessage.includes("wrong-password") ||
+        lowerMessage.includes("user-not-found") ||
+        lowerMessage.includes("invalid-email-or-password"))
+      return "Correo electrónico o contraseña incorrectos. Por favor verifique sus datos e intente nuevamente.";
+    
+    // Email inválido
+    else if (lowerMessage.includes("invalid-email") && !lowerMessage.includes("password"))
+      return "El formato del correo electrónico no es válido.";
+    
+    // Usuario deshabilitado
+    else if (lowerMessage.includes("user-disabled"))
+      return "Su cuenta ha sido deshabilitada. Contacte al administrador.";
+    
+    // Demasiados intentos
+    else if (lowerMessage.includes("too-many-requests"))
+      return "Demasiados intentos fallidos. Su cuenta ha sido bloqueada temporalmente por seguridad. Intente más tarde.";
+    
+    // Error de red
+    else if (lowerMessage.includes("network-request-failed") || lowerMessage.includes("network"))
+      return "Error de conexión. Verifique su conexión a internet e intente nuevamente.";
+    
+    // Si el mensaje ya es un mensaje legible (no un código de error), devolverlo tal cual
+    if (message.length > 20 && !message.includes("/") && !message.includes("-")) {
+      return message;
+    }
+    
+    // Error genérico pero más amigable
+    return "No se pudo iniciar sesión. Si el problema persiste, contacte al administrador del sistema.";
   };
 
   const onSubmit = async (data: Login) => {
@@ -56,8 +84,13 @@ export const LoginPage = () => {
       } else {
         setIsError(translateErrorMessage(signInResponse.error as string || ""));
       }
-    } catch (error) {
-      setIsError("Error de conexión. Verifique su internet.");
+    } catch (error: any) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("network") || errorMessage.includes("Network")) {
+        setIsError("Error de conexión. Verifique su conexión a internet e intente nuevamente.");
+      } else {
+        setIsError("No se pudo conectar con el servidor. Intente nuevamente en unos momentos.");
+      }
     } finally {
       setIsLoading(false);
     }

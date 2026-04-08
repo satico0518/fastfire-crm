@@ -2,7 +2,6 @@ import * as React from "react";
 import { Theme, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
@@ -18,14 +17,17 @@ const MenuProps = {
       backgroundColor: '#1c1c1e',
       color: 'white',
       border: '1px solid rgba(255, 255, 255, 0.1)',
+      zIndex: 9999,
     },
   },
 };
 
 const darkSelectSx = {
   color: 'white',
-  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3)' },
-  '& .MuiInput-underline:after': { borderBottomColor: 'white' },
+  borderRadius: '12px',
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
   '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
 };
 
@@ -61,42 +63,51 @@ export const MultiselectComponent = ({
     setValue(typeof value === "string" ? value.split(",") : value);
   };
 
+  const handleDelete = (valToDelete: string) => {
+    setValue(value.filter((v) => v !== valToDelete));
+  };
+
   return (
-    <Box sx={{ width: '100%', mt: 1 }}>
-      <FormControl fullWidth variant="standard">
-        <InputLabel 
-          id="demo-multiple-chip-label"
-          sx={{ color: 'rgba(255,255,255,0.7)', '&.Mui-focused': { color: 'white' } }}
-        >
-          {title}
-        </InputLabel>
+    <Box sx={{ width: '100%', mt: 1, p: 0.5 }}>
+      <FormControl fullWidth variant="outlined">
         <Select
           labelId="demo-multiple-chip-label"
+          id="demo-multiple-chip"
           multiple
           value={value}
+          displayEmpty
           onChange={handleChange}
-          input={<OutlinedInput id="select-multiple-chip" label={title} />}
-          renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, py: 0.5 }}>
-              {selected.map((val) => (
-                <Chip 
-                  key={val} 
-                  label={val} 
-                  size="small"
-                  sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.1)', 
-                    color: 'white', 
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    borderRadius: '6px'
-                  }} 
-                />
-              ))}
-            </Box>
-          )}
+          input={<OutlinedInput id="select-multiple-chip" placeholder={title} />}
+          renderValue={(selected) => {
+            if (selected.length === 0) {
+              return <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{title}</span>;
+            }
+            return (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, py: 0.5 }}>
+                {selected.map((val) => (
+                  <Chip 
+                    key={val} 
+                    label={val} 
+                    size="small"
+                    onDelete={(e) => {
+                      e.stopPropagation();
+                      handleDelete(val);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    sx={{ 
+                      bgcolor: 'rgba(10,132,255,0.15)', 
+                      color: '#0a84ff', 
+                      border: '1px solid rgba(10,132,255,0.3)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      borderRadius: '6px'
+                    }} 
+                  />
+                ))}
+              </Box>
+            );
+          }}
           fullWidth
-          variant="standard"
           sx={darkSelectSx}
           MenuProps={MenuProps}
         >

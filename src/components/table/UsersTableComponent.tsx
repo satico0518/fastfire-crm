@@ -130,7 +130,7 @@ export default function UsersTable() {
             handleDeleteConfirmation(
               params?.row?.key as string,
               `${params.row.firstName || ""} ${params.row.lastName || ""}`,
-              params.row.permissions.includes("PROVIDER")
+              params.row.permissions?.includes("PROVIDER")
             )
           }
           label="Eliminar"
@@ -171,7 +171,7 @@ export default function UsersTable() {
               }}
               imgProps={{ style: { objectFit: "contain", borderRadius: "50%" } }}
             />
-          ) : !row.permissions.includes("PROVIDER") ? (
+          ) : !row.permissions?.includes("PROVIDER") ? (
             <Avatar
               sx={{
                 color: 'white',
@@ -241,7 +241,7 @@ export default function UsersTable() {
                 }
                 return null;
               })
-            : !row.permissions.includes("PROVIDER") && (
+            : !row.permissions?.includes("PROVIDER") && (
                 <Chip 
                   label="SIN GRUPO" 
                   variant="outlined"
@@ -262,10 +262,10 @@ export default function UsersTable() {
       field: "permissions",
       headerName: "Permisos",
       type: "string",
-      width: 250,
+      width: 350,
       renderCell: ({ row }: GridRenderCellParams<User>) => (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center', py: 0.5, height: '100%', overflow: 'hidden' }}>
-          {row.permissions.map((acc: Access) => (
+          {row.permissions?.map((acc: Access) => (
             <Chip
               size="small"
               key={acc}
@@ -273,7 +273,7 @@ export default function UsersTable() {
               sx={{
                 fontSize: "0.65rem",
                 fontWeight: 700,
-                background: row.permissions.includes("PROVIDER")
+                background: row.permissions?.includes("PROVIDER")
                   ? "linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)"
                   : "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
                 color: "white",

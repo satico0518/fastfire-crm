@@ -97,67 +97,64 @@ export const SignaturePadField = ({
         </Box>
       ) : (
         /* ── Signature canvas ────────────────────────────────────────── */
-        <Box
-          sx={{
-            width: "100%",
-            border: "1.5px dashed",
-            borderColor: isDrawing ? "primary.main" : "divider",
-            borderRadius: 2,
-            overflow: "hidden",
-            bgcolor: "rgba(255,255,255,0.03)",
-            transition: "border-color 0.2s",
-            position: "relative",
-          }}
-        >
-          {/* Hint text when canvas is empty */}
-          {!isDrawing && (
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                pointerEvents: "none",
-                gap: 0.5,
-                opacity: 0.4,
-              }}
-            >
-              <BrushIcon sx={{ fontSize: 28 }} />
-              <Typography variant="caption" sx={{ color: 'white' }}>Firma aquí con el dedo</Typography>
-            </Box>
-          )}
-
-          <SignatureCanvas
-            ref={sigRef}
-            penColor="white"
-            minWidth={1.5}
-            maxWidth={3}
-            velocityFilterWeight={0.7}
-            onBegin={() => setIsDrawing(true)}
-            canvasProps={{
-              style: {
-                width: "100%",
-                height: 120,
-                touchAction: "none", // prevents scroll interference on mobile
-                display: "block",
-              },
+        <Box sx={{ width: "100%" }}>
+          <Box
+            sx={{
+              width: "100%",
+              border: "1.5px dashed",
+              borderColor: isDrawing ? "primary.main" : "rgba(255,255,255,0.2)",
+              borderRadius: 2,
+              overflow: "hidden",
+              bgcolor: "white",
+              transition: "border-color 0.2s",
+              position: "relative",
             }}
-          />
+          >
+            {/* Hint text when canvas is empty */}
+            {!isDrawing && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                  gap: 0.5,
+                  opacity: 0.4,
+                }}
+              >
+                <BrushIcon sx={{ fontSize: 28, color: 'gray' }} />
+                <Typography variant="caption" sx={{ color: 'gray' }}>Firma aquí con el dedo</Typography>
+              </Box>
+            )}
 
-          {/* Action buttons */}
+            <SignatureCanvas
+              ref={sigRef}
+              penColor="black"
+              minWidth={1.5}
+              maxWidth={3}
+              velocityFilterWeight={0.7}
+              onBegin={() => setIsDrawing(true)}
+              canvasProps={{
+                style: {
+                  width: "100%",
+                  height: 140,
+                  touchAction: "none",
+                  display: "block",
+                },
+              }}
+            />
+          </Box>
+
+          {/* Action buttons - Now outside the white box for visibility */}
           <Box
             sx={{
               display: "flex",
               justifyContent: "flex-end",
               gap: 1,
-              px: 1.5,
-              pb: 1,
-              pt: 0.5,
-              borderTop: "1px solid",
-              borderColor: "rgba(255,255,255,0.1)",
-              bgcolor: "transparent",
+              mt: 1,
             }}
           >
             <Button
@@ -165,10 +162,11 @@ export const SignaturePadField = ({
               onClick={handleClear}
               disabled={!isDrawing}
               sx={{
-                color: 'rgba(255,255,255,0.5)',
+                color: 'rgba(255,255,255,0.6)',
                 textTransform: 'none',
                 fontWeight: 600,
-                '&:hover': { background: 'rgba(255,255,255,0.05)', color: 'white' }
+                '&:hover': { color: 'white' },
+                '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
               }}
               startIcon={<ClearIcon />}
             >
@@ -186,19 +184,12 @@ export const SignaturePadField = ({
                 textTransform: 'none',
                 fontWeight: 700,
                 borderRadius: '8px',
-                padding: '4px 12px',
+                padding: '4px 16px',
+                background: 'rgba(10,132,255,0.25)',
                 border: '1px solid rgba(10,132,255,0.5)',
-                background: 'rgba(10,132,255,0.2)',
-                backdropFilter: 'blur(10px)',
                 '&:hover': {
                   background: 'rgba(10,132,255,0.4)',
                   border: '1px solid rgba(10,132,255,0.8)',
-                  boxShadow: '0 0 10px rgba(10,132,255,0.3)',
-                },
-                '&.Mui-disabled': {
-                  background: 'rgba(125,125,125,0.4)',
-                  color: 'rgba(245,245,245,0.8)',
-                  border: '1px solid rgba(180,180,180,0.7)'
                 }
               }}
             >

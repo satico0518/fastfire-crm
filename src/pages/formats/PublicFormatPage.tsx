@@ -17,12 +17,17 @@ import {
   Card,
   CardContent,
   Alert,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { SignaturePadField } from "../../components/signature-pad/SignaturePadField";
 import { getFormatTypeById } from "../../config/formatCatalog";
 import { FormatField, FormatSubmission } from "../../interfaces/Format";
 import { FormatService } from "../../services/format.service";
+import { AuthService } from "../../services/auth.service";
 import { useUiStore } from "../../stores/ui/ui.store";
+import { exportSubmissionToPDF } from "../../utils/utils";
 import { DatePicker, DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
@@ -38,6 +43,14 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+
+const statusConfig: Record<string, { label: string; color: "default" | "warning" | "info" | "success" | "error" }> = {
+  DRAFT: { label: "Borrador", color: "default" },
+  SUBMITTED: { label: "Enviado", color: "info" },
+  REVIEWED: { label: "Aprobado", color: "success" },
+  REJECTED: { label: "Rechazado", color: "error" },
+};
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
 
@@ -46,6 +59,7 @@ const FORMAT_ICONS: Record<string, ElementType<SvgIconProps>> = {
   AVANCE_OBRA: EngineeringIcon,
   ADICIONALES: AddCircleOutline,
   ACTA_ENTREGA: AssignmentTurnedInIcon,
+  ACTA_VISITA_MANTENIMIENTO: AssignmentTurnedInIcon,
 };
 
 export const PublicFormatPage = () => {
@@ -55,8 +69,26 @@ export const PublicFormatPage = () => {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
+  const [submittedSubmission, setSubmittedSubmission] = useState<FormatSubmission | null>(null);
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
+
+  // Authenticate anonymously on load
+  useState(() => {
+    AuthService.signInAnonymously().then(resp => {
+      if (resp.result === "OK") {
+        console.log("Authenticated anonymously with UID:", resp.user?.uid);
+        setIsAuthed(true);
+        setAuthError(null);
+      } else {
+        console.error("Failed to authenticate anonymously", resp.errorMessage);
+        setAuthError(resp.errorMessage || "Error de autenticación");
+        setIsAuthed(false);
+      }
+    });
+  });
 
   // Initialize form data
   useState(() => {
@@ -82,7 +114,9 @@ export const PublicFormatPage = () => {
     const missingRequired: string[] = [];
     const validateFields = (fields: any[], data: Record<string, unknown>, parentContext = "") => {
       fields.forEach(f => {
-        if (f.type === "dynamic-group") {
+        if (f.type === "section" && f.subFields) {
+          validateFields(f.subFields, data, parentContext);
+        } else if (f.type === "dynamic-group") {
           const arr = data[f.name] as Record<string, unknown>[];
           if (f.required && (!arr || arr.length === 0)) {
              missingRequired.push(`${parentContext}${f.label}`);
@@ -109,6 +143,27 @@ export const PublicFormatPage = () => {
         severity: "warning",
       });
       return;
+    }
+
+    // Validación especial para Acta de Visita Mantenimiento (Extintores)
+    if (format.id === "ACTA_VISITA_MANTENIMIENTO") {
+      const extOtros = String(formData.ext_otros || "").trim();
+      // Solo validar suma si "Otros" está vacío
+      if (!extOtros) {
+        const totalDeclared = Number(formData.extintores_total || 0);
+        const capacitySum = Object.keys(formData)
+          .filter(key => key.startsWith("ext_a_") || key.startsWith("ext_b_") || key.startsWith("ext_multi_"))
+          .reduce((acc, key) => acc + Number(formData[key] || 0), 0);
+
+        if (totalDeclared !== capacitySum) {
+          setSnackbar({
+            open: true,
+            message: `La suma de extintores por capacidad (${capacitySum}) no coincide con el total declarado (${totalDeclared}). Revise los valores o detalle en el campo 'Otros'.`,
+            severity: "error",
+          });
+          return;
+        }
+      }
     }
 
     setIsLoading(true);
@@ -147,6 +202,11 @@ export const PublicFormatPage = () => {
     setIsLoading(false);
 
     if (resp.result === "OK") {
+      const fullSubmission: FormatSubmission = {
+        ...submission,
+        key: resp.key!,
+      };
+      setSubmittedSubmission(fullSubmission);
       setSubmitted(true);
     } else {
       setSnackbar({
@@ -168,27 +228,40 @@ export const PublicFormatPage = () => {
     switch (field.type) {
       case "text":
         return (
-          <TextField
-            key={field.name}
-            label={field.label}
-            required={field.required}
-            placeholder={field.placeholder}
-            value={(getValue(field.name) as string) || ""}
-            onChange={(e) => setValue(field.name, e.target.value)}
-            fullWidth
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 }
-            }}
-          />
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <TextField
+              required={field.required}
+              placeholder={field.placeholder}
+              value={(getValue(field.name) as string) || ""}
+              onChange={(e) => setValue(field.name, e.target.value)}
+              fullWidth
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                },
+                '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 }
+              }}
+            />
+          </Box>
         );
-      case "textarea":
+      case "textarea": {
+        // Check if this is an observation textarea (ends with _obs)
+        const isObservationField = field.name.endsWith('_obs');
+        const checkFieldName = field.name.replace('_obs', '_obs_check');
+        const checkValue = (getValue(checkFieldName) as string[]) || [];
+        const hasObservationChecked = checkValue.includes('observacion');
+        
+        // If it's an observation field but checkbox is not checked, don't render
+        if (isObservationField && !hasObservationChecked) {
+          return null;
+        }
+        
         return (
           <TextField
             key={field.name}
@@ -200,8 +273,8 @@ export const PublicFormatPage = () => {
             fullWidth
             size="small"
             multiline
-            minRows={3}
-            maxRows={6}
+            minRows={field.minRows || 3}
+            maxRows={field.minRows ? field.minRows + 3 : 6}
             sx={{
               '& .MuiOutlinedInput-root': {
                 color: 'white',
@@ -209,32 +282,39 @@ export const PublicFormatPage = () => {
                 '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
               },
               '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 }
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+              gridColumn: { sm: "1 / -1" }
             }}
           />
         );
+      }
       case "number":
         return (
-          <TextField
-            key={field.name}
-            label={field.label}
-            required={field.required}
-            placeholder={field.placeholder}
-            value={(getValue(field.name) as string) || ""}
-            onChange={(e) => setValue(field.name, e.target.value)}
-            fullWidth
-            size="small"
-            type="number"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 }
-            }}
-          />
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <TextField
+              required={field.required}
+              placeholder={field.placeholder}
+              value={(getValue(field.name) as string) || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setValue(field.name, val);
+              }}
+              fullWidth
+              size="small"
+              type="number"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                },
+                '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 }
+              }}
+            />
+          </Box>
         );
       case "date": {
         let minDate: Dayjs | undefined = undefined;
@@ -245,32 +325,35 @@ export const PublicFormatPage = () => {
             : dayjs(minFieldVal, "DD/MM/YYYY");
         }
         return (
-          <LocalizationProvider dateAdapter={AdapterDayjs} key={field.name}>
-            <DatePicker
-              label={field.label}
-              value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY") : null}
-              onChange={(val) =>
-                setValue(field.name, val ? val.format("DD/MM/YYYY") : "")
-              }
-              format="DD/MM/YYYY"
-              minDate={minDate}
-              slotProps={{
-                textField: { 
-                  size: "small", 
-                  fullWidth: true, 
-                  required: field.required,
-                  sx: {
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                    },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' }
-                  }
-                },
-              }}
-            />
-          </LocalizationProvider>
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY") : null}
+                onChange={(val) =>
+                  setValue(field.name, val ? val.format("DD/MM/YYYY") : "")
+                }
+                format="DD/MM/YYYY"
+                minDate={minDate}
+                slotProps={{
+                  textField: { 
+                    size: "small", 
+                    fullWidth: true, 
+                    required: field.required,
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        color: 'white',
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                      },
+                      '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
+                    }
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
         );
       }
       case "datetime": {
@@ -282,32 +365,122 @@ export const PublicFormatPage = () => {
             : dayjs(minFieldVal, "DD/MM/YYYY");
         }
         return (
-          <LocalizationProvider dateAdapter={AdapterDayjs} key={field.name}>
-            <DateTimePicker
-              label={field.label}
-              value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY HH:mm") : null}
-              onChange={(val) =>
-                setValue(field.name, val ? val.format("DD/MM/YYYY HH:mm") : "")
-              }
-              format="DD/MM/YYYY HH:mm"
-              minDateTime={minDateTime}
-              slotProps={{
-                textField: { 
-                  size: "small", 
-                  fullWidth: true, 
-                  required: field.required,
-                  sx: {
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                    },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-                    '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' }
-                  }
-                },
-              }}
-            />
-          </LocalizationProvider>
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                value={getValue(field.name) ? dayjs(getValue(field.name) as string, "DD/MM/YYYY HH:mm") : null}
+                onChange={(val) =>
+                  setValue(field.name, val ? val.format("DD/MM/YYYY HH:mm") : "")
+                }
+                format="DD/MM/YYYY HH:mm"
+                minDateTime={minDateTime}
+                slotProps={{
+                  textField: { 
+                    size: "small", 
+                    fullWidth: true, 
+                    required: field.required,
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        color: 'white',
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                      },
+                      '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' }
+                    }
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
+        );
+      }
+      case "select": {
+        const currentValue = (getValue(field.name) as string) || "";
+        return (
+          <Box key={field.name} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <FormLabel sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', fontWeight: 600, ml: 0.5 }}>
+              {field.label} {field.required && <span style={{ color: '#ff453a' }}>*</span>}
+            </FormLabel>
+            <FormControl fullWidth size="small" required={field.required}>
+              <Select
+                value={currentValue}
+                onChange={(e) => setValue(field.name, e.target.value)}
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(10,132,255,0.5)' },
+                  '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                }}
+              >
+                {(field.options || []).map((option: string) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        );
+      }
+      case "switch": {
+        const options = field.options || ["SI", "NO", "NA"];
+        const currentValue = (getValue(field.name) as string) || "";
+        return (
+          <Box 
+            key={field.name} 
+            sx={{ 
+              display: 'contents',
+            }}
+          >
+            {/* Label spans both columns */}
+            <Box sx={{ gridColumn: '1 / -1', mt: 1 }}>
+              <FormLabel component="legend" sx={{ fontSize: "0.85rem", mb: 0.5, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                {field.label}
+                {field.required && <span style={{ color: '#ff453a', marginLeft: 4 }}>*</span>}
+              </FormLabel>
+            </Box>
+
+            {/* Buttons occupy only the first column */}
+            <Box sx={{ gridColumn: '1', display: 'flex', gap: 1, mb: 1.5 }}>
+              {options.map((option: string) => {
+                const isSelected = currentValue === option;
+                let activeColor = '#0a84ff'; // Default blue
+                if (option.toUpperCase() === 'SI') activeColor = '#34c759'; // Success green
+                if (option.toUpperCase() === 'NO') activeColor = '#ff453a'; // Error red
+                if (option.toUpperCase() === 'NA') activeColor = '#0a84ff'; // Info blue
+
+                return (
+                  <Button
+                    key={option}
+                    variant={isSelected ? "contained" : "outlined"}
+                    size="small"
+                    onClick={() => setValue(field.name, option)}
+                    sx={{
+                      flex: 1,
+                      borderRadius: 2,
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      bgcolor: isSelected ? activeColor : 'transparent',
+                      borderColor: isSelected ? activeColor : 'rgba(255,255,255,0.2)',
+                      color: isSelected ? 'white' : 'rgba(255,255,255,0.6)',
+                      '&:hover': {
+                        bgcolor: isSelected ? activeColor : 'rgba(255,255,255,0.05)',
+                        borderColor: isSelected ? activeColor : 'rgba(255,255,255,0.4)',
+                        opacity: 0.9
+                      },
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? `0 0 12px ${activeColor}44` : 'none',
+                    }}
+                  >
+                    {option}
+                  </Button>
+                );
+              })}
+            </Box>
+          </Box>
         );
       }
       case "checkbox-group": {
@@ -319,11 +492,8 @@ export const PublicFormatPage = () => {
           setValue(field.name, updated);
         };
         return (
-          <Box key={field.name} sx={{ border: "1px solid", borderColor: "rgba(255,255,255,0.2)", borderRadius: 3, p: 2, mb: 1, bgcolor: "rgba(255,255,255,0.05)" }}>
-            <FormLabel component="legend" sx={{ fontSize: "0.78rem", mb: 0.5, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>
-              {field.label}
-            </FormLabel>
-            <FormGroup>
+          <Box key={field.name} sx={{ alignSelf: 'end', mb: 1, ml: 0.5, transform: 'translateY(-6px)' }}>
+            <FormGroup row>
               {(field.options || []).map((option) => (
                 <FormControlLabel
                   key={option}
@@ -332,10 +502,18 @@ export const PublicFormatPage = () => {
                       size="small"
                       checked={selectedOptions.includes(option)}
                       onChange={() => toggle(option)}
-                      sx={{ color: 'rgba(255,255,255,0.6)' }}
+                      sx={{ 
+                        color: 'rgba(255,255,255,0.4)',
+                        '&.Mui-checked': { color: '#0a84ff' },
+                        py: 0
+                      }}
                     />
                   }
-                  label={<Typography variant="body2" sx={{ color: "rgba(255,255,255,0.9)" }}>{option}</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>
+                      {field.options?.length === 1 ? field.label : option}
+                    </Typography>
+                  }
                 />
               ))}
             </FormGroup>
@@ -486,13 +664,14 @@ export const PublicFormatPage = () => {
       }
       case "signature":
         return (
-          <SignaturePadField
-            key={field.name}
-            label={field.label}
-            required={field.required}
-            value={(getValue(field.name) as string) || ""}
-            onChange={(val) => setValue(field.name, val)}
-          />
+          <Box key={field.name} sx={{ gridColumn: "1 / -1" }}>
+            <SignaturePadField
+              label={field.label}
+              value={(getValue(field.name) as string) || ""}
+              onChange={(val) => setValue(field.name, val)}
+              required={field.required}
+            />
+          </Box>
         );
       case "dynamic-group": {
         const items = (getValue(field.name) as Record<string, unknown>[]) || [];
@@ -581,6 +760,66 @@ export const PublicFormatPage = () => {
           </Paper>
         );
       }
+      case "header":
+        return (
+          <Typography 
+            key={field.name}
+            variant="overline" 
+            sx={{ 
+              gridColumn: '1 / -1', 
+              mt: 2, 
+              mb: -0.5, 
+              color: '#0a84ff', 
+              fontWeight: 900,
+              fontSize: '0.75rem',
+              letterSpacing: '1px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              '&::after': {
+                content: '""',
+                flex: 1,
+                height: '1px',
+                bgcolor: 'rgba(10,132,255,0.2)'
+              }
+            }}
+          >
+            {field.label}
+          </Typography>
+        );
+      case "section": {
+        return (
+          <Box key={field.name} sx={{ mb: 3 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 800, 
+                fontSize: '0.95rem',
+                color: 'white', 
+                mb: 2,
+                pb: 1,
+                borderBottom: '2px solid rgba(10,132,255,0.5)',
+                letterSpacing: '0.5px'
+              }}
+            >
+              {field.label}
+            </Typography>
+            <Box 
+              sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                gap: 2,
+                p: 2,
+                bgcolor: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 3
+              }}
+            >
+              {(field.subFields || []).map((subField) => renderField(subField, groupData, onGroupFieldChange, groupIndex))}
+            </Box>
+          </Box>
+        );
+      }
       default:
         return null;
     }
@@ -598,7 +837,7 @@ export const PublicFormatPage = () => {
   }
 
   // Success state
-  if (submitted) {
+  if (submitted && submittedSubmission) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: '#1c1c1e', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
         <Card sx={{ maxWidth: 500, width: '100%', bgcolor: 'rgba(28,28,30,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -607,9 +846,26 @@ export const PublicFormatPage = () => {
             <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>
               ¡Formato enviado exitosamente!
             </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3 }}>
               Gracias por completar el formato de <strong>{format.name}</strong>.
             </Typography>
+            <Stack spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<PictureAsPdfIcon />}
+                onClick={() => exportSubmissionToPDF(submittedSubmission, format.fields, "Usuario Público", statusConfig[submittedSubmission.status].label)}
+                sx={{ bgcolor: '#0a84ff', '&:hover': { bgcolor: '#0a84ffdd' } }}
+              >
+                Descargar PDF
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => window.open(`/public-format-results/${format.id}`, '_blank')}
+                sx={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', '&:hover': { borderColor: 'rgba(255,255,255,0.5)', bgcolor: 'rgba(255,255,255,0.05)' } }}
+              >
+                Ver Lista de Resultados
+              </Button>
+            </Stack>
           </CardContent>
         </Card>
       </Box>
@@ -649,6 +905,13 @@ export const PublicFormatPage = () => {
         {/* Form */}
         <Card sx={{ bgcolor: 'rgba(28,28,30,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3 }}>
           <CardContent sx={{ p: 3 }}>
+            {authError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                Error de Acceso: No se pudo establecer una conexión segura. 
+                Por favor, contacte al administrador si el problema persiste.
+              </Alert>
+            )}
+
             <Stack spacing={1.5}>
               {format.fields.map((field) => renderField(field))}
             </Stack>
@@ -656,6 +919,7 @@ export const PublicFormatPage = () => {
             <Button
               variant="contained"
               fullWidth
+              disabled={!isAuthed && !authError} // Disable if still loading auth (no error yet)
               size="large"
               startIcon={<SendIcon />}
               onClick={handleSubmit}

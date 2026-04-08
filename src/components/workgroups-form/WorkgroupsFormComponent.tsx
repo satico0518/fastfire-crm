@@ -99,7 +99,7 @@ export const WorkgroupsFormComponent = ({
     }
 
     setAvailableMembers(
-      users?.filter(u => u.isActive && !u.permissions.includes('PROVIDER')).map((user) => ({
+      users?.filter(u => u.isActive && !u.permissions?.includes('PROVIDER')).map((user) => ({
         key: user.key,
         label: getUserNameByKey(user.key as string, users),
       })) as SetStateAction<AutocompleteField[]>

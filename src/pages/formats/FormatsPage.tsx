@@ -28,8 +28,8 @@ function TabPanel(props: TabPanelProps) {
 
 export const FormatsPage = () => {
   const user = useAuhtStore((state) => state.user);
-  const isAdmin = user?.permissions.includes("ADMIN");
-  const isFormater = user?.permissions.includes("FORMATER");
+  const isAdmin = user?.permissions?.includes("ADMIN");
+  const isFormater = user?.permissions?.includes("FORMATER");
 
   const hasAccess = isAdmin || isFormater;
   if (!hasAccess) return <UnauthorizedPage />;

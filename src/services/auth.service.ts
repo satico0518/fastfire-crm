@@ -2,6 +2,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  signInAnonymously,
 } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
 import { FirebaseSignInOrCreateResponse } from "../interfaces/FirebaseSignInOrCreateResponse";
@@ -16,7 +17,7 @@ export class AuthService {
       const createUserResponse = await createUserWithEmailAndPassword(
         auth,
         user.email,
-        user.permissions.includes('PROVIDER') ? 'P12345' : 'Ff12345' // TODO env Var
+        user.permissions?.includes('PROVIDER') ? 'P12345' : 'Ff12345' // TODO env Var
       );
       if (createUserResponse.user && createUserResponse.user.uid) {
         const userToPush: User = {
@@ -70,9 +71,9 @@ export class AuthService {
     pass: string
   ): Promise<FirebaseSignInOrCreateResponse> {
     try {
-      const userLoggedIn = await signInWithEmailAndPassword(auth, email, pass);
+      const userLoggedIn = await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), pass);
       const users: User[] =  Object.values((await get(ref(db, 'users'))).val());
-      const userDB = users?.filter((u) => u.email === email)[0];
+      const userDB = users?.filter((u) => u.email.toLowerCase() === email.toLowerCase().trim())[0];
       
       if (!userDB) {
         const msg = `El usuario "${email}" no está registrado.`;
@@ -95,11 +96,14 @@ export class AuthService {
         firebaseUser: userLoggedIn.user,
         user: userDB,
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error(error);
+      // Pasar el código de error original de Firebase para que el componente pueda traducirlo
+      const errorCode = error?.code || "";
+      const errorMessage = error?.message || "";
       return {
         result: "ERROR",
-        error: "Error al intentar iniciar sesión, revise sus credenciales.",
+        error: errorCode || errorMessage || "auth/unknown-error",
       };
     }
   }
@@ -133,6 +137,22 @@ export class AuthService {
       return {
         result: "ERROR",
         errorMessage: "Error cerrando sesión",
+      };
+    }
+  }
+
+  static async signInAnonymously(): Promise<ServiceResponse & { user?: any }> {
+    try {
+      const response = await signInAnonymously(auth);
+      return {
+        result: "OK",
+        user: response.user
+      };
+    } catch (error) {
+      console.error("Error en autenticación anónima", error);
+      return {
+        result: "ERROR",
+        errorMessage: "Error en autenticación anónima"
       };
     }
   }

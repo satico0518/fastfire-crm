@@ -31,4 +31,5 @@ export interface Task {
     tags: string[];
     status: Status;
     notes: string;
+    deletedDate?: number;
 }

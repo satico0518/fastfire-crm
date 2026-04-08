@@ -45,7 +45,7 @@ export const AdministratorPage = () => {
   const setModal = useUiStore((state) => state.setModal);
   const user = useAuhtStore((state) => state.user);
   
-  if (!user?.permissions.includes('ADMIN')) return <UnauthorizedPage />
+  if (!user?.permissions?.includes('ADMIN')) return <UnauthorizedPage />
 
   const handleTabsChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabsValue(newValue);

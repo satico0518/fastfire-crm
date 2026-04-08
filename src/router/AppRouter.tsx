@@ -15,6 +15,7 @@ import { TasksbyGroupPage } from "../pages/tasks-by-group/TasksbyGroupPage";
 import { FormatsPage } from "../pages/formats/FormatsPage";
 import { AgendaMantenimientosPage } from "../pages/agenda-mantenimientos/AgendaMantenimientosPage";
 import { PublicFormatPage } from "../pages/formats/PublicFormatPage";
+import { PublicFormatResultsPage } from "../pages/formats/PublicFormatResultsPage";
 
 export const AppRouter = () => {
   const isLoading = useUiStore(state => state.isLoading);
@@ -48,6 +49,7 @@ export const AppRouter = () => {
           <Route path="/agenda-mantenimientos" element={<AgendaMantenimientosPage />} />
         </Route>
         <Route path="/public-format/:formatId" element={<PublicFormatPage />} />
+        <Route path="/public-format-results/:formatId" element={<PublicFormatResultsPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="*" element={<LoginPage />} />
         </Route>

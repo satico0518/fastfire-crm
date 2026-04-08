@@ -1,4 +1,4 @@
-import { Autocomplete, Button, Chip, IconButton, TextField } from "@mui/material";
+import { Autocomplete, Button, Chip, IconButton, TextField, Paper } from "@mui/material";
 import { DialogueCustomContent } from "../dialogs/DialogueCustomContent";
 import { Task } from "../../interfaces/Task";
 import { TaskService } from "../../services/task.service";
@@ -149,26 +149,59 @@ export const TagsInput = ({
             fullWidth
             onChange={(_, tag) => tag && handleAddTag(tag)}
             renderInput={(params) => (
-              <div className="tags-selector">
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <TextField
                   {...params}
-                  name="tags"
                   label="Etiquetas creadas"
-                  type="text"
-                  variant="standard"
+                  variant="outlined"
                   autoCapitalize="words"
+                  InputLabelProps={{
+                    ...params.InputLabelProps,
+                    sx: { color: 'white !important', fontWeight: 700 }
+                  }}
+                  sx={{
+                    flex: 1,
+                    '& .MuiInputLabel-root': { color: 'white !important', fontWeight: 700 },
+                    '& .MuiInputLabel-standard': { color: 'white !important', fontWeight: 700 },
+                    '& .MuiFormLabel-root': { color: 'white !important' },
+                    '& .MuiOutlinedInput-root': {
+                      color: 'white',
+                      borderRadius: '12px',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3) !important' },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.6) !important' },
+                      '&.Mui-focused fieldset': { borderColor: 'white !important' },
+                    },
+                    '& .MuiInput-underline:before': { borderBottomColor: 'rgba(255,255,255,0.3) !important' },
+                    '& .MuiInput-underline:after': { borderBottomColor: 'white !important' },
+                    '& .MuiInput-root': { color: 'white !important' },
+                  }}
                 />
-                {
-                  <Button
-                    onClick={() =>
-                      handleAddTag(params.inputProps.value as string)
-                    }
-                    title="Nueva etiqueta"
-                  >
-                    <AddCircleOutlinedIcon color="success" />
-                  </Button>
-                }
+                <Button
+                  onClick={() => handleAddTag(params.inputProps.value as string)}
+                  sx={{ 
+                    minWidth: '48px', 
+                    height: '48px', 
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.1)',
+                    '&:hover': { background: 'rgba(255,255,255,0.2)' }
+                  }}
+                >
+                  <AddCircleOutlinedIcon sx={{ color: '#30d158' }} />
+                </Button>
               </div>
+            )}
+            PaperComponent={({ children }) => (
+              <Paper sx={{ 
+                bgcolor: '#1c1c1e', 
+                color: 'white', 
+                border: '1px solid rgba(255,255,255,0.1)',
+                '& .MuiAutocomplete-option': {
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                  '&[aria-selected="true"]': { bgcolor: 'rgba(255,255,255,0.1)' }
+                }
+              }}>
+                {children}
+              </Paper>
             )}
           />
         </div>
