@@ -17,14 +17,17 @@ export const useStockStore = create<StockState>()(
       try {
         const stockRef = ref(db, "stock");
         onValue(stockRef, (snapshot) => {
-          const data = Object.values(snapshot.val()) as Item[] || [];
-          
-          if (data) {
-            const values: Item[] = Object.entries<Item>(data).map(
-              ([key, value]) => ({ ...value, key })
-            ) as Item[];
-            set({ stock: values });
-          } else set({ stock: [] });
+          const snapshotValue = snapshot.val();
+
+          if (!snapshotValue || typeof snapshotValue !== "object") {
+            set({ stock: [] });
+            return;
+          }
+
+          const values: Item[] = Object.entries<Item>(snapshotValue as Item[]).map(
+            ([key, value]) => ({ ...value, key })
+          ) as Item[];
+          set({ stock: values });
         });
       } catch (error) {
         console.error("Error cargando inventario desde store", { error });

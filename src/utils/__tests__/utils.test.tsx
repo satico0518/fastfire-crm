@@ -16,6 +16,7 @@ import {
 } from '../utils.tsx';
 import * as XLSX from "xlsx";
 import { render } from '@testing-library/react';
+import { jsPDF } from 'jspdf';
 
 jest.mock('jspdf', () => {
   return {
@@ -288,6 +289,372 @@ describe('Utils', () => {
 
        const resp = await exportSubmissionToPDF(submission as any, fields as any, 'USRR', 'DRAFT');
        expect(resp).toBeTruthy();
+    });
+
+    it('usa color default de estado y muestra mensaje de sección vacía', async () => {
+      const submission = {
+        formatTypeName: 'SECCIONES',
+        createdDate: Date.now(),
+        data: {},
+      };
+
+      const fields = [
+        {
+          name: 'section_a',
+          label: 'Sección A',
+          type: 'section',
+          subFields: [{ name: 'campo_a', label: 'Campo A', type: 'text' }],
+        },
+      ];
+
+      await exportSubmissionToPDF(submission as any, fields as any, 'Tester', 'PENDIENTE');
+
+      const doc = (jsPDF as unknown as jest.Mock).mock.results.at(-1)?.value;
+      expect(doc.setFillColor).toHaveBeenCalledWith(48, 209, 88);
+      expect(doc.text).toHaveBeenCalledWith(
+        '— Sin comentarios registrados',
+        expect.any(Number),
+        expect.any(Number)
+      );
+    });
+
+    it('maneja error cargando logo en header del PDF', async () => {
+      const originalFetch = global.fetch;
+      const originalFileReader = global.FileReader;
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      class MockFileReader {
+        result: string | ArrayBuffer | null = 'data:image/png;base64,AAA';
+        onloadend: null | (() => void) = null;
+        onerror: null | (() => void) = null;
+        readAsDataURL() {
+          if (this.onloadend) this.onloadend();
+        }
+      }
+
+      global.fetch = jest.fn(async () => ({
+        blob: async () => new Blob(['logo'], { type: 'image/png' }),
+      })) as any;
+      global.FileReader = MockFileReader as any;
+
+      const doc = {
+        internal: { pageSize: { getWidth: () => 210 } },
+        addImage: jest.fn().mockImplementationOnce(() => {
+          throw new Error('logo-add-image-fail');
+        }),
+        setFillColor: jest.fn(),
+        setDrawColor: jest.fn(),
+        setTextColor: jest.fn(),
+        setFontSize: jest.fn(),
+        setFont: jest.fn(),
+        setLineWidth: jest.fn(),
+        text: jest.fn(),
+        rect: jest.fn(),
+        roundedRect: jest.fn(),
+        line: jest.fn(),
+        splitTextToSize: jest.fn().mockImplementation((val) => [val]),
+        addPage: jest.fn(),
+        getNumberOfPages: jest.fn().mockReturnValue(1),
+        setPage: jest.fn(),
+        save: jest.fn(),
+        lastAutoTable: { finalY: 50 },
+      };
+      (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
+
+      const submission = {
+        formatTypeName: 'LOGO',
+        createdDate: Date.now(),
+        data: { campo: 'ok' },
+      };
+      const fields = [{ name: 'campo', label: 'Campo', type: 'text' }];
+
+      await exportSubmissionToPDF(submission as any, fields as any, 'Tester', 'APROBADO');
+
+      expect(consoleSpy).toHaveBeenCalledWith('Error loading logo for PDF:', expect.any(Error));
+
+      global.fetch = originalFetch;
+      global.FileReader = originalFileReader;
+      consoleSpy.mockRestore();
+    });
+
+    it('agrega salto de página al superar límite y maneja error de firma', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      const doc = {
+        internal: { pageSize: { getWidth: () => 210 } },
+        addImage: jest
+          .fn()
+          .mockImplementationOnce(() => undefined)
+          .mockImplementationOnce(() => {
+            throw new Error('signature-add-image-fail');
+          }),
+        setFillColor: jest.fn(),
+        setDrawColor: jest.fn(),
+        setTextColor: jest.fn(),
+        setFontSize: jest.fn(),
+        setFont: jest.fn(),
+        setLineWidth: jest.fn(),
+        text: jest.fn(),
+        rect: jest.fn(),
+        roundedRect: jest.fn(),
+        line: jest.fn(),
+        splitTextToSize: jest.fn().mockImplementation(() => Array(50).fill('linea')),
+        addPage: jest.fn(),
+        getNumberOfPages: jest.fn().mockReturnValue(1),
+        setPage: jest.fn(),
+        save: jest.fn(),
+        lastAutoTable: { finalY: 50 },
+      };
+      (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
+
+      const submission = {
+        formatTypeName: 'PAGINACION',
+        createdDate: Date.now(),
+        data: {
+          h_data: 'valor',
+          firma: 'data:image/png;base64,AAA',
+        },
+      };
+
+      const fields = [
+        { name: 'header_big', label: 'Header Grande', type: 'header' },
+        { name: 'h_data', label: 'Dato', type: 'text' },
+        { name: 'firma', label: 'Firma', type: 'signature' },
+      ];
+
+      await exportSubmissionToPDF(submission as any, fields as any, 'Tester', 'APROBADO');
+
+      expect(doc.addPage).toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith('Error adding signature to PDF:', expect.any(Error));
+
+      consoleSpy.mockRestore();
+    });
+
+    it('usa fallback visual cuando no puede cargar el logo', async () => {
+      const originalFetch = global.fetch;
+      global.fetch = jest.fn(async () => {
+        throw new Error('logo-fetch-fail');
+      }) as any;
+
+      const doc = {
+        internal: { pageSize: { getWidth: () => 210 } },
+        addImage: jest.fn(),
+        setFillColor: jest.fn(),
+        setDrawColor: jest.fn(),
+        setTextColor: jest.fn(),
+        setFontSize: jest.fn(),
+        setFont: jest.fn(),
+        setLineWidth: jest.fn(),
+        text: jest.fn(),
+        rect: jest.fn(),
+        roundedRect: jest.fn(),
+        line: jest.fn(),
+        splitTextToSize: jest.fn().mockImplementation((val) => [val]),
+        addPage: jest.fn(),
+        getNumberOfPages: jest.fn().mockReturnValue(1),
+        setPage: jest.fn(),
+        save: jest.fn(),
+        lastAutoTable: { finalY: 50 },
+      };
+      (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
+
+      await exportSubmissionToPDF(
+        { formatTypeName: 'FALLBACK', createdDate: Date.now(), data: { a: '1' } } as any,
+        [{ name: 'a', label: 'Campo A', type: 'text' }] as any,
+        'Tester',
+        'APROBADO'
+      );
+
+      expect(doc.rect).toHaveBeenCalledWith(0, 0, 210, 35, 'F');
+      expect(doc.text).toHaveBeenCalledWith(
+        'FAST FIRE DE COLOMBIA SAS',
+        105,
+        15,
+        { align: 'center' }
+      );
+
+      global.fetch = originalFetch;
+    });
+
+    it('usa dimensiones fallback y maneja error al renderizar imagen', async () => {
+      const originalFetch = global.fetch;
+      const originalImage = global.Image;
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      global.fetch = jest.fn(async () => {
+        throw new Error('logo-fetch-fail');
+      }) as any;
+
+      class MockImageError {
+        onload: null | (() => void) = null;
+        onerror: null | ((err?: unknown) => void) = null;
+        set src(_value: string) {
+          if (this.onerror) this.onerror(new Error('image-dimensions-fail'));
+        }
+      }
+      global.Image = MockImageError as any;
+
+      const doc = {
+        internal: { pageSize: { getWidth: () => 210 } },
+        addImage: jest.fn().mockImplementationOnce(() => {
+          throw new Error('render-image-fail');
+        }),
+        setFillColor: jest.fn(),
+        setDrawColor: jest.fn(),
+        setTextColor: jest.fn(),
+        setFontSize: jest.fn(),
+        setFont: jest.fn(),
+        setLineWidth: jest.fn(),
+        text: jest.fn(),
+        rect: jest.fn(),
+        roundedRect: jest.fn(),
+        line: jest.fn(),
+        splitTextToSize: jest.fn().mockImplementation((val) => [val]),
+        addPage: jest.fn(),
+        getNumberOfPages: jest.fn().mockReturnValue(1),
+        setPage: jest.fn(),
+        save: jest.fn(),
+        lastAutoTable: { finalY: 50 },
+      };
+      (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
+
+      await exportSubmissionToPDF(
+        {
+          formatTypeName: 'IMAGEN',
+          createdDate: Date.now(),
+          data: { imagen: 'data:image/png;base64,AAA' },
+        } as any,
+        [{ name: 'imagen', label: 'Imagen', type: 'image' }] as any,
+        'Tester',
+        'APROBADO'
+      );
+
+      expect(consoleSpy).toHaveBeenCalledWith('Error adding image to PDF:', expect.any(Error));
+      expect(doc.text).toHaveBeenCalledWith(
+        'Imagen: Error al renderizar imagen',
+        expect.any(Number),
+        expect.any(Number)
+      );
+
+      global.fetch = originalFetch;
+      global.Image = originalImage;
+      consoleSpy.mockRestore();
+    });
+
+    it('agrega salto de página cuando una imagen supera el alto disponible', async () => {
+      const originalFetch = global.fetch;
+      const originalImage = global.Image;
+
+      global.fetch = jest.fn(async () => {
+        throw new Error('logo-fetch-fail');
+      }) as any;
+
+      class MockImageDims {
+        width = 10;
+        height = 1000;
+        onload: null | (() => void) = null;
+        onerror: null | ((err?: unknown) => void) = null;
+        set src(_value: string) {
+          if (this.onload) this.onload();
+        }
+      }
+      global.Image = MockImageDims as any;
+
+      const doc = {
+        internal: { pageSize: { getWidth: () => 210 } },
+        addImage: jest.fn(),
+        setFillColor: jest.fn(),
+        setDrawColor: jest.fn(),
+        setTextColor: jest.fn(),
+        setFontSize: jest.fn(),
+        setFont: jest.fn(),
+        setLineWidth: jest.fn(),
+        text: jest.fn(),
+        rect: jest.fn(),
+        roundedRect: jest.fn(),
+        line: jest.fn(),
+        splitTextToSize: jest.fn().mockImplementation((val: string) => {
+          if (val === 'Texto:') return Array(10).fill('t');
+          if (val === 'VALOR_LARGO') return Array(16).fill('v');
+          return [val];
+        }),
+        addPage: jest.fn(),
+        getNumberOfPages: jest.fn().mockReturnValue(1),
+        setPage: jest.fn(),
+        save: jest.fn(),
+        lastAutoTable: { finalY: 50 },
+      };
+      (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
+
+      await exportSubmissionToPDF(
+        {
+          formatTypeName: 'PAGINA_IMAGEN',
+          createdDate: Date.now(),
+          data: { texto: 'VALOR_LARGO', imagen: 'data:image/png;base64,AAA' },
+        } as any,
+        [
+          { name: 'texto', label: 'Texto', type: 'text' },
+          { name: 'imagen', label: 'Imagen', type: 'image' },
+        ] as any,
+        'Tester',
+        'APROBADO'
+      );
+
+      expect(doc.addPage).toHaveBeenCalled();
+
+      global.fetch = originalFetch;
+      global.Image = originalImage;
+    });
+
+    it('agrega salto de página en firma cuando no hay espacio suficiente', async () => {
+      const originalFetch = global.fetch;
+      global.fetch = jest.fn(async () => {
+        throw new Error('logo-fetch-fail');
+      }) as any;
+
+      const doc = {
+        internal: { pageSize: { getWidth: () => 210 } },
+        addImage: jest.fn(),
+        setFillColor: jest.fn(),
+        setDrawColor: jest.fn(),
+        setTextColor: jest.fn(),
+        setFontSize: jest.fn(),
+        setFont: jest.fn(),
+        setLineWidth: jest.fn(),
+        text: jest.fn(),
+        rect: jest.fn(),
+        roundedRect: jest.fn(),
+        line: jest.fn(),
+        splitTextToSize: jest.fn().mockImplementation((val: string) => {
+          if (val === 'Texto:') return Array(14).fill('t');
+          if (val === 'VALOR_FIRMA') return Array(20).fill('v');
+          return [val];
+        }),
+        addPage: jest.fn(),
+        getNumberOfPages: jest.fn().mockReturnValue(1),
+        setPage: jest.fn(),
+        save: jest.fn(),
+        lastAutoTable: { finalY: 50 },
+      };
+      (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
+
+      await exportSubmissionToPDF(
+        {
+          formatTypeName: 'PAGINA_FIRMA',
+          createdDate: Date.now(),
+          data: { texto: 'VALOR_FIRMA', firma: 'data:image/png;base64,AAA' },
+        } as any,
+        [
+          { name: 'texto', label: 'Texto', type: 'text' },
+          { name: 'firma', label: 'Firma', type: 'signature' },
+        ] as any,
+        'Tester',
+        'APROBADO'
+      );
+
+      expect(doc.addPage).toHaveBeenCalled();
+
+      global.fetch = originalFetch;
     });
   });
 });
