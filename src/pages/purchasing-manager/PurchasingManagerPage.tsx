@@ -1,10 +1,10 @@
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 import { ComercialContainer } from "../../components/comercial-container/ComercialContainer";
 import { ProviderContainer } from "../../components/provider-container/ProviderContainer";
 
 export const PurchasingManagerPage = () => {
-  const user = useAuhtStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   if (
     !user?.permissions?.includes("PURCHASE") &&

@@ -1,4 +1,4 @@
-import { useAuhtStore } from '../auth.store';
+import { useAuthStore } from '../auth.store';
 import { User, Access } from '../../../interfaces/User';
 
 describe('Auth Store', () => {
@@ -7,7 +7,7 @@ describe('Auth Store', () => {
   });
 
   test('debe tener estado inicial correcto', () => {
-    const state = useAuhtStore.getState();
+    const state = useAuthStore.getState();
     expect(state.user).toBeDefined();
     expect(state.isAuth).toBeDefined();
     expect(state.token).toBeDefined();
@@ -25,25 +25,25 @@ describe('Auth Store', () => {
       workgroupKeys: ['wg1']
     };
     
-    useAuhtStore.getState().setNewUser(mockUser);
-    expect(useAuhtStore.getState().user).toEqual(mockUser);
+    useAuthStore.getState().setNewUser(mockUser);
+    expect(useAuthStore.getState().user).toEqual(mockUser);
   });
 
   test('debe establecer token correctamente', () => {
-    useAuhtStore.getState().setToken('test-token');
-    expect(useAuhtStore.getState().token).toBe('test-token');
+    useAuthStore.getState().setToken('test-token');
+    expect(useAuthStore.getState().token).toBe('test-token');
   });
 
   test('debe establecer isAuth correctamente', () => {
-    useAuhtStore.getState().setIsAuth(true);
-    expect(useAuhtStore.getState().isAuth).toBe(true);
+    useAuthStore.getState().setIsAuth(true);
+    expect(useAuthStore.getState().isAuth).toBe(true);
     
-    useAuhtStore.getState().setIsAuth(false);
-    expect(useAuhtStore.getState().isAuth).toBe(false);
+    useAuthStore.getState().setIsAuth(false);
+    expect(useAuthStore.getState().isAuth).toBe(false);
   });
 
   test('debe establecer hasHydrated correctamente', () => {
-    useAuhtStore.getState().setHasHydrated(true);
-    expect(useAuhtStore.getState().hasHydrated).toBe(true);
+    useAuthStore.getState().setHasHydrated(true);
+    expect(useAuthStore.getState().hasHydrated).toBe(true);
   });
 });

@@ -23,7 +23,7 @@ let mockUser: any = {
 };
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector: Function) =>
+  useAuthStore: jest.fn((selector: Function) =>
     selector({ user: mockUser })
   ),
 }));

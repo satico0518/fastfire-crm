@@ -32,7 +32,7 @@ import { TaskService } from "../../services/task.service";
 import { Priority, Task } from "../../interfaces/Task";
 import { useTagsStore } from "../../stores/tags/tags.store";
 import { TagsService } from "../../services/tags.service";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { MultiselectComponent } from "../multi-select/MultiselectComponent";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { User } from "../../interfaces/User";
@@ -76,7 +76,7 @@ export const TasksFormComponent = ({
     workgroups?.filter((wg) => wg.key === workgroupKey).map((wg) => wg.name) || []
   );
   const [priority, setPriority] = useState<Priority>("LOW");
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);

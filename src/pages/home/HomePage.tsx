@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuhtStore } from '../../stores';
+import { useAuthStore } from '../../stores';
 import heroImg from '../../assets/fire-suppression-hero.png';
 
 const stats = [
@@ -46,7 +46,7 @@ const quickLinks = [
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
 
   const hasPermission = (permission: string | null) => {
     if (!permission) return true;

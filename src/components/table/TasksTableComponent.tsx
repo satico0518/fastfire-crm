@@ -62,7 +62,7 @@ import {
 import { useUsersStore } from "../../stores/users/users.store";
 import { TaskService } from "../../services/task.service";
 import { RefObject, useEffect, useRef, useState } from "react";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
@@ -98,7 +98,7 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const tasks = useTasksStore((state) => state.tasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
   const [tagAnchorEl, setTagAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);

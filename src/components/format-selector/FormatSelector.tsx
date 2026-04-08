@@ -28,7 +28,7 @@ import { SignaturePadField } from "../signature-pad/SignaturePadField";
 import { FORMAT_CATALOG } from "../../config/formatCatalog";
 import { FormatType, FormatField, FormatSubmission, FormatTypeId } from "../../interfaces/Format";
 import { FormatService } from "../../services/format.service";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { DatePicker, DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -59,7 +59,7 @@ export const FormatSelector = () => {
   const [selectedFormat, setSelectedFormat] = useState<FormatType | null>(null);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
 

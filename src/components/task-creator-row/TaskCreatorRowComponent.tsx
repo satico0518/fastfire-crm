@@ -21,7 +21,7 @@ import { Priority, Task } from "../../interfaces/Task";
 import { Dayjs } from "dayjs";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { TaskService } from "../../services/task.service";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { PriorityInput } from "../priority-input/PriorityInput";
 import { TagsService } from "../../services/tags.service";
@@ -32,7 +32,7 @@ export const TaskCreatorRowComponent = () => {
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
 
   const [isEditing, setIsEditing] = useState(false);
 

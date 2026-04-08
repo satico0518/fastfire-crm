@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AgendaMantenimientosPage } from '../AgendaMantenimientosPage';
 import { BrowserRouter } from 'react-router-dom';
-import { useAuhtStore } from '../../../stores';
+import { useAuthStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 import { MaintenanceService } from '../../../services/maintenance.service';
 import dayjs from 'dayjs';
@@ -42,7 +42,7 @@ describe('AgendaMantenimientosPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) =>
       selector({ user: { permissions: ['ADMIN', 'PLANNER', 'MANAGER'] } })
     );
 
@@ -71,7 +71,7 @@ describe('AgendaMantenimientosPage', () => {
   };
 
   it('renderiza Unauthorized si no tiene permisos', () => {
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) =>
       selector({ user: { permissions: ['NO_PERM'] } })
     );
 

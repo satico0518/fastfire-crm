@@ -2,7 +2,7 @@ import { render, fireEvent, waitFor, screen, act } from "@testing-library/react"
 import "@testing-library/jest-dom";
 import CloudinaryUploadWidget from "../CloudinaryWidget";
 import { UsersService } from "../../../services/users.service";
-import { useAuhtStore } from "../../../stores";
+import { useAuthStore } from "../../../stores";
 import { useUiStore } from "../../../stores/ui/ui.store";
 
 jest.mock("../../../services/users.service", () => ({
@@ -12,7 +12,7 @@ jest.mock("../../../services/users.service", () => ({
 }));
 
 jest.mock("../../../stores", () => ({
-  useAuhtStore: jest.fn(),
+  useAuthStore: jest.fn(),
 }));
 
 jest.mock("../../../stores/ui/ui.store", () => ({
@@ -27,7 +27,7 @@ describe("CloudinaryUploadWidget", () => {
     jest.clearAllMocks();
     document.body.innerHTML = "";
 
-    (useAuhtStore as unknown as jest.Mock).mockImplementation(
+    (useAuthStore as unknown as jest.Mock).mockImplementation(
       (selector: (state: { user: typeof user | null }) => unknown) =>
         selector({ user })
     );
@@ -175,7 +175,7 @@ describe("CloudinaryUploadWidget", () => {
     script.id = "uw";
     document.body.appendChild(script);
 
-    (useAuhtStore as unknown as jest.Mock).mockImplementation(
+    (useAuthStore as unknown as jest.Mock).mockImplementation(
       (selector: (state: { user: null }) => unknown) => selector({ user: null })
     );
 

@@ -16,7 +16,7 @@ import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import HistoryIcon from '@mui/icons-material/History';
-import { useAuhtStore } from '../../../stores';
+import { useAuthStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 
 interface Props {
@@ -47,7 +47,7 @@ const getStatusText = (status: string) => {
 };
 
 export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, onEdit }) => {
-  const user = useAuhtStore(state => state.user);
+  const user = useAuthStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
   const [showHistory, setShowHistory] = useState(false);
   

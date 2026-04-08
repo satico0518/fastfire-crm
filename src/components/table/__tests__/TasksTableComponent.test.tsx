@@ -188,7 +188,7 @@ jest.mock('../../../stores/workgroups/workgroups.store', () => ({
 }));
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector) =>
+  useAuthStore: jest.fn((selector) =>
     selector({ user: {
       id: 'admin', 
       key: 'admin', 
@@ -224,7 +224,7 @@ describe('TasksTableComponent', () => {
     const { useUiStore } = require('../../../stores/ui/ui.store');
     const { useUsersStore } = require('../../../stores/users/users.store');
     const { useWorkgroupStore } = require('../../../stores/workgroups/workgroups.store');
-    const { useAuhtStore } = require('../../../stores');
+    const { useAuthStore } = require('../../../stores');
     const { TaskService } = require('../../../services/task.service');
 
     useTasksStore.mockImplementation((selector: any) => selector({ tasks: [
@@ -327,7 +327,7 @@ describe('TasksTableComponent', () => {
       ] })
     );
 
-    useAuhtStore.mockImplementation((selector: any) =>
+    useAuthStore.mockImplementation((selector: any) =>
       selector({ user: {
         id: 'admin',
         key: 'admin',
@@ -529,10 +529,10 @@ describe('TasksTableComponent', () => {
   });
 
   it('ejecuta rama de usuario no admin con workgroup y abre modal de nueva tarea', async () => {
-    const { useAuhtStore } = require('../../../stores');
+    const { useAuthStore } = require('../../../stores');
     const { useTasksStore } = require('../../../stores/tasks/tasks.store');
 
-    useAuhtStore.mockImplementationOnce((selector: any) =>
+    useAuthStore.mockImplementationOnce((selector: any) =>
       selector({ user: {
         id: 'u1',
         key: 'u1',

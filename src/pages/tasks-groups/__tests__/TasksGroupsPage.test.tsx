@@ -17,7 +17,7 @@ const mockAuthState = {
 };
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector: Function) => selector(mockAuthState)),
+  useAuthStore: jest.fn((selector: Function) => selector(mockAuthState)),
 }));
 
 jest.mock('../../../stores/ui/ui.store', () => ({
@@ -62,16 +62,16 @@ describe('TasksGroupsPage (TasksPage)', () => {
     mockAuthState.user = { key: 'admin', permissions: ['TYG', 'ADMIN'] };
     mockAuthState.hasHydrated = true;
 
-    const { useAuhtStore } = require('../../../stores');
-    (useAuhtStore as jest.Mock).mockImplementation((selector: Function) => selector(mockAuthState));
+    const { useAuthStore } = require('../../../stores');
+    (useAuthStore as jest.Mock).mockImplementation((selector: Function) => selector(mockAuthState));
   });
 
   // ── Estado no hidratado ───────────────────────────────────────────────────
   describe('estado de carga', () => {
     test('debe renderizar null hasta que el store esté hidratado', () => {
       mockAuthState.hasHydrated = false;
-      const { useAuhtStore } = require('../../../stores');
-      (useAuhtStore as jest.Mock).mockImplementation((selector: Function) =>
+      const { useAuthStore } = require('../../../stores');
+      (useAuthStore as jest.Mock).mockImplementation((selector: Function) =>
         selector(mockAuthState)
       );
 
@@ -144,8 +144,8 @@ describe('TasksGroupsPage (TasksPage)', () => {
   describe('sin permisos TYG', () => {
     test('debe mostrar UnauthorizedPage si el usuario no tiene permiso TYG', () => {
       mockAuthState.user = { key: 'u1', permissions: ['VIEWER'] } as any;
-      const { useAuhtStore } = require('../../../stores');
-      (useAuhtStore as jest.Mock).mockImplementation((selector: Function) =>
+      const { useAuthStore } = require('../../../stores');
+      (useAuthStore as jest.Mock).mockImplementation((selector: Function) =>
         selector(mockAuthState)
       );
 

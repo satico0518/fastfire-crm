@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { Header } from "../HeaderComponent";
-import { useAuhtStore } from "../../../stores/auth/auth.store";
+import { useAuthStore } from "../../../stores/auth/auth.store";
 
 jest.mock("../../../stores/auth/auth.store");
 jest.mock("../../profile-menu/ProfileMenuComponent", () => () => <div data-testid="profile-menu" />);
@@ -14,13 +14,13 @@ describe("HeaderComponent", () => {
   });
 
   it("no debe renderizar nada si no está autenticado", () => {
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: false }));
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: false }));
     const { container } = render(<Header isMobileMenuOpen={false} onToggleMobileMenu={mockOnToggleMobileMenu} />);
     expect(container.firstChild).toBeNull();
   });
 
   it("debe renderizar el logo y el menú de perfil si está autenticado", () => {
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: true }));
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: true }));
     render(<Header isMobileMenuOpen={false} onToggleMobileMenu={mockOnToggleMobileMenu} />);
     
     expect(screen.getByAltText("logo fastfire de colombia")).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe("HeaderComponent", () => {
   });
 
   it("debe mostrar el ícono de hamburguesa correcto según el estado del menú", () => {
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: true }));
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: true }));
     
     const { rerender } = render(<Header isMobileMenuOpen={false} onToggleMobileMenu={mockOnToggleMobileMenu} />);
     expect(screen.getByText("☰")).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe("HeaderComponent", () => {
   });
 
   it("debe llamar a onToggleMobileMenu al hacer clic en el botón de hamburguesa", () => {
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: true }));
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) => selector({ isAuth: true }));
     render(<Header isMobileMenuOpen={false} onToggleMobileMenu={mockOnToggleMobileMenu} />);
     
     fireEvent.click(screen.getByLabelText("Toggle navigation menu"));

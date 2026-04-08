@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { ProtectedRoute } from "../ProtectedRoute";
 
-let mockAuthState: any = { isAuth: true };
+let mockAuthState: any = { isAuth: true, hasHydrated: true };
 
 jest.mock("../../stores", () => ({
-  useAuhtStore: jest.fn((selector) => (selector ? selector(mockAuthState) : mockAuthState)),
+  useAuthStore: jest.fn((selector) => (selector ? selector(mockAuthState) : mockAuthState)),
 }));
 
 jest.mock("react-router-dom", () => ({
@@ -21,7 +21,7 @@ describe("ProtectedRoute", () => {
   });
 
   test("redirige a login cuando no está autenticado", () => {
-    mockAuthState = { isAuth: false };
+    mockAuthState = { isAuth: false, hasHydrated: true };
     render(<ProtectedRoute />);
     expect(screen.getByText("NAVIGATE:/login")).toBeInTheDocument();
   });

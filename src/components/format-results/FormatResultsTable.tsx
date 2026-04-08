@@ -35,7 +35,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { FormatService } from "../../services/format.service";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { SvgIconProps } from "@mui/material";
 import { ElementType } from "react";
@@ -70,7 +70,7 @@ const statusConfig: Record<
 export const FormatResultsTable = () => {
   const submissions = useFormatsStore((state) => state.submissions);
   const users = useUsersStore((state) => state.users);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
 
   const [selectedTypeId, setSelectedTypeId] = useState<FormatTypeId | null>(null);

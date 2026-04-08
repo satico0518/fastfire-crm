@@ -44,7 +44,7 @@ jest.mock("react-router-dom", () => {
 });
 
 jest.mock("../../stores", () => ({
-  useAuhtStore: jest.fn((selector) => (selector ? selector(mockAuthState) : mockAuthState)),
+  useAuthStore: jest.fn((selector) => (selector ? selector(mockAuthState) : mockAuthState)),
 }));
 
 jest.mock("../../stores/ui/ui.store", () => ({

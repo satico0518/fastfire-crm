@@ -19,7 +19,7 @@ const mockSetNewUser = jest.fn();
 const mockSetIsAuth = jest.fn();
 
 jest.mock("../../../stores", () => ({
-  useAuhtStore: jest.fn((selector) =>
+  useAuthStore: jest.fn((selector) =>
     selector({
       user: mockUser,
       setNewUser: mockSetNewUser,

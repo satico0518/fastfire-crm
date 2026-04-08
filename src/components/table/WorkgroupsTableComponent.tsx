@@ -31,14 +31,14 @@ import { getUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function WorksgroupTable() {
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const setIsLoading = useUiStore((state) => state.setIsLoading);

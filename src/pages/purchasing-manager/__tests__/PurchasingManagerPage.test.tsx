@@ -18,7 +18,7 @@ jest.mock('../../../components/provider-container/ProviderContainer', () => ({
 let mockUser: any = { key: 'u1', permissions: ['PURCHASE'] };
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector: Function) => selector({ user: mockUser })),
+  useAuthStore: jest.fn((selector: Function) => selector({ user: mockUser })),
 }));
 
 describe('PurchasingManagerPage', () => {

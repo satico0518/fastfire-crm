@@ -33,7 +33,7 @@ jest.mock('../../../stores/tags/tags.store', () => ({
 }));
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector) => selector({
+  useAuthStore: jest.fn((selector) => selector({
     user: { key: 'admin-key', name: 'Admin', permissions: ['ADMIN'] }
   })),
 }));
@@ -207,8 +207,8 @@ describe('TasksFormComponent', () => {
   // ── Submit sin usuario ────────────────────────────────────────────────────
   describe('submit sin usuario autenticado', () => {
     test('debe mostrar snackbar de error si no hay usuario', async () => {
-      const { useAuhtStore } = require('../../../stores');
-      useAuhtStore.mockImplementation((selector: Function) =>
+      const { useAuthStore } = require('../../../stores');
+      useAuthStore.mockImplementation((selector: Function) =>
         selector({ user: null })
       );
 
@@ -229,8 +229,8 @@ describe('TasksFormComponent', () => {
   // ── Submit exitoso ────────────────────────────────────────────────────────
   describe('submit exitoso', () => {
     beforeEach(() => {
-      const { useAuhtStore } = require('../../../stores');
-      useAuhtStore.mockImplementation((selector: Function) =>
+      const { useAuthStore } = require('../../../stores');
+      useAuthStore.mockImplementation((selector: Function) =>
         selector({ user: { key: 'admin-key', name: 'Admin' } })
       );
     });
@@ -287,8 +287,8 @@ describe('TasksFormComponent', () => {
   // ── Submit con error del servicio ─────────────────────────────────────────
   describe('submit con error del servicio', () => {
     beforeEach(() => {
-      const { useAuhtStore } = require('../../../stores');
-      useAuhtStore.mockImplementation((selector: Function) =>
+      const { useAuthStore } = require('../../../stores');
+      useAuthStore.mockImplementation((selector: Function) =>
         selector({ user: { key: 'admin-key', name: 'Admin' } })
       );
     });

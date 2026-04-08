@@ -37,7 +37,7 @@ jest.mock("../../../stores/ui/ui.store", () => ({
 
 let mockUser: any = { key: "u1" };
 jest.mock("../../../stores", () => ({
-  useAuhtStore: jest.fn((selector) =>
+  useAuthStore: jest.fn((selector) =>
     selector({
       user: mockUser,
     })

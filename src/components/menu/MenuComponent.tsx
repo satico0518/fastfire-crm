@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
@@ -39,9 +39,9 @@ export const MenuComponent = ({
   onCloseMobileMenu,
 }: MenuComponentProps) => {
   const navigate = useNavigate();
-  const isAuth = useAuhtStore((state) => state.isAuth);
-  const currentUser = useAuhtStore((state) => state.user);
-  const hasHydrated = useAuhtStore((state) => state.hasHydrated);
+  const isAuth = useAuthStore((state) => state.isAuth);
+  const currentUser = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
   const setIsSidebarCollapsed = useUiStore((state) => state.setIsSidebarCollapsed);

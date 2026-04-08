@@ -31,7 +31,7 @@ let mockWorkgroups: any[] = [
 ];
 
 jest.mock("../../../stores", () => ({
-  useAuhtStore: jest.fn((selector) =>
+  useAuthStore: jest.fn((selector) =>
     selector({
       isAuth: mockIsAuth,
       hasHydrated: mockHasHydrated,

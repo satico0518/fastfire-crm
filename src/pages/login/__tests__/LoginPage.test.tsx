@@ -17,7 +17,7 @@ const mockSetToken = jest.fn();
 const mockSetIsLoading = jest.fn();
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector: Function) =>
+  useAuthStore: jest.fn((selector: Function) =>
     selector({
       setNewUser: mockSetNewUser,
       setIsAuth: mockSetIsAuth,

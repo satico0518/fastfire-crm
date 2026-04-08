@@ -12,7 +12,7 @@ const mockAuthState = {
 };
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector: Function) => selector(mockAuthState)),
+  useAuthStore: jest.fn((selector: Function) => selector(mockAuthState)),
 }));
 
 jest.mock('../../../stores/ui/ui.store', () => ({
@@ -57,8 +57,8 @@ describe('AdministratorPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAuthState.user = { key: 'admin', permissions: ['ADMIN'] };
-    const { useAuhtStore } = require('../../../stores');
-    (useAuhtStore as jest.Mock).mockImplementation((selector: Function) =>
+    const { useAuthStore } = require('../../../stores');
+    (useAuthStore as jest.Mock).mockImplementation((selector: Function) =>
       selector(mockAuthState)
     );
   });
@@ -67,8 +67,8 @@ describe('AdministratorPage', () => {
   describe('control de acceso', () => {
     test('debe mostrar UnauthorizedPage si el usuario NO tiene permiso ADMIN', () => {
       mockAuthState.user = { key: 'u1', permissions: ['TYG'] } as any;
-      const { useAuhtStore } = require('../../../stores');
-      (useAuhtStore as jest.Mock).mockImplementation((selector: Function) =>
+      const { useAuthStore } = require('../../../stores');
+      (useAuthStore as jest.Mock).mockImplementation((selector: Function) =>
         selector(mockAuthState)
       );
       renderPage();

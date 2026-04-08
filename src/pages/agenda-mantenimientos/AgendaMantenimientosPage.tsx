@@ -17,7 +17,7 @@ import { CalendarGridView } from './components/CalendarGridView';
 import { ScheduleCreationModal } from './components/ScheduleCreationModal';
 import { MaintenanceExportControls } from './components/MaintenanceExportControls';
 import { useNavigate } from 'react-router-dom';
-import { useAuhtStore } from '../../stores';
+import { useAuthStore } from '../../stores';
 import { useUiStore } from '../../stores/ui/ui.store';
 
 dayjs.extend(isToday);
@@ -27,7 +27,7 @@ dayjs.locale('es');
 
 export const AgendaMantenimientosPage = () => {
   const navigate = useNavigate();
-  const user = useAuhtStore(state => state.user);
+  const user = useAuthStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
 
   const [schedulesData, setSchedulesData] = useState<MaintenanceSchedule[]>([]);

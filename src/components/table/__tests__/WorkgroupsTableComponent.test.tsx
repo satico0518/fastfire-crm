@@ -73,7 +73,7 @@ const mockSetIsLoading = jest.fn();
 let mockAdminStatus = true;
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector: Function) => selector({
+  useAuthStore: jest.fn((selector: Function) => selector({
     user: { key: 'admin', permissions: mockAdminStatus ? ['ADMIN'] : ['TYG'], workgroupKeys: ['wg1'] }
   })),
 }));

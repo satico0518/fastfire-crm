@@ -33,7 +33,7 @@ jest.mock('../../../stores/ui/ui.store', () => ({
 }));
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn((selector) => selector({
+  useAuthStore: jest.fn((selector) => selector({
     user: { key: 'admin', name: 'Admin', permissions: ['ADMIN'] }
   })),
 }));

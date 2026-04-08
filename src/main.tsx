@@ -55,7 +55,7 @@ export const Main = () => {
 
 const rootEl = document.getElementById("root");
 /* istanbul ignore next -- createRoot solo en runtime fuera de Jest */
-if (rootEl && process.env.JEST_WORKER_ID === undefined) {
+if (rootEl && !import.meta.env.SSR) {
   createRoot(rootEl).render(
     <StrictMode>
       <Main />

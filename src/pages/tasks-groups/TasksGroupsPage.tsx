@@ -5,7 +5,7 @@ import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { TabPanelProps } from "../../interfaces/Tabs";
 import { useUiStore } from "../../stores/ui/ui.store";
 import TasksTable from "../../components/table/TasksTableComponent";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 import WorksgroupTable from "../../components/table/WorkgroupsTableComponent";
 import { WorkgroupsFormComponent } from "../../components/workgroups-form/WorkgroupsFormComponent";
@@ -17,8 +17,8 @@ export const TasksPage = () => {
   const [tabsValue, setTabsValue] = useState(state?.goTo === "wg" ? 1 : 0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
-  const user = useAuhtStore((state) => state.user);
-  const hasHydrated = useAuhtStore((state) => state.hasHydrated);
+  const user = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   
   // No renderizar hasta que el store esté hidratado
   if (!hasHydrated) {

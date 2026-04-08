@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { FormatSelector } from '../FormatSelector';
-import { useAuhtStore } from '../../../stores';
+import { useAuthStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 import { FormatService } from '../../../services/format.service';
 import userEvent from '@testing-library/user-event';
@@ -9,7 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 import imageCompression from 'browser-image-compression';
 
 jest.mock('../../../stores', () => ({
-  useAuhtStore: jest.fn(),
+  useAuthStore: jest.fn(),
 }));
 
 jest.mock('../../../stores/ui/ui.store', () => ({
@@ -128,7 +128,7 @@ describe('FormatSelector', () => {
 
     clipboardWriteSpy = jest.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
 
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector: (state: { user: { key: string } }) => unknown) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector: (state: { user: { key: string } }) => unknown) =>
       selector({ user: { key: 'user-1' } })
     );
 
@@ -330,7 +330,7 @@ describe('FormatSelector', () => {
   });
 
   it('does not submit when there is no authenticated user', async () => {
-    (useAuhtStore as unknown as jest.Mock).mockImplementation((selector: (state: { user: null }) => unknown) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector: (state: { user: null }) => unknown) =>
       selector({ user: null })
     );
 
