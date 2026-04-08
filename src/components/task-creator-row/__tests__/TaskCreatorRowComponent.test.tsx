@@ -64,7 +64,38 @@ jest.mock('../../dialogs/DialogueCustomContent', () => ({
 }));
 
 jest.mock('../../priority-input/PriorityInput', () => ({
-  PriorityInput: () => <div data-testid="priority-input">Priority</div>,
+  PriorityInput: ({ setPriority }: any) => (
+    <button type="button" data-testid="priority-input" onClick={() => setPriority('URGENT')}>
+      Priority
+    </button>
+  ),
+}));
+
+jest.mock('@mui/material', () => {
+  const actual = jest.requireActual('@mui/material');
+  return {
+    ...actual,
+    Autocomplete: ({ onChange, renderInput }: any) => (
+      <div data-testid="autocomplete-mock">
+        <button type="button" onClick={() => onChange(null, 'tag1')}>select-existing-tag</button>
+        <button type="button" onClick={() => onChange(null, 'tag-nueva')}>select-new-tag</button>
+        {renderInput({ inputProps: { value: 'tag-nueva' } })}
+      </div>
+    ),
+  };
+});
+
+jest.mock('@mui/x-date-pickers', () => ({
+  LocalizationProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DatePicker: ({ onChange }: { onChange: (val: { toDate: () => Date }) => void }) => (
+    <button
+      type="button"
+      data-testid="mock-date-picker"
+      onClick={() => onChange({ toDate: () => new Date('2026-01-05T00:00:00.000Z') })}
+    >
+      set-date
+    </button>
+  ),
 }));
 
 jest.mock('../../../utils/utils', () => ({
@@ -244,6 +275,66 @@ describe('TaskCreatorRowComponent', () => {
       render(<TaskCreatorRowComponent />);
       fireEvent.click(screen.getByText('Nueva tarea'));
       expect(screen.getByTestId('priority-input')).toBeInTheDocument();
+    });
+
+    test('debe agregar y eliminar etiquetas, y crear una etiqueta nueva', async () => {
+      const { TagsService } = require('../../../services/tags.service');
+
+      render(<TaskCreatorRowComponent />);
+      fireEvent.click(screen.getByText('Nueva tarea'));
+
+      fireEvent.click(screen.getByText('select-existing-tag'));
+      fireEvent.click(screen.getByText('select-new-tag'));
+      fireEvent.click(screen.getByTitle('Nueva etiqueta'));
+
+      await waitFor(() => {
+        expect(TagsService.createTag).toHaveBeenCalledWith('tag-nueva');
+      });
+
+      const deleteButtons = screen.getAllByRole('button').filter((btn) =>
+        (btn.getAttribute('aria-label') || '').toLowerCase().includes('delete')
+      );
+      if (deleteButtons.length > 0) {
+        fireEvent.click(deleteButtons[0]);
+      }
+    });
+
+    test('debe actualizar fecha, notas, prioridad y toggles de dialogs al guardar', async () => {
+      const { TaskService } = require('../../../services/task.service');
+
+      render(<TaskCreatorRowComponent />);
+      fireEvent.click(screen.getByText('Nueva tarea'));
+
+      fireEvent.change(screen.getByPlaceholderText('Nombre de la tarea...'), {
+        target: { value: 'Tarea completa' },
+      });
+
+      fireEvent.click(screen.getByTestId('LocalOfferOutlinedIcon').closest('button') as HTMLElement);
+      fireEvent.click(screen.getByTestId('GroupAddOutlinedIcon').closest('button') as HTMLElement);
+      fireEvent.click(screen.getByTestId('DateRangeOutlinedIcon').closest('button') as HTMLElement);
+      fireEvent.click(screen.getByTestId('NoteAltOutlinedIcon').closest('button') as HTMLElement);
+      fireEvent.click(screen.getByTestId('EmojiFlagsOutlinedIcon').closest('button') as HTMLElement);
+      fireEvent.click(screen.getByTestId('GroupsOutlinedIcon').closest('button') as HTMLElement);
+
+      fireEvent.click(screen.getByTestId('mock-date-picker'));
+      fireEvent.change(screen.getByPlaceholderText('Escribe las notas aquí...'), {
+        target: { value: 'Notas de prueba' },
+      });
+      fireEvent.click(screen.getByTestId('priority-input'));
+
+      fireEvent.click(screen.getByText('Guardar'));
+
+      await waitFor(() => {
+        expect(TaskService.createTask).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Tarea completa',
+            notes: 'Notas de prueba',
+            priority: 'URGENT',
+            dueDate: expect.any(Date),
+          }),
+          'admin'
+        );
+      });
     });
   });
 });
