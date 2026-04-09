@@ -2,7 +2,7 @@ import { IconButton } from "@mui/material";
 import { createContext, useEffect, useState } from "react";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import { UsersService } from "../../services/users.service";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useUiStore } from "../../stores/ui/ui.store";
 
 // Create a context to manage the script loading state
@@ -17,7 +17,7 @@ function CloudinaryUploadWidget({
   isXLS?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
 
   useEffect(() => {

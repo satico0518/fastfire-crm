@@ -1,93 +1,158 @@
 import { useTasksStore } from '../tasks.store';
 import { Task } from '../../../interfaces/Task';
 
-// Mock de Firebase
+// ─── Mocks de Firebase ──────────────────────────────────────────────────────
+const mockOnValueUnsubscribe = jest.fn();
+
 jest.mock('firebase/database', () => ({
-  ref: jest.fn(),
+  ref: jest.fn(() => ({ path: 'tasks' })),
   onValue: jest.fn((_ref, callback) => {
     callback({
       val: () => ({
         'task-1': {
-          id: '1',
-          key: '1',
-          name: 'Tarea 1',
-          description: 'Descripción tarea 1',
-          status: 'TODO',
-          priority: 'LOW',
-          createdDate: Date.now(),
-          workgroupKeys: ['wg1'],
-          workgroupKey: 'wg1',
-          ownerKeys: ['user1'],
-          tags: ['tag1'],
-          dueDate: '',
-          notes: '',
-          history: [],
-          createdByUserKey: 'user1'
+          id: '1', key: '1', name: 'Tarea 1', status: 'TODO',
+          priority: 'LOW', createdDate: Date.now(), workgroupKeys: ['wg1'],
+          workgroupKey: 'wg1', ownerKeys: ['user1'], tags: [], dueDate: '',
+          notes: '', history: [], createdByUserKey: 'user1'
         },
         'task-2': {
-          id: '2',
-          key: '2',
-          name: 'Tarea 2',
-          description: 'Descripción tarea 2',
-          status: 'IN_PROGRESS',
-          priority: 'NORMAL',
-          createdDate: Date.now(),
-          workgroupKeys: ['wg1'],
-          workgroupKey: 'wg1',
-          ownerKeys: ['user2'],
-          tags: ['tag2'],
-          dueDate: '',
-          notes: '',
-          history: [],
-          createdByUserKey: 'user2'
+          id: '2', key: '2', name: 'Tarea 2', status: 'IN_PROGRESS',
+          priority: 'NORMAL', createdDate: Date.now(), workgroupKeys: ['wg1'],
+          workgroupKey: 'wg1', ownerKeys: ['user2'], tags: [], dueDate: '',
+          notes: '', history: [], createdByUserKey: 'user2'
         }
       })
     });
-    return jest.fn();
-  })
+    return mockOnValueUnsubscribe;
+  }),
 }));
 
+// ─── Datos de ayuda ─────────────────────────────────────────────────────────
+const mockTask: Task = {
+  id: '1', key: 'task-1', name: 'Tarea de prueba', status: 'TODO',
+  priority: 'LOW', createdDate: Date.now(), workgroupKeys: ['wg1'],
+  workgroupKey: 'wg1', ownerKeys: ['user1'], tags: [], dueDate: '',
+  notes: '', history: [], createdByUserKey: 'user1', createdBy: 'user1',
+  modifiedDate: Date.now(),
+};
+
+// ─── Suite ──────────────────────────────────────────────────────────────────
 describe('Tasks Store', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Resetear el store a su estado inicial entre tests
+    useTasksStore.setState({ tasks: [], hasHydrated: false });
   });
 
-  test('debe tener estado inicial correcto', () => {
-    const state = useTasksStore.getState();
-    expect(state.tasks).toBeDefined();
-    expect(Array.isArray(state.tasks)).toBe(true);
+  // ── Estado inicial ───────────────────────────────────────────────────────
+  describe('estado inicial', () => {
+    test('tasks debe ser un array definido', () => {
+      const { tasks } = useTasksStore.getState();
+      expect(tasks).toBeDefined();
+      expect(Array.isArray(tasks)).toBe(true);
+    });
+
+    test('hasHydrated debe ser false inicialmente', () => {
+      expect(useTasksStore.getState().hasHydrated).toBe(false);
+    });
   });
 
-  test('debe establecer tareas correctamente', () => {
-    const mockTasks: Task[] = [
-      {
-        id: '1',
-        key: '1',
-        name: 'Tarea Test',
-        description: 'Descripción test',
-        status: 'TODO',
-        priority: 'LOW',
-        createdDate: Date.now(),
-        workgroupKeys: ['wg1'],
-        workgroupKey: 'wg1',
-        ownerKeys: ['user1'],
-        tags: [],
-        dueDate: '',
-        notes: '',
-        history: [],
-        createdByUserKey: 'user1'
-      }
-    ];
-    
-    useTasksStore.getState().setTasks(mockTasks);
-    expect(useTasksStore.getState().tasks).toEqual(mockTasks);
+  // ── setTasks ─────────────────────────────────────────────────────────────
+  describe('setTasks', () => {
+    test('debe reemplazar las tareas con el nuevo array', () => {
+      const tasks = [mockTask];
+      useTasksStore.getState().setTasks(tasks);
+      expect(useTasksStore.getState().tasks).toEqual(tasks);
+    });
+
+    test('debe soportar array vacío', () => {
+      useTasksStore.getState().setTasks([mockTask]);
+      useTasksStore.getState().setTasks([]);
+      expect(useTasksStore.getState().tasks).toEqual([]);
+    });
+
+    test('debe soportar múltiples tareas', () => {
+      const tasks: Task[] = [
+        mockTask,
+        { ...mockTask, id: '2', key: 'task-2', name: 'Tarea 2', status: 'DONE' },
+        { ...mockTask, id: '3', key: 'task-3', name: 'Tarea 3', status: 'IN_PROGRESS' },
+      ];
+      useTasksStore.getState().setTasks(tasks);
+      expect(useTasksStore.getState().tasks).toHaveLength(3);
+      expect(useTasksStore.getState().tasks![0].name).toBe('Tarea de prueba');
+    });
   });
 
-  test('debe establecer hasHydrated correctamente', () => {
-    useTasksStore.getState().setHasHydrated(true);
-    expect(useTasksStore.getState().hasHydrated).toBe(true);
-    
-    useTasksStore.getState().setHasHydrated(false);
-    expect(useTasksStore.getState().hasHydrated).toBe(false);
+  // ── setHasHydrated ───────────────────────────────────────────────────────
+  describe('setHasHydrated', () => {
+    test('debe cambiar hasHydrated a true', () => {
+      useTasksStore.getState().setHasHydrated(true);
+      expect(useTasksStore.getState().hasHydrated).toBe(true);
+    });
+
+    test('debe cambiar hasHydrated de true a false', () => {
+      useTasksStore.getState().setHasHydrated(true);
+      useTasksStore.getState().setHasHydrated(false);
+      expect(useTasksStore.getState().hasHydrated).toBe(false);
+    });
+  });
+
+  // ── loadTasks ─────────────────────────────────────────────────────────────
+  describe('loadTasks', () => {
+    test('debe llamar a onValue para suscribirse al stream de Firebase', async () => {
+      const { onValue } = require('firebase/database');
+      await useTasksStore.getState().loadTasks();
+      expect(onValue).toHaveBeenCalled();
+    });
+
+    test('debe cargar tareas desde el snapshot de Firebase', async () => {
+      await useTasksStore.getState().loadTasks();
+      const { tasks } = useTasksStore.getState();
+      expect(tasks).toBeDefined();
+      expect(Array.isArray(tasks)).toBe(true);
+      expect(tasks!.length).toBeGreaterThan(0);
+    });
+
+    test('debe dejar tasks vacio cuando snapshot no es un objeto valido', async () => {
+      const { onValue } = require('firebase/database');
+      (onValue as jest.Mock).mockImplementationOnce((_ref, callback) => {
+        callback({ val: () => null });
+        return jest.fn();
+      });
+
+      await useTasksStore.getState().loadTasks();
+      expect(useTasksStore.getState().tasks).toEqual([]);
+    });
+
+    test('debe manejar errores del listener de Firebase y limpiar tasks', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const { onValue } = require('firebase/database');
+      (onValue as jest.Mock).mockImplementationOnce((_ref, _callback, onError) => {
+        onError(new Error('Firebase listener error'));
+        return jest.fn();
+      });
+
+      await useTasksStore.getState().loadTasks();
+
+      expect(useTasksStore.getState().tasks).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error cargando tareas desde Firebase',
+        expect.objectContaining({ error: expect.any(Error) })
+      );
+      consoleSpy.mockRestore();
+    });
+
+    test('debe manejar errores y dejar tasks como array vacío', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const { ref } = require('firebase/database');
+      (ref as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Firebase connection error');
+      });
+
+      await useTasksStore.getState().loadTasks();
+      expect(useTasksStore.getState().tasks).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
   });
 });

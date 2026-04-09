@@ -15,7 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { MaintenanceSchedule } from '../../../interfaces/Maintenance';
 import { MaintenanceService } from '../../../services/maintenance.service';
-import { useAuhtStore } from '../../../stores';
+import { useAuthStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
@@ -52,7 +52,7 @@ const darkInputFieldSx = {
 };
 
 export const ScheduleCreationModal: React.FC<Props> = ({ open, onClose, selectedDateStr, onSave, editingSchedule }) => {
-  const user = useAuhtStore(state => state.user);
+  const user = useAuthStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
   const [isLoading, setIsLoading] = useState(false);
   

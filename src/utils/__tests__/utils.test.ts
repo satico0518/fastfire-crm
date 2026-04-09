@@ -121,7 +121,6 @@ beforeEach(() => {
   }));
   setupAutoTableMock();
 });
-
 describe('Utils', () => {
   describe('formatToCOP', () => {
     test('debe formatear número a pesos colombianos', () => {

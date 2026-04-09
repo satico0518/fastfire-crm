@@ -166,4 +166,26 @@ export class WorkgroupService {
       };
     }
   }
+
+  static async reactivateWorkgroup(workgroup: Workgroup): Promise<ServiceResponse> {
+    try {
+      const workgroupRef = ref(db, `workgroups/${workgroup.key}`);
+      await update(workgroupRef, { isActive: true });
+
+      return {
+        result: "OK",
+        message: "Grupo de trabajo reactivado exitosamente!",
+      };
+    } catch (error) {
+      console.error(
+        `Error al intentar reactivar el grupo de trabajo [key:${workgroup.key}]`,
+        { error }
+      );
+      return {
+        result: "ERROR",
+        message: null,
+        errorMessage: "Error al intentar reactivar el grupo de trabajo.",
+      };
+    }
+  }
 }

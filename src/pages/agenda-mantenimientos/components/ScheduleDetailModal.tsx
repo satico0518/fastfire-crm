@@ -16,7 +16,7 @@ import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import HistoryIcon from '@mui/icons-material/History';
-import { useAuhtStore } from '../../../stores';
+import { useAuthStore } from '../../../stores';
 import { useUiStore } from '../../../stores/ui/ui.store';
 
 interface Props {
@@ -47,7 +47,7 @@ const getStatusText = (status: string) => {
 };
 
 export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, onEdit }) => {
-  const user = useAuhtStore(state => state.user);
+  const user = useAuthStore(state => state.user);
   const setSnackbar = useUiStore(state => state.setSnackbar);
   const [showHistory, setShowHistory] = useState(false);
   
@@ -92,7 +92,7 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
       <DialogTitle sx={{ pb: 1, pt: 3, px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box>
            <Chip 
-              label={getStatusText(schedule.status)} 
+              label={getStatusText(schedule.status).toUpperCase()} 
               size="small"
               sx={{ 
                 mb: 1.5,
@@ -114,7 +114,8 @@ export const ScheduleDetailModal: React.FC<Props> = ({ open, onClose, schedule, 
                  fontWeight: 900, 
                  bgcolor: 'rgba(168, 85, 247, 0.2)', 
                  color: '#a855f7',
-                 border: '1px solid rgba(168, 85, 247, 0.4)'
+                 border: '1px solid rgba(168, 85, 247, 0.4)',
+                 marginLeft: '10px',
                }} 
              />
            )}

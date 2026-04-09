@@ -3,6 +3,8 @@ import { devtools } from "zustand/middleware";
 import { onValue, ref } from "firebase/database";
 import { db } from "../../firebase/firebase.config";
 
+let unsubscribeTagsListener: (() => void) | null = null;
+
 interface TagsState {
   tags: string[];
   loadTags: () => void;
@@ -14,18 +16,30 @@ export const useTagsStore = create<TagsState>()(
     tags: [],
     loadTags: async () => {
       try {
-        const tagsRef = ref(db, "tags");
-        onValue(tagsRef, (snapshot) => {
-          const data = snapshot.val();
+        if (unsubscribeTagsListener) {
+          unsubscribeTagsListener();
+        }
 
-          if (data) {
-            // Convertir el objeto de etiquetas a un array
-            const tagsArray = Object.values(data) as string[];
-            set({ tags: tagsArray });
-          } else {
+        const tagsRef = ref(db, "tags");
+        unsubscribeTagsListener = onValue(
+          tagsRef,
+          (snapshot) => {
+            const data = snapshot.val();
+
+            if (data) {
+              const tagsArray = Object.values(data).filter(
+                (tag): tag is string => typeof tag === "string"
+              );
+              set({ tags: tagsArray });
+            } else {
+              set({ tags: [] });
+            }
+          },
+          (error) => {
+            console.error("Error cargando etiquetas desde Firebase", { error });
             set({ tags: [] });
           }
-        });
+        );
       } catch (error) {
         console.error("Error cargando etiquetas desde store", { error });
       }

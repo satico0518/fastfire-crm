@@ -11,7 +11,7 @@ import { useUiStore } from "../../stores/ui/ui.store";
 import { UserFormComponent } from "../../components/user-form/UserFormComponent";
 import { TabPanelProps } from "../../interfaces/Tabs";
 import UsersTable from "../../components/table/UsersTableComponent";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 import ProjectsTable from "../../components/table/ProjectsTableComponent";
 import { ProjectsFormComponent } from "../../components/projects-form/ProjectsFormComponent";
@@ -43,7 +43,7 @@ export const AdministratorPage = () => {
   const [tabsValue, setTabsValue] = React.useState(0);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
-  const user = useAuhtStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
   
   if (!user?.permissions?.includes('ADMIN')) return <UnauthorizedPage />
 

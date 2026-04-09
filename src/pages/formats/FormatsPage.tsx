@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Tab, Tabs } from "@mui/material";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { UnauthorizedPage } from "../unauthorized/UnauthorizedPage";
 import { FormatSelector } from "../../components/format-selector/FormatSelector";
 import { FormatResultsTable } from "../../components/format-results/FormatResultsTable";
@@ -27,7 +27,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const FormatsPage = () => {
-  const user = useAuhtStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
   const isAdmin = user?.permissions?.includes("ADMIN");
   const isFormater = user?.permissions?.includes("FORMATER");
   const canSeeResults = isAdmin || isFormater;

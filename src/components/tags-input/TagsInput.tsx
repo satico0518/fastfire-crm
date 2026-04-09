@@ -5,7 +5,7 @@ import { TaskService } from "../../services/task.service";
 import { Dispatch, SetStateAction } from "react";
 import { useUiStore } from "../../stores/ui/ui.store";
 import { useTagsStore } from "../../stores/tags/tags.store";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { TagsService } from "../../services/tags.service";
 import RemoveCircleOutlinedIcon from "@mui/icons-material/RemoveCircleOutlined";
 import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
@@ -27,7 +27,7 @@ export const TagsInput = ({
 }: TagsInputProps) => {
   const tags = useTagsStore((state) => state.tags);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
 
   const handleAddTag = (tag: string) => {
     if (!tags.some((t) => t === tag)) {

@@ -11,6 +11,7 @@ describe('UI Store', () => {
     expect(state.modal).toBeDefined();
     expect(state.snackbar).toBeDefined();
     expect(state.confirmation).toBeDefined();
+    expect(state.isSidebarCollapsed).toBe(false);
   });
 
   test('debe establecer isLoading correctamente', () => {
@@ -37,5 +38,13 @@ describe('UI Store', () => {
     const mockConfirmation = { open: true, title: 'Confirm?', text: 'Are you sure?', actions: null };
     useUiStore.getState().setConfirmation(mockConfirmation);
     expect(useUiStore.getState().confirmation).toEqual(mockConfirmation);
+  });
+
+  test('debe establecer isSidebarCollapsed correctamente', () => {
+    useUiStore.getState().setIsSidebarCollapsed(true);
+    expect(useUiStore.getState().isSidebarCollapsed).toBe(true);
+
+    useUiStore.getState().setIsSidebarCollapsed(false);
+    expect(useUiStore.getState().isSidebarCollapsed).toBe(false);
   });
 });

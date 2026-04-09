@@ -1,5 +1,6 @@
 import { useCitiesStore } from '../cities.store';
 import { CityAutocomplete } from '../../../services/cities.service';
+import { CitiesService } from '../../../services/cities.service';
 
 // Mock de CitiesService
 jest.mock('../../../services/cities.service', () => ({
@@ -15,6 +16,7 @@ jest.mock('../../../services/cities.service', () => ({
 describe('Cities Store', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useCitiesStore.setState({ cities: [] });
   });
 
   test('debe tener estado inicial correcto', () => {
@@ -30,5 +32,18 @@ describe('Cities Store', () => {
     ];
     useCitiesStore.getState().setCities(mockCities);
     expect(useCitiesStore.getState().cities).toEqual(mockCities);
+  });
+
+  test('debe manejar error cuando falla loadCities', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    (CitiesService.getCities as jest.Mock).mockRejectedValueOnce(new Error('Cities error'));
+
+    await useCitiesStore.getState().loadCities();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error caragndo cities desde store',
+      expect.objectContaining({ error: expect.any(Error) })
+    );
+    consoleSpy.mockRestore();
   });
 });

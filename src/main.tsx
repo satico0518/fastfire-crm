@@ -1,6 +1,6 @@
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 
 import App from "./App.tsx";
 import "./index.css";
@@ -20,13 +20,30 @@ declare global {
 }
 
 import { useUiStore } from "./stores/ui/ui.store";
+import { useAuthStore } from "./stores";
 
-const Main = () => {
+const PUBLIC_SHELL_HIDDEN_ROUTES = ["/login", "/public-format", "/public-format-results"];
+
+const shouldHidePrivateShell = (pathname: string) => {
+  return PUBLIC_SHELL_HIDDEN_ROUTES.some((route) => pathname.startsWith(route));
+};
+
+const MainContent = () => {
+  const location = useLocation();
+  const isAuth = useAuthStore((state) => state.isAuth);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isSidebarCollapsed = useUiStore((state) => state.isSidebarCollapsed);
 
+  const showPrivateShell = hasHydrated && isAuth && !shouldHidePrivateShell(location.pathname);
+
+  if (!showPrivateShell) {
+    return <App />;
+  }
+
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <>
       <Header
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen((s) => !s)}
@@ -49,12 +66,24 @@ const Main = () => {
           />
         )}
       </div>
+    </>
+  );
+};
+
+export const Main = () => {
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MainContent />
     </BrowserRouter>
   );
 };
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <Main />
-  </StrictMode>
-);
+const rootEl = document.getElementById("root");
+/* istanbul ignore next -- createRoot solo en runtime fuera de Jest */
+if (rootEl) {
+  createRoot(rootEl).render(
+    <StrictMode>
+      <Main />
+    </StrictMode>
+  );
+}

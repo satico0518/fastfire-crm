@@ -10,7 +10,7 @@ import {
   Alert, 
   CircularProgress 
 } from "@mui/material";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "../../services/auth.service";
 import { useState } from "react";
@@ -19,9 +19,9 @@ import { useUiStore } from "../../stores/ui/ui.store";
 
 export const LoginPage = () => {
   const [isError, setIsError] = useState<string | null>(null);
-  const setNewUser = useAuhtStore((state) => state.setNewUser);
-  const setIsAuth = useAuhtStore((state) => state.setIsAuth);
-  const setToken = useAuhtStore((state) => state.setToken);
+  const setNewUser = useAuthStore((state) => state.setNewUser);
+  const setIsAuth = useAuthStore((state) => state.setIsAuth);
+  const setToken = useAuthStore((state) => state.setToken);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const isLoading = useUiStore((state) => state.isLoading);
   const navigate = useNavigate();

@@ -14,7 +14,7 @@ import ColorLensOutlinedIcon from "@mui/icons-material/ColorLensOutlined";
 import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
 import { Chip } from "@mui/material";
 import { getUserNameByKey } from "../../utils/utils";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useUsersStore } from "../../stores/users/users.store";
 import { User } from "../../interfaces/User";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -26,9 +26,9 @@ import CloudinaryUploadWidget from "../cloudinary/CloudinaryWidget";
 
 export default function ProfileMenu() {
   const users = useUsersStore((state) => state.users);
-  const currentUser = useAuhtStore((state) => state.user);
-  const setNewUser = useAuhtStore((state) => state.setNewUser);
-  const setIsAuth = useAuhtStore((state) => state.setIsAuth);
+  const currentUser = useAuthStore((state) => state.user);
+  const setNewUser = useAuthStore((state) => state.setNewUser);
+  const setIsAuth = useAuthStore((state) => state.setIsAuth);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
