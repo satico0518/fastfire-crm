@@ -30,6 +30,7 @@ export const FormatsPage = () => {
   const user = useAuhtStore((state) => state.user);
   const isAdmin = user?.permissions?.includes("ADMIN");
   const isFormater = user?.permissions?.includes("FORMATER");
+  const canSeeResults = isAdmin || isFormater;
 
   const hasAccess = isAdmin || isFormater;
   if (!hasAccess) return <UnauthorizedPage />;
@@ -61,7 +62,7 @@ export const FormatsPage = () => {
           variant={window.innerWidth < 1101 ? "fullWidth" : "standard"}
         >
           <Tab label="Formatos" id="formats-tab-0" aria-controls="formats-tabpanel-0" />
-          {isAdmin && (
+          {canSeeResults && (
             <Tab label="Resultados" id="formats-tab-1" aria-controls="formats-tabpanel-1" />
           )}
         </Tabs>
@@ -71,7 +72,7 @@ export const FormatsPage = () => {
         <FormatSelector />
       </TabPanel>
 
-      {isAdmin && (
+      {canSeeResults && (
         <TabPanel value={tabValue} index={1}>
           <FormatResultsTable />
         </TabPanel>
