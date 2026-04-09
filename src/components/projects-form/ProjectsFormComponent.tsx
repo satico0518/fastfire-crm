@@ -53,8 +53,6 @@ export const ProjectsFormComponent = ({
         });
       else response = await ProjectService.createProject(data);
 
-      setIsLoading(true);
-
       if (response.result === "OK") {
         setSnackbar({
           ...snackbar,
@@ -72,7 +70,6 @@ export const ProjectsFormComponent = ({
           severity: "error",
         });
       }
-      setIsLoading(false);
     } catch (error) {
       console.error(
         `Error ${editingProject ? "modificando" : "creando"} proyecto.`,
@@ -87,6 +84,7 @@ export const ProjectsFormComponent = ({
         } proyecto.`,
         severity: "error",
       });
+    } finally {
       setIsLoading(false);
     }
   };

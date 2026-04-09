@@ -62,7 +62,7 @@ import {
 import { useUsersStore } from "../../stores/users/users.store";
 import { TaskService } from "../../services/task.service";
 import { RefObject, useEffect, useRef, useState } from "react";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useWorkgroupStore } from "../../stores/workgroups/workgroups.store";
 import { Workgroup } from "../../interfaces/Workgroup";
 import { TaskCreatorRowComponent } from "../task-creator-row/TaskCreatorRowComponent";
@@ -96,9 +96,10 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   const setConfirmation = useUiStore((state) => state.setConfirmation);
   const setModal = useUiStore((state) => state.setModal);
   const tasks = useTasksStore((state) => state.tasks);
+  const loadTasks = useTasksStore((state) => state.loadTasks);
   const users = useUsersStore((state) => state.users);
   const workgroups = useWorkgroupStore((state) => state.workgroups);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
   const [tagAnchorEl, setTagAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -131,6 +132,12 @@ export default function TasksTable({ workgroup }: TasksTableProps) {
   useEffect(() => {
     TaskService.cleanupDeletedTasks();
   }, []);
+
+  useEffect(() => {
+    if (typeof loadTasks === "function") {
+      loadTasks();
+    }
+  }, [loadTasks, currentUser?.key]);
 
 
   const translateHistoryAction = (action: string) => {

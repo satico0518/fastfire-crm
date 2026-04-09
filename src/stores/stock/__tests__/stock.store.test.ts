@@ -21,6 +21,7 @@ jest.mock('firebase/database', () => ({
 describe('Stock Store', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useStockStore.setState({ stock: [] });
   });
 
   test('debe tener estado inicial correcto', () => {
@@ -43,5 +44,32 @@ describe('Stock Store', () => {
     ];
     useStockStore.getState().setStock(mockStock);
     expect(useStockStore.getState().stock).toEqual(mockStock);
+  });
+
+  test('debe dejar stock vacío cuando snapshot no es objeto válido', async () => {
+    const { onValue } = require('firebase/database');
+    (onValue as jest.Mock).mockImplementationOnce((_ref, callback) => {
+      callback({ val: () => null });
+      return jest.fn();
+    });
+
+    await useStockStore.getState().loadStock();
+    expect(useStockStore.getState().stock).toEqual([]);
+  });
+
+  test('debe manejar errores de carga y loguear en consola', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const { ref } = require('firebase/database');
+    (ref as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('Firebase stock error');
+    });
+
+    await useStockStore.getState().loadStock();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error cargando inventario desde store',
+      expect.objectContaining({ error: expect.any(Error) })
+    );
+    consoleSpy.mockRestore();
   });
 });

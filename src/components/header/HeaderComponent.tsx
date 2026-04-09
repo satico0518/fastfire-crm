@@ -1,5 +1,5 @@
 import logo from "../../assets/img/Logo.jpg";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import ProfileMenu from "../profile-menu/ProfileMenuComponent";
 
 type HeaderProps = {
@@ -8,7 +8,7 @@ type HeaderProps = {
 };
 
 export const Header = ({ isMobileMenuOpen, onToggleMobileMenu }: HeaderProps) => {
-  const isAuth = useAuhtStore((state) => state.isAuth);
+  const isAuth = useAuthStore((state) => state.isAuth);
 
   if (!isAuth) return null;
 

@@ -20,6 +20,7 @@ import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
+import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 
 import { Workgroup } from "../../interfaces/Workgroup";
 import { useUiStore } from "../../stores/ui/ui.store";
@@ -31,14 +32,14 @@ import { getUserNameByKey } from "../../utils/utils";
 import { User } from "../../interfaces/User";
 import { WorkgroupsFormComponent } from "../workgroups-form/WorkgroupsFormComponent";
 import { TasksFormComponent } from "../tasks-form/TasksFormComponent";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { useTasksStore } from "../../stores/tasks/tasks.store";
 import { Task } from "../../interfaces/Task";
 
 const paginationModel = { page: 0, pageSize: 15 };
 
 export default function WorksgroupTable() {
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const modal = useUiStore((state) => state.modal);
   const setModal = useUiStore((state) => state.setModal);
   const setIsLoading = useUiStore((state) => state.setIsLoading);
@@ -50,11 +51,10 @@ export default function WorksgroupTable() {
 
   const isAdmin = currentUser?.permissions.includes("ADMIN");
   const workgroupsByRole = (): Workgroup[] => {
-    if (isAdmin) return workgroups?.filter((wg) => wg.isActive) as Workgroup[];
+    if (isAdmin) return (workgroups as Workgroup[]) || [];
 
     return workgroups
-      ?.filter((wg) => currentUser?.workgroupKeys.some((key) => wg.key === key))
-      .filter((wg) => wg.isActive) as Workgroup[];
+      ?.filter((wg) => currentUser?.workgroupKeys.some((key) => wg.key === key)) as Workgroup[];
   };
 
   const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -127,6 +127,24 @@ export default function WorksgroupTable() {
     setConfirmation({ open: false, title: "", text: "", actions: null });
   };
 
+  const handleReactivateWorkgroup = async (workgroup: Workgroup) => {
+    const response = await WorkgroupService.reactivateWorkgroup(workgroup);
+
+    if (response.result === "OK") {
+      setSnackbar({
+        open: true,
+        message: response.message as string,
+        severity: "success",
+      });
+    } else {
+      setSnackbar({
+        open: true,
+        message: response.errorMessage as string,
+        severity: "error",
+      });
+    }
+  };
+
   const handleDeleteConfirmation = (workgroup: Workgroup) => {
     setConfirmation({
       open: true,
@@ -167,6 +185,25 @@ export default function WorksgroupTable() {
       resizable: false,
       align: "right",
       getActions: (params: GridRowParams<Workgroup>) => [
+        ...(params.row.isActive === false
+          ? [
+              <GridActionsCellItem
+                key="reactivate"
+                icon={<RestartAltOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+                onClick={() => handleReactivateWorkgroup(params.row)}
+                label="Reactivar"
+                sx={{
+                  color: '#ff9f0a',
+                  background: 'rgba(255,159,10,0.1)',
+                  border: '1px solid rgba(255,159,10,0.2)',
+                  borderRadius: '8px',
+                  padding: '4px',
+                  mx: 0.1,
+                  '&:hover': { background: 'rgba(255,159,10,0.2)' }
+                }}
+              />,
+            ]
+          : []),
         <GridActionsCellItem
           key="task"
           icon={<AddTaskOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
@@ -212,6 +249,7 @@ export default function WorksgroupTable() {
           icon={<DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
           onClick={() => handleDeleteConfirmation(params.row)}
           label="Eliminar"
+          disabled={params.row.isActive === false}
           sx={{
             color: '#ff453a',
             background: 'rgba(255,69,58,0.1)',
@@ -229,10 +267,33 @@ export default function WorksgroupTable() {
       headerName: "Nombre",
       flex: 1,
       renderCell: ({ value }: GridRenderCellParams<Workgroup>) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', height: '100%', fontWeight: 600, color: 'white' }}>
-          {value}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', height: '100%', fontWeight: 600, color: 'white' }}>
+          <span>{value}</span>
         </Box>
       )
+    },
+    {
+      field: "status",
+      headerName: "Estado",
+      width: 140,
+      sortable: false,
+      filterable: false,
+      renderCell: (params: GridRenderCellParams<Workgroup>) => {
+        const isActive = params.row.isActive !== false;
+        return (
+          <Chip
+            size="small"
+            label={isActive ? "Activo" : "Inactivo"}
+            sx={{
+              fontWeight: 700,
+              borderRadius: '8px',
+              color: isActive ? '#30d158' : '#ff9f0a',
+              background: isActive ? 'rgba(48,209,88,0.12)' : 'rgba(255,159,10,0.12)',
+              border: isActive ? '1px solid rgba(48,209,88,0.35)' : '1px solid rgba(255,159,10,0.35)',
+            }}
+          />
+        );
+      },
     },
     {
       field: "memberKeys",
@@ -345,8 +406,18 @@ export default function WorksgroupTable() {
           },
           '& .MuiDataGrid-row:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          }
+          },
+          '& .MuiDataGrid-row.row-inactive': {
+            backgroundColor: 'rgba(255,159,10,0.08)',
+          },
+          '& .MuiDataGrid-row.row-inactive .MuiDataGrid-cell': {
+            color: 'rgba(255,255,255,0.7)',
+          },
+          '& .MuiDataGrid-row.row-inactive:hover': {
+            backgroundColor: 'rgba(255,159,10,0.14)',
+          },
         }}
+        getRowClassName={(params) => (params.row.isActive === false ? 'row-inactive' : '')}
       />
     </Paper>
   );

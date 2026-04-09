@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route } from "react-router-dom";
 
 import { TasksPage } from "../pages/tasks-groups/TasksGroupsPage";
 import { HomePage } from "../pages/home/HomePage";
@@ -16,13 +16,21 @@ import { FormatsPage } from "../pages/formats/FormatsPage";
 import { AgendaMantenimientosPage } from "../pages/agenda-mantenimientos/AgendaMantenimientosPage";
 import { PublicFormatPage } from "../pages/formats/PublicFormatPage";
 import { PublicFormatResultsPage } from "../pages/formats/PublicFormatResultsPage";
+import { useAuthStore } from "../stores";
 
 export const AppRouter = () => {
   const isLoading = useUiStore(state => state.isLoading);
+  const isAuth = useAuthStore(state => state.isAuth);
+  const hasHydrated = useAuthStore(state => state.hasHydrated);
+
+  const fallbackRedirect = hasHydrated
+    ? <Navigate to={isAuth ? "/home" : "/login"} replace />
+    : null;
 
   return (
     <>
       <Routes>
+        <Route path="/" element={fallbackRedirect} />
         <Route element={<ProtectedRoute />}>
           <Route path="/tasks" element={<TasksPage />} />
         </Route>
@@ -50,9 +58,7 @@ export const AppRouter = () => {
         </Route>
         <Route path="/public-format/:formatId" element={<PublicFormatPage />} />
         <Route path="/public-format-results/:formatId" element={<PublicFormatResultsPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="*" element={<LoginPage />} />
-        </Route>
+        <Route path="*" element={fallbackRedirect} />
       </Routes>
       <Backdrop
         sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}

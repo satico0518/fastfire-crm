@@ -25,7 +25,7 @@ const customStorage: StateStorage = {
   }
 }
 
-export const useAuhtStore = create<AuthState>()(
+export const useAuthStore = create<AuthState>()(
   persist(
     devtools((set) => ({
       user: null,

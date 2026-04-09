@@ -28,5 +28,8 @@ dist-ssr
 .env.local
 .env.*.local
 
-# Coverage reports
+# Testing
 coverage/
+*.txt
+test-calc.js
+*.tsbuildinfo

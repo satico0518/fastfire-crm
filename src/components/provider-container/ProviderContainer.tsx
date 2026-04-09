@@ -26,7 +26,7 @@ import {
   LicitationExcel,
   ProviderLicitation,
 } from "../../interfaces/Licitation";
-import { useAuhtStore } from "../../stores";
+import { useAuthStore } from "../../stores";
 import { PurchaseService } from "../../services/purchase.service";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Item } from "../../interfaces/Item";
@@ -63,7 +63,7 @@ export const ProviderContainer = () => {
   const [items, setItems] = useState<LicitationExcel[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const setSnackbar = useUiStore((state) => state.setSnackbar);
-  const currentUser = useAuhtStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.user);
   const stockToTender = useStockStore((state) => state.stock).filter(
     (s) => s.showInTender
   );

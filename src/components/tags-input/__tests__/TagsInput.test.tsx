@@ -1,78 +1,160 @@
-import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { TagsInput } from '../TagsInput';
-import { Task } from '../../../interfaces/Task';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { TagsInput } from "../TagsInput";
+import { TaskService } from "../../../services/task.service";
+import { TagsService } from "../../../services/tags.service";
+import userEvent from "@testing-library/user-event";
 
-// Mock de los stores
-jest.mock('../../../stores/tags/tags.store', () => ({
-  useTagsStore: jest.fn((selector) => {
-    const state = {
-      tags: ['tag1', 'tag2', 'tag3', 'tag4'],
-      loadTags: jest.fn(),
-      setTags: jest.fn()
-    };
-    return selector ? selector(state) : state;
-  })
+jest.mock("../../../services/task.service", () => ({
+  TaskService: {
+    updateTask: jest.fn(),
+  },
 }));
 
-jest.mock('../../../stores/ui/ui.store', () => ({
-  useUiStore: jest.fn((selector) => {
-    const state = {
-      snackbar: { open: false, message: '', severity: 'success' },
-      setSnackbar: jest.fn(),
-      confirmation: { open: false, title: '', content: '', onConfirm: jest.fn() },
-      setConfirmation: jest.fn()
-    };
-    return selector ? selector(state) : state;
-  })
+jest.mock("../../../services/tags.service", () => ({
+  TagsService: {
+    createTag: jest.fn(),
+  },
 }));
 
-const mockTask: Task = {
-  id: '1',
-  key: '1',
-  name: 'Tarea de prueba',
-  tags: ['tag1', 'tag2'],
-  priority: 'NORMAL',
-  status: 'TODO',
-  createdDate: Date.now(),
-  dueDate: '',
-  notes: '',
-  history: [],
-  createdByUserKey: 'user1',
-  workgroupKeys: ['wg1'],
-  ownerKeys: ['user1']
-};
+let mockTags = ["tag1", "tag2"];
+jest.mock("../../../stores/tags/tags.store", () => ({
+  useTagsStore: jest.fn((selector) =>
+    selector({
+      tags: mockTags,
+    })
+  ),
+}));
 
-describe('TagsInput', () => {
+const mockSetSnackbar = jest.fn();
+jest.mock("../../../stores/ui/ui.store", () => ({
+  useUiStore: jest.fn((selector) =>
+    selector({
+      setSnackbar: mockSetSnackbar,
+    })
+  ),
+}));
+
+let mockUser: any = { key: "u1" };
+jest.mock("../../../stores", () => ({
+  useAuthStore: jest.fn((selector) =>
+    selector({
+      user: mockUser,
+    })
+  ),
+}));
+
+jest.mock("../../dialogs/DialogueCustomContent", () => ({
+  DialogueCustomContent: ({ title, open, content, okText, okAction }: any) => {
+    if (!open) return null;
+    return (
+      <div data-testid="mock-dialog">
+        <h2>{title}</h2>
+        {content}
+        <button onClick={okAction}>{okText}</button>
+      </div>
+    );
+  },
+}));
+
+describe("TagsInput", () => {
+  const mockTask: any = { id: 1, name: "Test", tags: ["tag1"] };
   const mockSetSelectedTags = jest.fn();
   const mockSetOpenTagsDialog = jest.fn();
 
-  test('renderiza el componente correctamente', () => {
-    render(
-      <TagsInput
-        selectedTask={mockTask}
-        setSelectedTags={mockSetSelectedTags}
-        openTagsDialog={true}
-        selectedTags={[]}
-        setOpenTagsDialog={mockSetOpenTagsDialog}
-      />
-    );
-    
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  test('muestra las etiquetas seleccionadas', () => {
-    render(
+  const renderComponent = (selectedTags = ["tag1"]) => {
+    return render(
       <TagsInput
         selectedTask={mockTask}
         setSelectedTags={mockSetSelectedTags}
         openTagsDialog={true}
-        selectedTags={['tag1', 'tag2']}
         setOpenTagsDialog={mockSetOpenTagsDialog}
+        selectedTags={selectedTags}
       />
     );
+  };
+
+  it("renderiza contenido y chips existentes", () => {
+    renderComponent();
+    expect(screen.getByText("tag1")).toBeInTheDocument();
+  });
+
+  it("elimina tag local y en db simulado", () => {
+    renderComponent();
+    // Encuentra el botón de eliminar del chip
+    const deleteBtn = screen.getByTestId("CancelIcon"); // Default delete icon on chip
+    fireEvent.click(deleteBtn);
+    expect(TaskService.updateTask).toHaveBeenCalled();
+  });
+
+  it("maneja error en eliminar tag de tarea", async () => {
+    (TaskService.updateTask as jest.Mock).mockRejectedValueOnce(new Error("Net error"));
+    renderComponent();
+    const deleteBtn = screen.getByTestId("CancelIcon");
+    fireEvent.click(deleteBtn);
     
-    expect(screen.getByText('tag1')).toBeInTheDocument();
-    expect(screen.getByText('tag2')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "error" })
+      );
+    });
+  });
+
+  it("elimina etiqueta usando el boton remove de from DB", () => {
+    renderComponent(["tag1", "tag2"]);
+    const removeBtn = screen.getAllByTestId("RemoveCircleOutlinedIcon")[0];
+    fireEvent.click(removeBtn.parentElement!); // the IconButton
+    expect(mockSetSelectedTags).toHaveBeenCalled();
+    expect(mockSetSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "success" })
+    );
+  });
+
+  it("agrega un nuevo tag y llama createTag si no existe", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    // Type a new tag "new_tag" in autocomplete textfield
+    const input = screen.getByRole("combobox");
+    
+    await user.type(input, "new_tag");
+    
+    // There is an Add button near it
+    const addBtn = screen.getByTestId("AddCircleOutlinedIcon");
+    fireEvent.click(addBtn.parentElement!);
+
+    expect(TagsService.createTag).toHaveBeenCalledWith("new_tag");
+    expect(mockSetSelectedTags).toHaveBeenCalled(); // Should update with new_tag
+  });
+
+  it("guarda tags editados usando okAction con exito", async () => {
+    (TaskService.updateTask as jest.Mock).mockResolvedValueOnce({ result: "OK" });
+    renderComponent();
+    
+    fireEvent.click(screen.getByText("Guardar"));
+    
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "success" })
+      );
+    });
+    expect(mockSetSelectedTags).toHaveBeenCalledWith([]);
+  });
+
+  it("guarda tags pero recibe error desde el server", async () => {
+    (TaskService.updateTask as jest.Mock).mockResolvedValueOnce({ result: "ERROR", errorMessage: "Bad" });
+    renderComponent();
+    
+    fireEvent.click(screen.getByText("Guardar"));
+    
+    await waitFor(() => {
+      expect(mockSetSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: "error", message: "Error editando tarea." })
+      );
+    });
   });
 });
