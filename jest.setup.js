@@ -8,6 +8,16 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+const { TextEncoder, TextDecoder } = require('util');
+
+if (!global.TextEncoder) {
+  global.TextEncoder = TextEncoder;
+}
+
+if (!global.TextDecoder) {
+  global.TextDecoder = TextDecoder;
+}
+
 // Configuración de Jest - Importar testing library después de los mocks globales
 require('@testing-library/jest-dom');
 
@@ -46,17 +56,23 @@ jest.mock('firebase/app', () => ({
   getApps: jest.fn(() => []),
 }));
 
-// Mock de window.matchMedia
+const createMatchMedia = (query) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: jest.fn(), // deprecated
+  removeListener: jest.fn(), // deprecated
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+});
+
+// Mock de window.matchMedia estable para tests con resetMocks=true
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+  value: (query) => createMatchMedia(query),
+});
+
+beforeEach(() => {
+  window.matchMedia = (query) => createMatchMedia(query);
 });

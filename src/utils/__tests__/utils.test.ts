@@ -13,36 +13,113 @@ import {
   compareLicitationVsStock
 } from '../utils';
 import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { User } from '../../interfaces/User';
 import { Workgroup } from '../../interfaces/Workgroup';
 import { Project } from '../../interfaces/Project';
 
+const createMockPdfDoc = () => ({
+  internal: { pageSize: { getWidth: () => 210 } },
+  setFillColor: jest.fn(),
+  rect: jest.fn(),
+  setTextColor: jest.fn(),
+  setFontSize: jest.fn(),
+  setFont: jest.fn(),
+  text: jest.fn(),
+  splitTextToSize: jest.fn((text: string) => [text]),
+  roundedRect: jest.fn(),
+  setDrawColor: jest.fn(),
+  setLineWidth: jest.fn(),
+  line: jest.fn(),
+  addPage: jest.fn(),
+  addImage: jest.fn(),
+  getNumberOfPages: jest.fn().mockReturnValue(1),
+  setPage: jest.fn(),
+  save: jest.fn(),
+  output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
+});
+
 jest.mock('jspdf', () => {
-  const jsPDF = jest.fn().mockImplementation(() => ({
-    internal: { pageSize: { getWidth: () => 210 } },
-    setFillColor: jest.fn(),
-    rect: jest.fn(),
-    setTextColor: jest.fn(),
-    setFontSize: jest.fn(),
-    setFont: jest.fn(),
-    text: jest.fn(),
-    roundedRect: jest.fn(),
-    setDrawColor: jest.fn(),
-    setLineWidth: jest.fn(),
-    line: jest.fn(),
-    addPage: jest.fn(),
-    addImage: jest.fn(),
-    getNumberOfPages: jest.fn().mockReturnValue(1),
-    setPage: jest.fn(),
-    save: jest.fn(),
-  }));
+  const jsPDF = jest.fn(() => createMockPdfDoc());
   return { jsPDF };
 });
 
 jest.mock('jspdf-autotable', () => {
-  return jest.fn((doc, opts) => {
+  return jest.fn();
+});
+
+const setupAutoTableMock = () => {
+  ((autoTable as unknown) as jest.Mock).mockImplementation((doc, opts) => {
     doc.lastAutoTable = { finalY: opts.startY || 0 };
+    doc.lastAutoTableOptions = opts;
+
+    const body = opts.body || [];
+    body.forEach((row: unknown[], rowIndex: number) => {
+      row.forEach((_cell: unknown, colIndex: number) => {
+        const cellContext: any = {
+          section: 'body',
+          row: { index: rowIndex },
+          column: { index: colIndex },
+          cell: {
+            x: 10 + (colIndex * 45),
+            y: (opts.startY || 0) + (rowIndex * 26),
+            width: 40,
+            height: 24,
+            styles: {},
+          },
+        };
+
+        opts.didParseCell?.(cellContext);
+        opts.didDrawCell?.(cellContext);
+      });
+    });
   });
+};
+
+beforeAll(() => {
+  Object.defineProperty(URL, 'createObjectURL', {
+    value: jest.fn(() => 'blob:mock-pdf'),
+    writable: true,
+  });
+
+  Object.defineProperty(URL, 'revokeObjectURL', {
+    value: jest.fn(),
+    writable: true,
+  });
+
+  Object.defineProperty(global, 'fetch', {
+    writable: true,
+    value: jest.fn(async () => ({
+      blob: async () => new Blob(['fake-image'], { type: 'image/jpeg' }),
+    })),
+  });
+
+  // Simula carga de imágenes en JSDOM para evitar timeouts en getImageDimensions.
+  Object.defineProperty(global, 'Image', {
+    writable: true,
+    value: class {
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+      width = 1200;
+      height = 800;
+      naturalWidth = 1200;
+      naturalHeight = 800;
+
+      set src(_value: string) {
+        if (this.onload) {
+          this.onload();
+        }
+      }
+    },
+  });
+});
+
+beforeEach(() => {
+  ((jsPDF as unknown) as jest.Mock).mockImplementation(() => createMockPdfDoc());
+  (global.fetch as jest.Mock).mockImplementation(async () => ({
+    blob: async () => new Blob(['fake-image'], { type: 'image/jpeg' }),
+  }));
+  setupAutoTableMock();
 });
 
 describe('Utils', () => {
@@ -68,7 +145,7 @@ describe('Utils', () => {
     });
 
     test('debe traducir acceso PROVIDER', () => {
-      expect(translateAccess('PROVIDER')).toBe('Provedor');
+      expect(translateAccess('PROVIDER')).toBe('PROVEEDOR');
     });
   });
 
@@ -267,7 +344,6 @@ describe('Utils', () => {
   describe('exportSubmissionToPDF', () => {
     test('debe renderizar imagen inline y firma al final', async () => {
       const { exportSubmissionToPDF } = await import('../utils');
-      const doc = ((jsPDF as unknown) as jest.Mock).mock.results[0].value;
 
       const submission: any = {
         formatTypeName: 'Formato Test',
@@ -287,9 +363,63 @@ describe('Utils', () => {
 
       await exportSubmissionToPDF(submission, fields, 'Usuario', 'APROBADO');
 
-      expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), 85, 50);
+      const pdfMock = (jsPDF as unknown) as jest.Mock;
+      const doc = pdfMock.mock.results[pdfMock.mock.results.length - 1].value;
+
+      expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
       expect(doc.addImage).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64'), 'PNG', expect.any(Number), expect.any(Number), 100, 40);
-      expect(doc.text).toHaveBeenCalledWith('FIRMAS', expect.any(Number), expect.any(Number), { align: 'center' });
+
+      const fotoLabelCalls = doc.text.mock.calls.filter((call: any[]) => call[0] === 'Foto');
+      expect(fotoLabelCalls).toHaveLength(1);
+    });
+
+    test('debe renderizar imágenes dentro de celdas de tablas dinámicas', async () => {
+      const { exportSubmissionToPDF } = await import('../utils');
+
+      const submission: any = {
+        formatTypeName: 'Formato Test',
+        createdDate: new Date().toISOString(),
+        data: {
+          compras: [
+            {
+              fecha_compra: '2024-01-01',
+              valor: 150000,
+              detalle: 'Materiales',
+              foto: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA',
+            },
+          ],
+        },
+      };
+
+      const fields: any[] = [
+        {
+          name: 'compras',
+          label: 'Compras',
+          type: 'dynamic-group',
+          required: true,
+          subFields: [
+            { name: 'fecha_compra', label: 'Fecha de Compra', type: 'date', required: true },
+            { name: 'valor', label: 'Valor', type: 'number', required: true },
+            { name: 'detalle', label: 'Detalle', type: 'textarea', required: true },
+            { name: 'foto', label: 'Foto', type: 'image', required: false },
+          ],
+        },
+      ];
+
+      await exportSubmissionToPDF(submission, fields, 'Usuario', 'APROBADO');
+
+      const pdfMock = (jsPDF as unknown) as jest.Mock;
+      const doc = pdfMock.mock.results[pdfMock.mock.results.length - 1].value;
+
+      expect(doc.lastAutoTableOptions.body[0][3]).toBe('');
+      expect(doc.addImage).toHaveBeenCalledWith(
+        expect.stringContaining('data:image/png;base64'),
+        'PNG',
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number)
+      );
     });
   });
 

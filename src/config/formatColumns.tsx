@@ -165,7 +165,7 @@ export const getColumnsForFormat = (
             }
             return 0;
           },
-          valueFormatter: (value: number) => `$ ${Number(value).toLocaleString()}`,
+          valueFormatter: (value: number) => `$ ${Number(value).toLocaleString('es-CO')}`,
         },
         {
           field: "compras_fotos",
