@@ -9,6 +9,13 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import EmojiFlagsOutlinedIcon from "@mui/icons-material/EmojiFlagsOutlined";
 
+const SUPPORTED_PDF_IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/gif",
+]);
+
 export const formatToCOP = (value: number): string => {
   const options: Intl.NumberFormatOptions = {
     style: "currency",
@@ -376,21 +383,79 @@ export const compareLicitationVsStock = (
 };
 
 // Helper function to load image and convert to base64
+const isSupportedPdfImageDataUrl = (value: string): boolean => {
+  const match = value.trim().match(/^data:(image\/[a-z0-9.+-]+);base64,/i);
+  if (!match) return false;
+  return SUPPORTED_PDF_IMAGE_MIME_TYPES.has(match[1].toLowerCase());
+};
+
+const formatPdfTableCellValue = (value: unknown): string => {
+  if (value === undefined || value === null || value === "") return "-";
+  if (typeof value === "string" && isImageValue(value)) return "[Imagen]";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+};
+
+const formatCurrencyCOP = (value: number): string => {
+  return `$ ${value.toLocaleString("es-CO")}`;
+};
+
+const convertImageToPdfSafeDataUrl = async (source: string): Promise<string | null> => {
+  if (typeof document === "undefined" || typeof Image === "undefined") return source;
+
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth || image.width;
+        canvas.height = image.naturalHeight || image.height;
+
+        const context = canvas.getContext("2d");
+        if (!context) {
+          resolve(source);
+          return;
+        }
+
+        context.drawImage(image, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.92));
+      } catch (error) {
+        console.error("Error converting image for PDF:", error);
+        resolve(source);
+      }
+    };
+    image.onerror = () => resolve(null);
+    image.src = source;
+  });
+};
+
 const loadImageAsBase64 = async (url: string): Promise<string | null> => {
   try {
     // If already base64, return as is
     if (url.startsWith('data:image/')) {
-      return url;
+      if (isSupportedPdfImageDataUrl(url)) {
+        return url;
+      }
+
+      return convertImageToPdfSafeDataUrl(url);
     }
     // Fetch image and convert to base64
     const response = await fetch(url);
     const blob = await response.blob();
-    return new Promise((resolve, reject) => {
+    const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
+
+    const mimeType = blob.type.toLowerCase();
+    if (mimeType && !SUPPORTED_PDF_IMAGE_MIME_TYPES.has(mimeType)) {
+      return convertImageToPdfSafeDataUrl(base64);
+    }
+
+    return base64;
   } catch (error) {
     console.error('Error loading image:', error);
     return null;
@@ -723,6 +788,7 @@ export const exportSubmissionToPDF = async (
 
       const isObservation = field.name.endsWith("_obs");
       const fieldIndent = isObservation ? indent + 5 : indent;
+      const isInlineImageField = field.type === 'image' || isImageValue(value);
 
       // Handle Signature separately
       if (field.type === 'signature') {
@@ -760,6 +826,12 @@ export const exportSubmissionToPDF = async (
         continue;
       }
 
+      // Image rendering (single label handled inside renderImageInline)
+      if (isInlineImageField) {
+        await renderImageInline(doc, field.label, String(value), currentYRef, margin + fieldIndent);
+        continue;
+      }
+
       // Label with wrapping
       doc.setTextColor(48, 209, 88);
       doc.setFontSize(9);
@@ -770,22 +842,81 @@ export const exportSubmissionToPDF = async (
       currentYRef.value += (splitLabel.length * 4) + 1;
 
       // Value rendering
-      if (field.type === 'image' || isImageValue(value)) {
-        await renderImageInline(doc, field.label, String(value), currentYRef, margin + fieldIndent);
-      } else if (Array.isArray(value)) {
+      if (Array.isArray(value)) {
         // Handle Dynamic Groups or simple arrays
         if (value.length > 0 && typeof value[0] === 'object') {
-           // Reuse existing autoTable logic for arrays...
-           // (Simplifying for brevity in this replace call, but keeping core logic)
            const keys = Object.keys(value[0]);
-           const rows = value.map((item: any) => keys.map(k => String(item[k] || '-')));
+           const imageColumns = new Set<number>();
+           const imageCellValues: Record<string, string> = {};
+
+           if (field.type === "dynamic-group" && field.subFields?.length) {
+             keys.forEach((key, idx) => {
+               const subField = field.subFields?.find((f: FormatField) => f.name === key);
+               if (subField?.type === "image") {
+                 imageColumns.add(idx);
+               }
+             });
+           }
+
+           const rows = await Promise.all(
+             value.map(async (item: any, rowIndex: number) => {
+               return Promise.all(
+                 keys.map(async (key, colIndex) => {
+                   const rawValue = item?.[key];
+
+                   if (typeof rawValue === "string" && isImageValue(rawValue)) {
+                     imageColumns.add(colIndex);
+                     const base64 = await loadImageAsBase64(rawValue);
+                     if (base64) {
+                       imageCellValues[`${rowIndex}-${colIndex}`] = base64;
+                       return "";
+                     }
+                     return "[Imagen no disponible]";
+                   }
+
+                   return formatPdfTableCellValue(rawValue);
+                 })
+               );
+             })
+           );
+
            autoTable(doc, {
              head: [keys.map(k => k.replace(/_/g, ' ').toUpperCase())],
              body: rows,
              startY: currentYRef.value,
              margin: { left: margin + fieldIndent },
-             styles: { fontSize: 8 },
-             headStyles: { fillColor: [28, 28, 30] }
+             styles: { fontSize: 8, valign: "middle" },
+             headStyles: { fillColor: [28, 28, 30] },
+             didParseCell: (data: any) => {
+               if (data.section !== "body") return;
+               if (imageColumns.has(data.column.index)) {
+                 data.cell.styles.minCellHeight = Math.max(data.cell.styles.minCellHeight || 0, 24);
+               }
+             },
+             didDrawCell: (data: any) => {
+               if (data.section !== "body") return;
+
+               const imageBase64 = imageCellValues[`${data.row.index}-${data.column.index}`];
+               if (!imageBase64) return;
+
+               const padding = 1.5;
+               const maxW = Math.max(0, data.cell.width - (padding * 2));
+               const maxH = Math.max(0, data.cell.height - (padding * 2));
+               if (!maxW || !maxH) return;
+
+               const targetRatio = 1.5;
+               let imgW = Math.min(maxW, maxH * targetRatio);
+               let imgH = imgW / targetRatio;
+
+               if (imgH > maxH) {
+                 imgH = maxH;
+                 imgW = imgH * targetRatio;
+               }
+
+               const x = data.cell.x + (data.cell.width - imgW) / 2;
+               const y = data.cell.y + (data.cell.height - imgH) / 2;
+               doc.addImage(imageBase64, getImageFormat(imageBase64), x, y, imgW, imgH);
+             },
            });
            currentYRef.value = (doc as any).lastAutoTable.finalY + 8;
         } else {
@@ -801,12 +932,17 @@ export const exportSubmissionToPDF = async (
         // Simple value
         let displayValue = String(value);
         const lowerLabel = field.label.toLowerCase();
+        const lowerName = field.name.toLowerCase();
         const isCurrency = (lowerLabel.includes('valor') || lowerLabel.includes('precio') || 
                            lowerLabel.includes('monto') || lowerLabel.includes('costo')) && 
                            !lowerLabel.includes('cantidad');
+        const isCalculatedCurrency =
+          field.type === 'calculated-sum' ||
+          lowerName.includes('total_legalizacion') ||
+          (lowerLabel.includes('total') && lowerLabel.includes('legaliz'));
         
-        if (!isNaN(Number(value)) && value !== '' && isCurrency) {
-          displayValue = `$ ${Number(value).toLocaleString('es-CO')}`;
+        if (!isNaN(Number(value)) && value !== '' && (isCurrency || isCalculatedCurrency)) {
+          displayValue = formatCurrencyCOP(Number(value));
         }
         
         doc.setTextColor(60, 60, 60);
@@ -835,6 +971,15 @@ export const exportSubmissionToPDF = async (
   
   // Save PDF
   const fileName = `${submission.formatTypeName.replace(/\s+/g, '_').toLowerCase()}_${new Date(submission.createdDate).toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
+  const pdfBlob = doc.output("blob");
+  const downloadUrl = URL.createObjectURL(pdfBlob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
   return fileName;
 };

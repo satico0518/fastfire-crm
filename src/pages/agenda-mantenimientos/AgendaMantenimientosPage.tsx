@@ -221,6 +221,11 @@ export const AgendaMantenimientosPage = () => {
       }
       result[dateKey].push(schedule);
     });
+
+    Object.keys(result).forEach(dateKey => {
+      result[dateKey].sort((a, b) => dayjs(a.dateStr).valueOf() - dayjs(b.dateStr).valueOf());
+    });
+
     return result;
   }, [schedulesData]);
 

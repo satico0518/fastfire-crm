@@ -78,6 +78,11 @@ export const CalendarGridView: React.FC<Props> = ({ schedules, onOpenCreation, o
         map[d].push(schedule);
       }
     });
+
+    Object.keys(map).forEach(day => {
+      map[Number(day)].sort((a, b) => dayjs(a.dateStr).valueOf() - dayjs(b.dateStr).valueOf());
+    });
+
     return map;
   }, [schedules, currentMonth]);
 

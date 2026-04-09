@@ -38,6 +38,7 @@ jest.mock('jspdf', () => {
       getNumberOfPages: jest.fn().mockReturnValue(1),
       setPage: jest.fn(),
       save: jest.fn(),
+      output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
       lastAutoTable: { finalY: 50 }
     }))
   };
@@ -357,6 +358,7 @@ describe('Utils', () => {
         getNumberOfPages: jest.fn().mockReturnValue(1),
         setPage: jest.fn(),
         save: jest.fn(),
+        output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
         lastAutoTable: { finalY: 50 },
       };
       (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
@@ -403,6 +405,7 @@ describe('Utils', () => {
         getNumberOfPages: jest.fn().mockReturnValue(1),
         setPage: jest.fn(),
         save: jest.fn(),
+        output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
         lastAutoTable: { finalY: 50 },
       };
       (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
@@ -454,6 +457,7 @@ describe('Utils', () => {
         getNumberOfPages: jest.fn().mockReturnValue(1),
         setPage: jest.fn(),
         save: jest.fn(),
+        output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
         lastAutoTable: { finalY: 50 },
       };
       (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
@@ -514,6 +518,7 @@ describe('Utils', () => {
         getNumberOfPages: jest.fn().mockReturnValue(1),
         setPage: jest.fn(),
         save: jest.fn(),
+        output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
         lastAutoTable: { finalY: 50 },
       };
       (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
@@ -582,6 +587,7 @@ describe('Utils', () => {
         getNumberOfPages: jest.fn().mockReturnValue(1),
         setPage: jest.fn(),
         save: jest.fn(),
+        output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
         lastAutoTable: { finalY: 50 },
       };
       (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
@@ -634,6 +640,7 @@ describe('Utils', () => {
         getNumberOfPages: jest.fn().mockReturnValue(1),
         setPage: jest.fn(),
         save: jest.fn(),
+        output: jest.fn().mockReturnValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
         lastAutoTable: { finalY: 50 },
       };
       (jsPDF as unknown as jest.Mock).mockImplementationOnce(() => doc as any);
